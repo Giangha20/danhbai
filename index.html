@@ -107,6 +107,19 @@
       <label class="setting-row"><span>🔊 Âm lượng</span><input id="volumeRange" type="range" min="0" max="100" value="35"><b id="volumeValue">35%</b></label>
       <label class="setting-row"><span>✨ Hiệu ứng lá bài</span><select id="fxMode"><option value="full">Đầy đủ</option><option value="soft">Nhẹ</option><option value="off">Tắt</option></select></label>
       <label class="setting-row"><span>🌙 Giao diện</span><select id="themeMode"><option value="dark">Casino tối</option><option value="midnight">Midnight</option><option value="emerald">Emerald</option></select></label>
+      <div class="coin-topup-box">
+        <div><b>🪙 Nạp xu ảo</b><small>Tỉ lệ mô phỏng: 1.000đ = 100 xu · không thanh toán thật</small></div>
+        <div class="coin-pack-grid">
+          <button type="button" class="coin-pack" data-topup="2000">Mốc 20.000 → +2.000 xu</button>
+          <button type="button" class="coin-pack" data-topup="5000">Mốc 50.000 → +5.000 xu</button>
+          <button type="button" class="coin-pack" data-topup="10000">Mốc 100.000 → +10.000 xu</button>
+          <button type="button" class="coin-pack" data-topup="20000">Mốc 200.000 → +20.000 xu</button>
+          <button type="button" class="coin-pack" data-topup="50000">Mốc 500.000 → +50.000 xu</button>
+          <button type="button" class="coin-pack" data-topup="100000">Mốc 1.000.000 → +100.000 xu</button>
+          <button type="button" class="coin-pack" data-topup="200000">Mốc 2.000.000 → +200.000 xu</button>
+        </div>
+        <small id="topupStatus" class="topup-status">Đây chỉ là xu ảo trong game.</small>
+      </div>
       <div class="login-reward" id="loginRewardBox"><div><b>🎁 Thưởng đăng nhập</b><small id="loginRewardText">Đang kiểm tra...</small></div><strong id="loginRewardAmount">+0 xu</strong></div>
       <p class="safe-note">Xu chỉ dùng cho tiến trình và vật phẩm trong game, không đổi tiền và không dùng để cá cược. Các ván bài chỉ tính điểm giải trí.</p>
       <button id="closeSettings2" class="primary big">Lưu cài đặt</button>

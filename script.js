@@ -47,6 +47,19 @@ function claimDailyLogin(){
 }
 claimDailyLogin();
 
+// Nạp xu ảo mô phỏng: không kết nối thanh toán và không dùng cho cá cược.
+document.querySelectorAll("[data-topup]").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    const amount=Math.max(0,Number(btn.dataset.topup)||0);
+    if(!amount)return;
+    state.coins+=amount;
+    saveLocalState();
+    if($("#coins"))$("#coins").textContent=state.coins;
+    const status=$("#topupStatus");
+    if(status)status.textContent=`Đã cộng +${amount.toLocaleString("vi-VN")} xu ảo.`;
+  });
+});
+
 
 $$(".game-choice").forEach(b=>b.onclick=()=>{$$(".game-choice").forEach(x=>x.classList.remove("active"));b.classList.add("active");state.game=b.dataset.game});
 $$(".diff-choice").forEach(b=>b.onclick=()=>{$$(".diff-choice").forEach(x=>x.classList.remove("active"));b.classList.add("active");state.diff=b.dataset.diff});
@@ -202,7 +215,7 @@ function renderTL(){
  const hand=$("#tlHand");hand.innerHTML="";
  state.tl.hand.forEach((c,i)=>{const b=cardEl(c);if(state.tl.selected.includes(i))b.classList.add("selected");b.onclick=()=>{const k=state.tl.selected.indexOf(i);k>=0?state.tl.selected.splice(k,1):state.tl.selected.push(i);renderTL()};hand.appendChild(b)});
  const ops=$("#tlOpponents");ops.innerHTML="";
- state.tl.players.slice(1).forEach(p=>{const x=document.createElement("div");x.className="opponent";x.innerHTML=`<b>${p.name}</b><div class="backs">${Array.from({length:p.hand.length},()=>'<span class="mini-card"></span>').join("")}</div><small>${p.hand.length} lá</small>`;ops.appendChild(x)});
+ state.tl.players.slice(1).forEach((p,idx)=>{const x=document.createElement("div");x.className=`opponent seat seat-${idx+1}`;const sample=p.hand[0];x.innerHTML=`<b>${p.name}</b><div class="single-opponent-card mini-card" aria-label="Một lá bài của ${p.name}">${sample?"": ""}</div><small>Còn ${p.hand.length} lá</small>`;ops.appendChild(x)});
  const lp=$("#lastPlay");lp.innerHTML=state.tl.last.length?state.tl.last.map(c=>cardText(c)).join("  "):"Chưa có lượt đánh";
 }
 function validMove(cards,last){
@@ -323,7 +336,7 @@ function startThree(){
 function renderThree(){
  $("#threeScore").textContent=state.three.score;$("#threeRound").textContent=state.three.round;$("#threeYouName").textContent=state.settings.playerName||"Bạn";
  const cards=$("#threeYouCards");if(cards)cards.innerHTML=state.three.players[0]?.hand.map(c=>{const b=cardEl(c,"lieng-card");b.disabled=true;return b.outerHTML}).join("")||"";
- const ops=$("#threeOpponents");if(ops)ops.innerHTML=state.three.players.slice(1).map(p=>`<div class="opponent"><b>${p.name}</b><div class="backs">${p.hand.map(()=>'<span class="mini-card"></span>').join("")}</div><small>3 lá</small></div>`).join("");
+ const ops=$("#threeOpponents");if(ops)ops.innerHTML=state.three.players.slice(1).map((p,idx)=>`<div class="opponent seat seat-${idx+1}"><b>${p.name}</b><div class="single-opponent-card mini-card" aria-label="Một lá bài của ${p.name}"></div><small>Còn ${p.hand.length} lá</small></div>`).join("");
  $("#threeYouTotal").textContent=state.three.players[0]?threeTotal(state.three.players[0].hand):0;
 }
 function dealThree(){

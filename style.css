@@ -197,3 +197,74 @@ body.theme-emerald{background:radial-gradient(circle at 50% -15%,#14684c,#06150e
 @media(min-width:801px){#tienlenBoard{padding-top:115px}.opponents.five{position:absolute;top:12px;left:16px;right:16px;grid-template-columns:repeat(4,1fr);z-index:2}}
 @media(max-width:800px){#tienlenBoard{padding-top:6px}}
 .tl-timer{transition:transform .2s,box-shadow .2s;box-shadow:0 0 0 0 #e8bd6240;animation:timerPulse 1s infinite}@keyframes timerPulse{50%{box-shadow:0 0 0 4px #e8bd6210}}
+
+/* V4 mobile/table layout: five players around the table, pentagon seating. */
+#tienlenBoard .opponents.five{
+  position:absolute;
+  inset:0;
+  display:block!important;
+  pointer-events:none;
+  z-index:4;
+}
+#tienlenBoard .opponents.five .opponent,
+#threecardBoard .three-opponents .opponent{
+  position:absolute;
+  width:112px;
+  min-height:86px;
+  padding:9px 8px;
+  box-sizing:border-box;
+  pointer-events:auto;
+  z-index:5;
+}
+#tienlenBoard .opponents.five .seat-1{top:7%;left:50%;transform:translateX(-50%)}
+#tienlenBoard .opponents.five .seat-2{top:29%;left:3%}
+#tienlenBoard .opponents.five .seat-3{top:29%;right:3%}
+#tienlenBoard .opponents.five .seat-4{top:54%;left:50%;transform:translateX(-50%)}
+#tienlenBoard .table{margin:0 0 0;min-height:330px}
+#tienlenBoard .player-area{position:relative;z-index:7;margin-top:8px}
+.single-opponent-card{display:block!important;margin:7px auto 5px;width:30px!important;height:42px!important;min-height:42px!important;flex:none!important;background:linear-gradient(135deg,#b83746,#681c28)!important;border:1px solid #ed8991!important;border-radius:5px!important;box-shadow:0 3px 7px #0008!important}
+.single-opponent-card:after{content:"";display:block!important;position:absolute;inset:4px;border:1px solid #ffffff45;border-radius:3px;background:repeating-linear-gradient(45deg,#fff2 0 2px,transparent 2px 5px)}
+#threecardBoard .three-table{min-height:330px;position:relative}
+#threecardBoard .three-opponents{position:absolute;inset:0;display:block!important;pointer-events:none}
+#threecardBoard .three-opponents .seat-1{top:6%;left:50%;transform:translateX(-50%)}
+#threecardBoard .three-opponents .seat-2{top:30%;left:3%}
+#threecardBoard .three-opponents .seat-3{top:30%;right:3%}
+#threecardBoard .three-opponents .seat-4{top:55%;left:50%;transform:translateX(-50%)}
+#threecardBoard .three-center{position:relative;z-index:6}
+@media(min-width:801px){
+  #tienlenBoard{padding-top:0;min-height:690px}
+  #tienlenBoard .opponents.five .seat-1{top:8%}
+  #tienlenBoard .opponents.five .seat-2{top:30%;left:8%}
+  #tienlenBoard .opponents.five .seat-3{top:30%;right:8%}
+  #tienlenBoard .opponents.five .seat-4{top:57%}
+  #tienlenBoard .table{min-height:360px;margin:95px 120px 0}
+  #tienlenBoard .player-area{margin-top:18px}
+}
+@media(max-width:650px){
+  #tienlenBoard{min-height:590px;padding:4px 6px 10px}
+  #tienlenBoard .opponents.five .opponent,
+  #threecardBoard .three-opponents .opponent{width:92px;min-height:76px;padding:7px 5px;font-size:12px;border-radius:12px}
+  #tienlenBoard .opponents.five .seat-1{top:2%}
+  #tienlenBoard .opponents.five .seat-2{top:25%;left:0}
+  #tienlenBoard .opponents.five .seat-3{top:25%;right:0}
+  #tienlenBoard .opponents.five .seat-4{top:49%}
+  #tienlenBoard .table{min-height:265px;margin:54px 58px 0}
+  #tienlenBoard .last-play{min-height:65px;font-size:16px!important}
+  #tienlenBoard .player-area{margin-top:8px}
+  #threecardBoard .three-table{min-height:285px;margin-top:55px}
+  #threecardBoard .three-opponents .seat-1{top:2%}
+  #threecardBoard .three-opponents .seat-2{top:27%;left:0}
+  #threecardBoard .three-opponents .seat-3{top:27%;right:0}
+  #threecardBoard .three-opponents .seat-4{top:51%}
+}
+
+
+/* Virtual coin top-up (simulation only) */
+.coin-topup-box{margin-top:14px;padding:13px 15px;border:1px solid #315648;border-radius:12px;background:#10231d}
+.coin-topup-box b{display:block}
+.coin-topup-box small{display:block;color:#91aaa2;margin-top:4px}
+.coin-pack-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.coin-pack{border:1px solid #4c7966;border-radius:10px;padding:10px 7px;background:#16372b;color:#fff;font-weight:700;cursor:pointer}
+.coin-pack:hover{transform:translateY(-1px);border-color:#79b99e}
+.topup-status{color:#f3d27d!important}
+@media(max-width:650px){.coin-pack-grid{grid-template-columns:1fr}.coin-pack{width:100%}}
