@@ -71,7 +71,14 @@ $("#backMenu").onclick=()=>{closeModal();show("#gameArea",false);show("#menu",tr
 
 const settingsModal=$("#settingsModal"), music=$("#chillMusic");
 let humanTurnTimer=null,humanTurnDeadline=0;
-function lockLandscape(){try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock("landscape").catch(()=>{})}catch(e){}}
+function lockOrientation(mode){
+ try{
+  if(screen.orientation&&screen.orientation.lock){
+   screen.orientation.lock(mode).then(()=>{const el=$("#orientationStatus");if(el)el.textContent=mode==="portrait"?"Đang dùng màn hình dọc.":"Đang dùng màn hình ngang."}).catch(()=>{const el=$("#orientationStatus");if(el)el.textContent="Trình duyệt không cho phép khóa hướng ở chế độ hiện tại."});
+  } else { const el=$("#orientationStatus");if(el)el.textContent="Thiết bị/trình duyệt không hỗ trợ khóa hướng."; }
+ }catch(e){}
+}
+function lockLandscape(){lockOrientation("landscape")}
 function ensureAudio(){try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==="suspended")audioCtx.resume();return audioCtx}catch(e){return null}}
 function tone(freq,duration=.22,type="sine",gain=.05,when=0){const c=ensureAudio();if(!c)return;const o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(0,c.currentTime+when);g.gain.linearRampToValueAtTime(gain*(state.settings.volume/100),c.currentTime+when+.02);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+when+duration);o.connect(g);g.connect(c.destination);o.start(c.currentTime+when);o.stop(c.currentTime+when+duration+.03)}
 function soundLose(){if(state.settings.fx!=="off"){tone(220,.18,"sawtooth",.07);tone(165,.28,"sawtooth",.06,.13)}}
@@ -87,7 +94,7 @@ function openSettings(){
  $("#musicToggle").checked=state.settings.music;
  $("#volumeRange").value=state.settings.volume;$("#volumeValue").textContent=state.settings.volume+"%";
  $("#fxMode").value=state.settings.fx;$("#themeMode").value=state.settings.theme;
- $("#playerName").value=state.settings.playerName||"Bạn";
+ const playerName=$("#playerName"); if(playerName)playerName.value=state.settings.playerName||"Bạn";
  const bg=$("#botNames"); if(bg){bg.innerHTML=""; state.settings.botNames.forEach((n,i)=>{const lab=document.createElement("label");lab.innerHTML=`Máy ${i+1}<input data-bot-name="${i}" maxlength="20" value="${String(n).replace(/"/g,"&quot;")}">`;bg.appendChild(lab)})}
  settingsModal.classList.remove("hidden");
 }
@@ -155,6 +162,15 @@ function dealAnimation(){
 }
 $("#settingsBtn").onclick=()=>{openSettings();};
 $("#closeSettings").onclick=closeSettings;
+$("#portraitBtn").onclick=()=>lockOrientation("portrait");
+$("#landscapeBtn").onclick=()=>lockOrientation("landscape");
+document.querySelectorAll(".coin-pack").forEach(btn=>btn.onclick=()=>{
+ const amount=Number(btn.dataset.topup)||0;
+ if(amount<=0)return;
+ state.coins+=amount; saveLocalState();
+ if($("#coins"))$("#coins").textContent=state.coins;
+ const st=$("#topupStatus"); if(st)st.textContent=`Đã cộng ${amount.toLocaleString("vi-VN")} xu ảo. Tổng: ${state.coins.toLocaleString("vi-VN")} xu.`;
+});
 $("#musicToggle").onchange=()=>{
  state.settings.music=$("#musicToggle").checked;
  saveLocalState();

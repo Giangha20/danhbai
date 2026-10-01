@@ -268,3 +268,5 @@ body.theme-emerald{background:radial-gradient(circle at 50% -15%,#14684c,#06150e
 .coin-pack:hover{transform:translateY(-1px);border-color:#79b99e}
 .topup-status{color:#f3d27d!important}
 @media(max-width:650px){.coin-pack-grid{grid-template-columns:1fr}.coin-pack{width:100%}}
+
+.orientation-box{margin-top:14px;padding:13px 15px;border:1px solid #315648;border-radius:12px;background:#10231d}.orientation-box b{display:block}.orientation-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}.orientation-actions button{min-height:42px}.orientation-box small{display:block;color:#91aaa2;margin-top:6px}.topup-status{min-height:18px}
