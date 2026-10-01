@@ -4,10 +4,11 @@ const $$=s=>[...document.querySelectorAll(s)];
 const savedCoins=Number(localStorage.getItem("cardGameCoins"));
 const savedSettings=(()=>{try{return JSON.parse(localStorage.getItem("cardGameSettings")||"null")}catch(e){return null}})();
 const state={
- game:"tienlen", diff:"easy", coins:Number.isFinite(savedCoins)?savedCoins:1000, round:1, settings:Object.assign({music:true,volume:35,fx:"full",theme:"dark"},savedSettings||{}),
+ game:"tienlen", diff:"easy", coins:Number.isFinite(savedCoins)?savedCoins:1000, round:1, settings:Object.assign({music:true,volume:35,fx:"full",theme:"dark",playerName:"Bạn",botNames:[]},savedSettings||{}),
  tl:{players:[],hand:[],selected:[],last:[],lastPlayer:-1,turn:0,passes:0},
  war:{players:[],turn:0,rounds:0,score:0},
- memory:{cards:[],revealed:[],matched:[],moves:0,lock:false}
+ memory:{cards:[],revealed:[],matched:[],moves:0,lock:false},
+ three:{players:[],round:0,score:0}
 };
 
 const suits=["♠","♥","♦","♣"], ranks=["3","4","5","6","7","8","9","10","J","Q","K","A","2"];
@@ -24,6 +25,9 @@ function rank(c){return c.v}
 function sortCards(a){return a.sort((x,y)=>x.v-y.v||suits.indexOf(x.s)-suits.indexOf(y.s))}
 function show(id,on=true){$(id).classList.toggle("hidden",!on)}
 const LOGIN_REWARDS=[100,200,350,500,600,700,1000];
+const BOT_NAME_POOL=["Minh","Lan","Huy","An","Linh","Nam","Mai","Khang","Vy","Quân","Trang","Phúc","Duy","Thảo","Tùng"];
+function randomBotNames(){return shuffle([...BOT_NAME_POOL]).slice(0,4)}
+if(!Array.isArray(state.settings.botNames)||state.settings.botNames.length!==4)state.settings.botNames=randomBotNames();
 function todayKey(){return new Date().toISOString().slice(0,10)}
 function dateDiff(a,b){const A=new Date(a+"T00:00:00"),B=new Date(b+"T00:00:00");return Math.round((B-A)/86400000)}
 function saveLocalState(){localStorage.setItem("cardGameCoins",String(state.coins));localStorage.setItem("cardGameSettings",JSON.stringify(state.settings));}
@@ -53,12 +57,25 @@ $("#backMenu").onclick=()=>{closeModal();show("#gameArea",false);show("#menu",tr
 
 
 const settingsModal=$("#settingsModal"), music=$("#chillMusic");
+let humanTurnTimer=null,humanTurnDeadline=0;
+function lockLandscape(){try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock("landscape").catch(()=>{})}catch(e){}}
+function ensureAudio(){try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==="suspended")audioCtx.resume();return audioCtx}catch(e){return null}}
+function tone(freq,duration=.22,type="sine",gain=.05,when=0){const c=ensureAudio();if(!c)return;const o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(0,c.currentTime+when);g.gain.linearRampToValueAtTime(gain*(state.settings.volume/100),c.currentTime+when+.02);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+when+duration);o.connect(g);g.connect(c.destination);o.start(c.currentTime+when);o.stop(c.currentTime+when+duration+.03)}
+function soundLose(){if(state.settings.fx!=="off"){tone(220,.18,"sawtooth",.07);tone(165,.28,"sawtooth",.06,.13)}}
+function soundWin(){if(state.settings.fx!=="off"){tone(523,.16,"triangle",.06);tone(659,.16,"triangle",.06,.13);tone(784,.32,"triangle",.07,.26)}}
+function soundChop(){if(state.settings.fx!=="off"){tone(740,.12,"square",.06);tone(988,.22,"square",.06,.12)}}
+function clearHumanTimer(){if(humanTurnTimer){clearInterval(humanTurnTimer);humanTurnTimer=null}}
+function startHumanTimer(){clearHumanTimer();humanTurnDeadline=Date.now()+15000;updateHumanTimer();humanTurnTimer=setInterval(()=>{updateHumanTimer();if(Date.now()>=humanTurnDeadline){clearHumanTimer();autoHumanMove()}},200)}
+function updateHumanTimer(){const el=$("#tlTimer");if(el){const sec=Math.max(0,Math.ceil((humanTurnDeadline-Date.now())/1000));el.textContent=`⏱️ ${sec}s`}}
+function autoHumanMove(){if(state.tl.turn!==0)return;const chosen=state.tl.selected.map(i=>state.tl.hand[i]);if(validMove(chosen,state.tl.last)){playHumanSelection();return}if(!state.tl.last.length){const one=chooseAI({hand:state.tl.hand});if(one){state.tl.selected=one.map(c=>state.tl.hand.findIndex(x=>x.id===c.id));playHumanSelection();return}}state.tl.selected=[];state.tl.turn=1;renderTL();setStatusTL("Hết 15 giây — bạn bỏ lượt.");setTimeout(aiTL,aiThinkDelay())}
 let audioCtx=null, musicTimer=null;
 function closeSettings(){settingsModal.classList.add("hidden")}
 function openSettings(){
  $("#musicToggle").checked=state.settings.music;
  $("#volumeRange").value=state.settings.volume;$("#volumeValue").textContent=state.settings.volume+"%";
  $("#fxMode").value=state.settings.fx;$("#themeMode").value=state.settings.theme;
+ $("#playerName").value=state.settings.playerName||"Bạn";
+ const bg=$("#botNames"); if(bg){bg.innerHTML=""; state.settings.botNames.forEach((n,i)=>{const lab=document.createElement("label");lab.innerHTML=`Máy ${i+1}<input data-bot-name="${i}" maxlength="20" value="${String(n).replace(/"/g,"&quot;")}">`;bg.appendChild(lab)})}
  settingsModal.classList.remove("hidden");
 }
 function applyTheme(){
@@ -132,22 +149,25 @@ $("#musicToggle").onchange=()=>{
 };
 $("#closeSettings2").onclick=()=>{
  state.settings.music=$("#musicToggle").checked;state.settings.volume=+$("#volumeRange").value;
- state.settings.fx=$("#fxMode").value;state.settings.theme=$("#themeMode").value;
+ state.settings.fx=$("#fxMode").value;state.settings.theme=$("#themeMode").value;state.settings.playerName=($("#playerName").value||"Bạn").trim().slice(0,20)||"Bạn";state.settings.botNames=[...document.querySelectorAll("[data-bot-name]")].map((el,i)=>(el.value||`Máy ${i+1}`).trim().slice(0,20)||`Máy ${i+1}`);
  saveLocalState();applyTheme();closeSettings();if(state.settings.music)ambientMusic();else if(musicTimer){clearInterval(musicTimer);musicTimer=null;}
 };
 $("#volumeRange").oninput=e=>$("#volumeValue").textContent=e.target.value+"%";
 applyTheme();
 
 function startGame(){
+ lockLandscape();
  show("#menu",false);show("#gameArea",true);
- $("#gameName").textContent={tienlen:"Tiến lên miền Nam",war:"Chiến bài",memory:"Nhớ bài"}[state.game]||"Game";
+ $("#gameName").textContent={tienlen:"Tiến lên miền Nam",war:"Chiến bài",memory:"Nhớ bài",threecard:"3 cây"}[state.game]||"Game";
  $("#difficultyName").textContent={easy:"Dễ",normal:"Bình thường",hard:"Khó"}[state.diff];
  $("#roundNo").textContent=state.round;$("#coins").textContent=state.coins;
  show("#tienlenBoard",state.game==="tienlen");
  show("#warBoard",state.game==="war");
  show("#memoryBoard",state.game==="memory");
+ show("#threecardBoard",state.game==="threecard");
  if(state.game==="tienlen")startTL();
  else if(state.game==="war")startWar();
+ else if(state.game==="threecard")startThree();
  else startMemory();
 }
 
@@ -162,25 +182,25 @@ function startTL(){
  dealAnimation();
  if(state.settings.music)ambientMusic();
  const d=shuffle(deck());state.tl.hand=sortCards(d.splice(0,10));state.tl.players=[
- {name:"Bạn",hand:state.tl.hand},
- {name:"Máy 1",hand:d.splice(0,10)},
- {name:"Máy 2",hand:d.splice(0,10)},
- {name:"Máy 3",hand:d.splice(0,10)},
- {name:"Máy 4",hand:d.splice(0,10)}
+ {name:state.settings.playerName||"Bạn",hand:state.tl.hand},
+ {name:state.settings.botNames[0],hand:d.splice(0,10)},
+ {name:state.settings.botNames[1],hand:d.splice(0,10)},
+ {name:state.settings.botNames[2],hand:d.splice(0,10)},
+ {name:state.settings.botNames[3],hand:d.splice(0,10)}
  ];
  state.tl.selected=[];state.tl.last=[];state.tl.lastPlayer=-1;state.tl.passes=0;
  state.tl.turn=state.tl.players.findIndex(p=>p.hand.some(c=>c.v===3&&c.s==="♠"));
  if(state.tl.turn<0)state.tl.turn=0;
  renderTL();setStatusTL();
- if(state.tl.turn!==0)setTimeout(aiTL,aiThinkDelay());
+ if(state.tl.turn!==0)setTimeout(aiTL,aiThinkDelay()); else startHumanTimer();
 }
 function setStatusTL(msg){
  $("#tlTurn").textContent=msg||("Lượt: "+state.tl.players[state.tl.turn].name);
 }
 function renderTL(){
- $("#tlCount").textContent=state.tl.hand.length;$("#coins").textContent=state.coins;
+ $("#tlCount").textContent=state.tl.hand.length;$("#coins").textContent=state.coins; if(state.tl.turn===0&&!humanTurnTimer)startHumanTimer(); else if(state.tl.turn!==0)clearHumanTimer();
  const hand=$("#tlHand");hand.innerHTML="";
- state.tl.hand.forEach((c,i)=>{const b=cardEl(c);if(state.tl.selected.includes(i))b.classList.add("selected");b.onclick=()=>{if(state.tl.turn===0){const k=state.tl.selected.indexOf(i);k>=0?state.tl.selected.splice(k,1):state.tl.selected.push(i);renderTL()}};hand.appendChild(b)});
+ state.tl.hand.forEach((c,i)=>{const b=cardEl(c);if(state.tl.selected.includes(i))b.classList.add("selected");b.onclick=()=>{const k=state.tl.selected.indexOf(i);k>=0?state.tl.selected.splice(k,1):state.tl.selected.push(i);renderTL()};hand.appendChild(b)});
  const ops=$("#tlOpponents");ops.innerHTML="";
  state.tl.players.slice(1).forEach(p=>{const x=document.createElement("div");x.className="opponent";x.innerHTML=`<b>${p.name}</b><div class="backs">${Array.from({length:p.hand.length},()=>'<span class="mini-card"></span>').join("")}</div><small>${p.hand.length} lá</small>`;ops.appendChild(x)});
  const lp=$("#lastPlay");lp.innerHTML=state.tl.last.length?state.tl.last.map(c=>cardText(c)).join("  "):"Chưa có lượt đánh";
@@ -227,22 +247,26 @@ function chooseAI(p){
 function aiTL(){
  if(state.tl.turn===0)return;
  const p=state.tl.players[state.tl.turn],m=chooseAI(p);
- if(m){animatePlayedCards(m);p.hand=p.hand.filter(c=>!m.some(x=>x.id===c.id));state.tl.last=m;state.tl.lastPlayer=state.tl.turn;state.tl.passes=0;$("#lastPlay").innerHTML=m.map(cardText).join("  ")}
+ if(m){if(state.tl.last.some(c=>c.r==="2") && (combo(m)?.type==="four" || combo(m)?.type==="pairrun"))soundChop();animatePlayedCards(m);p.hand=p.hand.filter(c=>!m.some(x=>x.id===c.id));state.tl.last=m;state.tl.lastPlayer=state.tl.turn;state.tl.passes=0;$("#lastPlay").innerHTML=m.map(cardText).join("  ")}
  else{state.tl.passes++;if(state.tl.passes>=state.tl.players.length-1){state.tl.last=[];state.tl.passes=0}}
  if(!p.hand.length){endGame(p.name+" thắng Tiến lên!");return}
  state.tl.turn=(state.tl.turn+1)%5;renderTL();setStatusTL(m?`Lượt: ${state.tl.players[state.tl.turn].name}`:`${p.name} bỏ lượt`);
  setTimeout(aiTL,aiThinkDelay());
 }
-$("#tlPlay").onclick=()=>{
+function playHumanSelection(){
  if(state.tl.turn!==0)return;
  const chosen=state.tl.selected.map(i=>state.tl.hand[i]);
  if(!validMove(chosen,state.tl.last)){setStatusTL("Bộ bài không hợp lệ hoặc không chặn được lượt trước.");return}
+ clearHumanTimer();
+ const hasTwo=state.tl.last.some(c=>c.r==="2") && (combo(chosen)?.type==="four" || combo(chosen)?.type==="pairrun");
+ if(hasTwo)soundChop();
  animatePlayedCards(chosen);state.tl.hand=state.tl.hand.filter((c,i)=>!state.tl.selected.includes(i));state.tl.players[0].hand=state.tl.hand;
  state.tl.last=chosen;state.tl.lastPlayer=0;state.tl.selected=[];state.tl.passes=0;
  if(!state.tl.hand.length){endGame("Bạn thắng Tiến lên!");return}
  state.tl.turn=1;renderTL();setStatusTL("Máy đang suy nghĩ...");setTimeout(aiTL,aiThinkDelay());
-};
-$("#tlPass").onclick=()=>{if(state.tl.turn===0&&!state.tl.last.length===false){state.tl.passes++;state.tl.turn=1;state.tl.selected=[];renderTL();setTimeout(aiTL,aiThinkDelay())}};
+}
+$("#tlPlay").onclick=()=>playHumanSelection();
+$("#tlPass").onclick=()=>{if(state.tl.turn===0){clearHumanTimer();state.tl.passes++;state.tl.turn=1;state.tl.selected=[];renderTL();setStatusTL("Bạn bỏ lượt.");setTimeout(aiTL,aiThinkDelay())}};
 $("#tlSort").onclick=()=>{state.tl.hand=sortCards(state.tl.hand);state.tl.players[0].hand=state.tl.hand;renderTL()};
 
 function handScore(h){
@@ -289,6 +313,26 @@ function playWarRound(){
  }
 }
 
+function threeValue(c){return Math.min(c.v,10)}
+function threeTotal(hand){return hand.reduce((n,c)=>n+threeValue(c),0)%10}
+function startThree(){
+ const d=shuffle(deck()); state.three.players=[{name:state.settings.playerName||"Bạn",hand:d.splice(0,3)}];
+ for(let i=0;i<4;i++)state.three.players.push({name:state.settings.botNames[i],hand:d.splice(0,3)});
+ state.three.round=0;state.three.score=0;renderThree();$("#threeStatus").textContent="Nhấn Chia 3 cây để bắt đầu.";
+}
+function renderThree(){
+ $("#threeScore").textContent=state.three.score;$("#threeRound").textContent=state.three.round;$("#threeYouName").textContent=state.settings.playerName||"Bạn";
+ const cards=$("#threeYouCards");if(cards)cards.innerHTML=state.three.players[0]?.hand.map(c=>{const b=cardEl(c,"lieng-card");b.disabled=true;return b.outerHTML}).join("")||"";
+ const ops=$("#threeOpponents");if(ops)ops.innerHTML=state.three.players.slice(1).map(p=>`<div class="opponent"><b>${p.name}</b><div class="backs">${p.hand.map(()=>'<span class="mini-card"></span>').join("")}</div><small>3 lá</small></div>`).join("");
+ $("#threeYouTotal").textContent=state.three.players[0]?threeTotal(state.three.players[0].hand):0;
+}
+function dealThree(){
+ const d=shuffle(deck());state.three.players=[{name:state.settings.playerName||"Bạn",hand:d.splice(0,3)}];for(let i=0;i<4;i++)state.three.players.push({name:state.settings.botNames[i],hand:d.splice(0,3)});
+ state.three.round++;renderThree();$("#threeStatus").textContent="Máy đang tính điểm...";
+ setTimeout(()=>{const vals=state.three.players.map(p=>threeTotal(p.hand));const best=Math.max(...vals);const winners=state.three.players.filter((p,i)=>vals[i]===best).map(p=>p.name);if(winners.includes(state.settings.playerName||"Bạn")){state.three.score++;soundWin();$("#threeStatus").textContent=`Bạn thắng! ${best} điểm.`}else{soundLose();$("#threeStatus").textContent=`${winners.join(", ")} thắng với ${best} điểm.`}renderThree()},aiThinkDelay());
+}
+$("#threeDeal").onclick=dealThree;$("#threeReset").onclick=startThree;
+
 function startMemory(){
  const base=shuffle(deck()).slice(0,8);
  state.memory.cards=shuffle(base.flatMap((c,i)=>[{...c,key:i+"a"},{...c,key:i+"b"}]));
@@ -324,5 +368,5 @@ $("#warDeal").onclick=()=>playWarRound();
 $("#warReset").onclick=()=>startWar();
 $("#memoryReset").onclick=()=>startMemory();
 
-function endGame(msg){state.coins=Math.max(0,state.coins);$("#coins").textContent=state.coins;$("#resultTitle").textContent=msg.includes("thắng")||msg.includes("hoàn thành")?"🎉 Chiến thắng":"🏁 Kết quả";$("#resultText").textContent=msg;show("#resultModal",true)}
+function endGame(msg){clearHumanTimer(); if(msg.includes("Bạn thắng")||msg.includes("hoàn thành"))soundWin();else soundLose(); state.coins=Math.max(0,state.coins);$("#coins").textContent=state.coins;$("#resultTitle").textContent=msg.includes("thắng")||msg.includes("hoàn thành")?"🎉 Chiến thắng":"🏁 Kết quả";$("#resultText").textContent=msg;show("#resultModal",true)}
 function closeModal(){show("#resultModal",false)}
