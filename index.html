@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Đánh Bài</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>🃏 Game Đánh Bài</h1>
+        <p>♠ Tiến lên miền Nam &nbsp;•&nbsp; ⚔️ Chiến bài &nbsp;•&nbsp; 🧠 Nhớ bài &nbsp;•&nbsp; 🤖 AI 3 cấp độ</p>
+      </div>
+      <div class="top-actions"><button id="settingsBtn" class="secondary">⚙ Cài đặt</button><button id="newGameTop" class="secondary">Ván mới</button></div>
+    </header>
+
+    <section id="menu" class="panel">
+      <h2>Chọn game</h2>
+      <div class="choices">
+        <button class="game-choice active" data-game="tienlen">♠ Tiến lên miền Nam</button>
+        <button class="game-choice" data-game="war">⚔️ Chiến bài</button>
+        <button class="game-choice" data-game="memory">🧠 Nhớ bài</button>
+      </div>
+
+      <h2>Độ khó AI</h2>
+      <div class="choices">
+        <button class="diff-choice active" data-diff="easy">Dễ</button>
+        <button class="diff-choice" data-diff="normal">Bình thường</button>
+        <button class="diff-choice" data-diff="hard">Khó</button>
+      </div>
+
+      <button id="startGame" class="primary big">▶ Bắt đầu chơi</button>
+      <p class="hint">Game chạy hoàn toàn trên trình duyệt, không cần server.</p>
+    </section>
+
+    <main id="gameArea" class="hidden">
+      <div class="gamebar">
+        <div><b id="gameName">Tiến lên miền Nam</b> · <span id="difficultyName">Dễ</span></div>
+        <div>Ván <span id="roundNo">1</span> · 💰 <span id="coins">1000</span></div>
+      </div>
+
+      <div id="status" class="status">Đang chia bài...</div>
+
+      <section id="tienlenBoard" class="board">
+        <div class="opponents five" id="tlOpponents"></div>
+        <div class="table">
+          <div class="last-play" id="lastPlay">Chưa có lượt đánh</div>
+          <div class="turn" id="tlTurn"></div>
+        </div>
+        <div class="player-area">
+          <div class="player-label">Bạn · <span id="tlCount">13</span> lá</div>
+          <div id="tlHand" class="hand"></div>
+          <div class="actions">
+            <button id="tlPlay" class="primary">Đánh</button>
+            <button id="tlPass" class="secondary">Bỏ lượt</button>
+            <button id="tlSort" class="secondary">Sắp xếp</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="warBoard" class="board hidden">
+        <div class="war-head"><div><b>⚔️ Chiến bài</b><small>So lá từng lượt, không cược.</small></div><div>Điểm: <span id="warScore">0</span></div></div>
+        <div class="war-table table">
+          <div class="war-cards"><div class="war-card"><small>Bạn</small><strong id="warYouCard">?</strong></div><div class="war-vs">VS</div><div class="war-card"><small>Máy</small><strong id="warBotCard">?</strong></div></div>
+          <div id="warRoundStatus" class="status">Sẵn sàng.</div>
+        </div>
+        <div class="war-meta">Lượt <span id="warRound">0</span> · Bạn <span id="warYouCount">26</span> lá · Máy <span id="warBotCount">26</span> lá</div>
+        <div class="actions"><button id="warDeal" class="primary">🃏 Chia bài</button><button id="warReset" class="secondary">↻ Ván mới</button></div>
+      </section>
+
+      <section id="memoryBoard" class="board hidden">
+        <div class="war-head"><div><b>🧠 Nhớ bài</b><small>Tìm các cặp lá giống nhau.</small></div><div>Lượt: <span id="memoryMoves">0</span></div></div>
+        <div id="memoryGrid" class="memory-grid"></div>
+        <div class="war-meta">Cặp đã tìm: <span id="memoryPairs">0</span>/8</div>
+        <div class="actions"><button id="memoryReset" class="primary">↻ Chơi lại</button></div>
+      </section>
+    </main>
+
+    <div id="resultModal" class="modal hidden">
+      <div class="modal-card">
+        <h2 id="resultTitle">Kết quả</h2>
+        <p id="resultText"></p>
+        <button id="playAgain" class="primary big">Chơi ván mới</button>
+        <button id="backMenu" class="secondary big">Về menu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="settingsModal" class="modal hidden">
+    <div class="modal-card settings-card">
+      <div class="settings-head"><h2>⚙ Cài đặt</h2><button id="closeSettings" class="icon-btn">×</button></div>
+      <label class="setting-row"><span>🎵 Nhạc chill</span><input id="musicToggle" type="checkbox" checked></label>
+      <label class="setting-row"><span>🔊 Âm lượng</span><input id="volumeRange" type="range" min="0" max="100" value="35"><b id="volumeValue">35%</b></label>
+      <label class="setting-row"><span>✨ Hiệu ứng lá bài</span><select id="fxMode"><option value="full">Đầy đủ</option><option value="soft">Nhẹ</option><option value="off">Tắt</option></select></label>
+      <label class="setting-row"><span>🌙 Giao diện</span><select id="themeMode"><option value="dark">Casino tối</option><option value="midnight">Midnight</option><option value="emerald">Emerald</option></select></label>
+      <div class="login-reward" id="loginRewardBox"><div><b>🎁 Thưởng đăng nhập</b><small id="loginRewardText">Đang kiểm tra...</small></div><strong id="loginRewardAmount">+0 xu</strong></div>
+      <p class="safe-note">Xu chỉ dùng cho tiến trình và vật phẩm trong game, không đổi tiền và không dùng để cá cược.</p>
+      <button id="closeSettings2" class="primary big">Lưu cài đặt</button>
+    </div>
+  </div>
+
+  <audio id="chillMusic" loop preload="auto"></audio>
+  <script src="script.js"></script>
+</body>
+</html>
