@@ -59,8 +59,8 @@ document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}
       </div>
       <nav class="menu-grid" aria-label="Menu chính">
         <button class="menu-item" type="button" data-action="goto" data-target="games"><span>🎴</span>CHƠI GAME</button>
-        <button class="menu-item soon" type="button" data-action="soon" data-what="Giải đấu"><span>🏆</span>GIẢI ĐẤU<em>Đợt sau</em></button>
-        <button class="menu-item soon" type="button" data-action="soon" data-what="Phòng chơi"><span>🏟️</span>PHÒNG<em>Đợt sau</em></button>
+        <button class="menu-item" type="button" data-action="goto" data-target="tournament"><span>🏆</span>GIẢI ĐẤU</button>
+        <button class="menu-item" type="button" data-action="goto" data-target="rooms"><span>🏟️</span>PHÒNG</button>
         <button class="menu-item" type="button" data-action="goto" data-target="profile"><span>👤</span>HỒ SƠ</button>
         <button class="menu-item" type="button" data-action="goto" data-target="stats"><span>📊</span>THỐNG KÊ</button>
         <button class="menu-item" type="button" data-action="goto" data-target="achievements"><span>🏅</span>THÀNH TÍCH</button>
@@ -75,6 +75,12 @@ document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}
       <h3 class="sub">Sắp có</h3>
       <div id="games-locked" class="games-list"></div>
     </section>
+
+    <!-- GIẢI ĐẤU -->
+    <section class="screen" id="screen-tournament" aria-label="Giải đấu"><div id="tour-body"></div></section>
+
+    <!-- PHÒNG -->
+    <section class="screen" id="screen-rooms" aria-label="Phòng chơi"><div id="rooms-body"></div></section>
 
     <!-- MÀN CHƠI -->
     <section class="screen" id="screen-play" aria-label="Bàn chơi">

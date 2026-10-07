@@ -129,51 +129,134 @@ const ACHIEVEMENTS = [
   { id: 'xibang', icon: '🅰️', name: 'Xì bàng', desc: 'Thắng với 2 lá A', test: (d, s) => s.includes('xibang') },
   { id: 'nguLinh', icon: '🖐️', name: 'Ngũ linh', desc: 'Thắng với 5 lá không quá 21', test: (d, s) => s.includes('nguLinh') },
   { id: 'beatHard', icon: '🔴', name: 'Hạ AI Siêu khó', desc: 'Thắng bàn toàn AI Siêu khó', test: (d, s) => s.includes('beatHard') },
+  { id: 'champion', icon: '👑', name: 'Vô địch giải đấu', desc: 'Giành chức vô địch một giải đấu bất kỳ', test: (d, s) => s.includes('champion') || d.statistics.championships >= 1 },
+  { id: 'worldChampion', icon: '🌎', name: 'Vô địch thế giới', desc: 'Vô địch World Solo Championship', test: (d, s) => s.includes('worldChampion') },
   { id: 'level20', icon: '⭐', name: 'Lên cấp 20', desc: 'Đạt Level 20', test: (d) => d.level >= 20 }
 ];
 
-/* Luật chơi — mỗi game một nội dung riêng */
+/* Luật chơi — mỗi game một nội dung riêng. Game chưa mở (ready=false) vẫn có luật đầy đủ để xem trước. */
 const RULES = {
   tienLen: ['Tiến Lên (cơ bản)', [
-    'Mỗi người 13 lá, ai hết bài trước là nhất. Thứ tự: 3 < 4 < … < K < A < 2. Chất: ♠ < ♣ < ♦ < ♥.',
-    'Bộ hợp lệ: lẻ, đôi, ba, tứ quý, sảnh (≥3 lá liên tiếp, không có 2).',
-    'Phải đánh cùng loại, cùng số lá và mạnh hơn bộ trước. Không đánh được thì bỏ lượt; người bỏ lượt mất quyền tới hết vòng.',
-    'Chặt: tứ quý chặt 2 lẻ. Ván đầu người có lá nhỏ nhất phải đánh lá đó.',
-    'Tới trắng: sảnh rồng (3→A) hoặc tứ quý 2 — thắng ngay.'
+    'Số người: 2–4. Mỗi người 13 lá. Ai hết bài trước là nhất; những người còn lại xếp theo số lá còn trên tay.',
+    'Thứ tự lá: 3 < 4 < … < 10 < J < Q < K < A < 2. Thứ tự chất: ♠ Bích < ♣ Tép < ♦ Rô < ♥ Cơ.',
+    'Bộ hợp lệ: lẻ, đôi, bộ ba, tứ quý, sảnh (từ 3 lá liên tiếp trở lên, không có 2, không cần cùng chất).',
+    'Người có lá nhỏ nhất đi trước và phải đánh bộ có chứa lá đó. Sau đó phải đánh cùng loại, cùng số lá và lá cao nhất lớn hơn bộ trước.',
+    'Không đánh được thì bỏ lượt — bỏ lượt là mất quyền đánh đến hết vòng. Khi mọi người khác đã bỏ, người đánh cuối được đi tự do.',
+    'Chặt: tứ quý chặt 2 lẻ. Bản cơ bản không có đôi thông.',
+    'Tới trắng (thắng ngay khi chia bài): sảnh rồng 3→A hoặc tứ quý 2.'
   ]],
   tienLenMienNam: ['Tiến Lên Miền Nam', [
-    'Như luật cơ bản, thêm đôi thông (≥3 đôi liên tiếp, không có 2).',
-    'Chặt 2: tứ quý và 3 đôi thông chặt 2 lẻ; tứ quý và 4 đôi thông chặt đôi 2. 4 đôi thông chặt tứ quý.',
-    'Thối 2: kết thúc ván mà còn quân 2 trên tay bị đánh dấu "Thối 2". Chưa đánh lá nào là "Cóng".',
-    'Tới trắng: sảnh rồng, tứ quý 2, hoặc 6 đôi.'
+    'Số người 2–4, mỗi người 13 lá. Thứ tự 3 < … < K < A < 2; chất ♠ < ♣ < ♦ < ♥. Người có lá nhỏ nhất đi trước và phải đánh lá đó.',
+    'Bộ hợp lệ: lẻ, đôi, ba, tứ quý, sảnh (≥3 lá, không có 2) và đôi thông (≥3 đôi liên tiếp, không có 2).',
+    'Chặt 2 lẻ: tứ quý hoặc 3 đôi thông (hoặc nhiều hơn).',
+    'Chặt đôi 2: tứ quý hoặc 4 đôi thông. 4 đôi thông cũng chặt được tứ quý.',
+    'Thối 2: khi ván kết thúc mà còn quân 2 trên tay thì bị đánh dấu "Thối 2". Chưa đánh được lá nào là "Cóng".',
+    'Tới trắng: sảnh rồng 3→A, tứ quý 2, hoặc 6 đôi — thắng ngay khi chia bài.'
   ]],
   tienLenMienBac: ['Tiến Lên Miền Bắc', [
-    'Có đôi thông, nhưng chặt hạn chế hơn Miền Nam: tứ quý và 3 đôi thông chỉ chặt 2 lẻ; đôi 2 không bị chặt.',
+    'Số người 2–4, mỗi người 13 lá. Thứ tự và chất như Tiến Lên; người có lá nhỏ nhất đi trước.',
+    'Bộ hợp lệ: lẻ, đôi, ba, tứ quý, sảnh (≥3 lá, không có 2) và đôi thông (≥3 đôi liên tiếp).',
+    'Chặt hạn chế hơn Miền Nam: chỉ tứ quý và đôi thông (≥3 đôi) chặt được 2 lẻ. Đôi 2 không bị chặt; đôi thông không chặt được tứ quý.',
     'Không có luật thối 2.',
-    'Tới trắng: sảnh rồng, tứ quý 2, hoặc tứ quý 3.'
+    'Tới trắng: sảnh rồng 3→A, tứ quý 2, hoặc tứ quý 3.'
   ]],
   samLoc: ['Sâm Lốc', [
-    '2–4 người, mỗi người 10 lá. Thứ tự: 3 < 4 < … < K < A < 2. Chất không quyết định giá trị.',
-    'Bộ: lẻ, đôi, ba, tứ quý, sảnh (≥3 lá liên tiếp, không có 2). Phải đánh cùng loại và lớn hơn; bằng nhau không chặt được.',
+    'Số người 2–4, mỗi người 10 lá. Thứ tự: 3 < 4 < … < K < A < 2. Chất không quyết định giá trị: bài bằng nhau thì không chặt được.',
+    'Bộ hợp lệ: lẻ, đôi, bộ ba, tứ quý, sảnh (≥3 lá liên tiếp, không có 2). Phải đánh cùng loại, cùng số lá và lớn hơn bộ trước.',
     'Chặt: tứ quý chặt 2 lẻ và đôi 2.',
-    'Báo Sâm: trước khi đánh, bạn có thể báo Sâm — phải đi hết 10 lá mà không ai chặn được. Có người chặn thì người báo thua, người chặn thắng.',
-    'Ăn trắng: tứ quý 2, 5 đôi, hoặc sảnh rồng 10 lá — thắng ngay.',
-    'Còn 1 lá sẽ có cảnh báo ⚠️.'
+    'Báo Sâm: trước khi đánh, bạn có thể báo Sâm — phải đi hết 10 lá mà không ai chặn được. Người báo được đi trước. Có người đánh bài chặn thì người báo thua, người chặn thắng.',
+    'Ăn trắng: tứ quý 2, 5 đôi, hoặc sảnh rồng 10 lá liên tiếp — thắng ngay khi chia bài.',
+    'Còn 1 lá sẽ có cảnh báo ⚠️. Ai hết bài trước là nhất.'
   ]],
   xiDach: ['Xì Dách', [
-    'Mục tiêu: điểm gần 21 hơn nhà cái nhưng không quá 21 (quắc).',
+    'Mục tiêu: điểm gần 21 hơn nhà cái nhưng không quá 21 (quắc). Bạn đấu với nhà cái, AI khác cũng chơi cùng bàn.',
     'J, Q, K = 10. A = 1, 10 hoặc 11 khi có 2–3 lá; có 4–5 lá thì A = 1.',
-    'Người chơi phải có ít nhất 16 điểm mới được dằn. Nhà cái phải có ít nhất 15 điểm. Tối đa 5 lá.',
-    'Xếp hạng: Xì bàng (2 lá A) > Xì dách (A + 10) > Ngũ linh (5 lá ≤ 21) > 21 điểm … thấp hơn. Quắc luôn thua.',
-    'Bằng điểm là hòa.'
+    'Người chơi phải đạt ít nhất 16 điểm mới được dằn; nhà cái phải đạt ít nhất 15 điểm. Tối đa 5 lá.',
+    'Xếp hạng bài: Xì bàng (2 lá A) > Xì dách (A + lá 10 điểm) > Ngũ linh (5 lá, không quá 21) > 21 điểm … thấp hơn. Quắc luôn thua.',
+    'Ngũ linh so với ngũ linh: tổng thấp hơn thắng. Bằng điểm là hòa. Nhà cái có Xì dách/Xì bàng thì so bài ngay.'
   ]],
   blackjack: ['Blackjack', [
-    'Điểm gần 21 hơn nhà cái nhưng không quá 21. Hình = 10, A = 1 hoặc 11.',
-    'Hit: rút thêm. Stand: dừng. Double: gấp đôi, rút đúng 1 lá rồi dừng (khi có 2 lá). Split: tách đôi cùng số (1 lần).',
-    'Blackjack tự nhiên (A + 10 ở 2 lá đầu) thắng 21 thường. Nhà cái rút đến khi ≥ 17.',
-    'Quắc (>21) là thua. Bằng điểm là Push (hòa).'
+    'Mục tiêu: điểm gần 21 hơn nhà cái nhưng không quá 21. Hình = 10, A = 1 hoặc 11.',
+    'Hit: rút thêm. Stand: dừng. Double: gấp đôi cược, rút đúng 1 lá rồi dừng (chỉ khi có 2 lá). Split: tách đôi hai lá cùng số (1 lần); tách A chỉ được 1 lá mỗi tay.',
+    'Blackjack tự nhiên (A + 10 ở 2 lá đầu) thắng 21 thường. Nhà cái rút đến khi đạt từ 17 điểm.',
+    'Quắc (>21) là thua. Bằng điểm là Push (hòa). Chỉ dùng điểm ảo, không có tiền thật.'
+  ]],
+  lieng: ['Liêng', [
+    'Mỗi người 3 lá. Xếp hạng: Sáp (3 lá cùng số) > Liêng (3 lá liên tiếp) > Ảnh (3 lá J/Q/K) > bài thường tính điểm.',
+    'Điểm bài thường: A = 1, 2–9 theo số, 10/J/Q/K = 10 (tính 0); điểm = tổng chia 10 lấy dư (cao nhất 9).',
+    'Vòng cược bằng điểm ảo: Tố (tăng mức), Theo (bằng mức), Úp/Bỏ (rời ván). Sau vòng cược các lá được lật để so bài.',
+    'Cùng hạng thì so lá cao nhất, rồi so chất (♠ < ♣ < ♦ < ♥). Game sẽ có ở đợt sau.'
+  ]],
+  baCay: ['Ba Cây', [
+    'Mỗi người 3 lá. Điểm = tổng điểm 3 lá chia 10 lấy dư, từ 0 đến 9. A = 1; J/Q/K = 10 (hoặc tính 0 tuỳ cấu hình luật).',
+    'Ba cây ảnh (3 lá J/Q/K) là bài cao nhất. Sau đó so điểm 9 > 8 > … > 0.',
+    'Bằng điểm thì so lá cao nhất, rồi so chất. Game sẽ có ở đợt sau.'
+  ]],
+  phom: ['Phỏm', [
+    'Dùng 52 lá, 2–4 người. Mỗi người 9 lá (người đi đầu 10 lá). Mục tiêu: ghép bài thành phỏm và còn ít điểm rác nhất.',
+    'Phỏm = 3 lá trở lên cùng số (phỏm ngang) hoặc 3 lá trở lên liên tiếp cùng chất (phỏm dọc, A có thể là 1).',
+    'Mỗi lượt: bốc 1 lá từ nọc hoặc ăn lá người trước vừa đánh (chỉ khi lá đó tạo được phỏm), rồi đánh ra 1 lá.',
+    'Hết 4 vòng đánh thì hạ phỏm. Người hạ phỏm được gửi lá còn lại vào phỏm đã hạ của mình hoặc của người khác.',
+    'Ù: hết bài sau khi hạ phỏm (hoặc 9 lá thành phỏm hết). Móm: không có phỏm nào — bị xếp bét. Tính điểm lá rác (A = 1 … K = 13), ít điểm nhất thắng. Game sẽ có ở đợt sau.'
+  ]],
+  mauBinh: ['Mậu Binh', [
+    'Mỗi người 13 lá, xếp thành 3 chi: Chi 1 (đầu) 3 lá, Chi 2 (giữa) 5 lá, Chi 3 (cuối) 5 lá. Bắt buộc Chi 3 ≥ Chi 2 ≥ Chi 1, xếp sai gọi là binh lủng (thua).',
+    'Hạng bài (cao → thấp): Thùng phá sảnh, Tứ quý, Cù lũ, Thùng, Sảnh, Sám, Thú (2 đôi), Đôi, Mậu thầu. Chi 1 chỉ có Sám, Đôi hoặc Mậu thầu.',
+    'So từng chi với đối thủ: thắng 2/3 chi là thắng ván. Thắng cả 3 chi là "sập hầm" (thưởng thêm).',
+    'Thắng trắng (thắng ngay): sảnh rồng 13 lá, 6 đôi, 3 sảnh, 3 thùng. Game sẽ có ở đợt sau.'
+  ]],
+  poker: ["Poker (Texas Hold'em)", [
+    'Mỗi người 2 lá riêng và dùng 5 lá chung trên bàn để ghép bộ 5 lá tốt nhất.',
+    'Các vòng: Pre-flop (chia 2 lá) → Flop (3 lá chung) → Turn (lá thứ 4) → River (lá thứ 5) → Showdown (so bài).',
+    'Hành động: Check (bỏ qua), Bet (đặt), Call (theo), Raise (tố thêm), Fold (bỏ bài), All-in (đẩy hết điểm). Chỉ dùng điểm ảo.',
+    'Xếp hạng: High Card < One Pair < Two Pair < Three of a Kind < Straight < Flush < Full House < Four of a Kind < Straight Flush < Royal Flush.',
+    'Còn nhiều người đến showdown thì bộ cao hơn thắng; bằng nhau thì chia. Game sẽ có ở đợt sau.'
+  ]],
+  highCard: ['High Card', [
+    'Mỗi người nhận 1 lá (hoặc rút từ bộ bài). Lá cao nhất thắng.',
+    'Thứ tự: 2 < 3 < … < 10 < J < Q < K < A. Cùng số thì so chất: ♠ < ♣ < ♦ < ♥.',
+    'Game nhanh, dùng để thi đấu giải mini. Game sẽ có ở đợt sau.'
+  ]],
+  rummy: ['Rummy', [
+    'Mỗi người nhận 10 lá (2 người) hoặc 7 lá (3–4 người). Mục tiêu: ghép hết bài thành bộ và đánh ra lá cuối.',
+    'Bộ hợp lệ: Set (3–4 lá cùng số khác chất) hoặc Sequence (≥3 lá liên tiếp cùng chất).',
+    'Mỗi lượt: bốc 1 lá (từ nọc hoặc từ chồng bỏ), hạ bộ nếu có, rồi đánh ra 1 lá.',
+    'Deadwood = lá lẻ chưa vào bộ (A = 1, J/Q/K = 10). Người hết bài thắng; hoặc kết thúc khi deadwood thấp hơn đối thủ. Game sẽ có ở đợt sau.'
+  ]],
+  solitaire: ['Solitaire (Klondike)', [
+    '7 cột (cột i có i lá, chỉ lá cuối ngửa), 4 nền theo chất từ A → K, một kho bài (stock) và chồng bỏ (waste).',
+    'Xếp lá trên cột theo thứ tự giảm dần và xen kẽ màu đỏ/đen. Chỉ lá K (hoặc chuỗi bắt đầu bằng K) được đặt vào cột trống.',
+    'Có thể chuyển cả chuỗi đúng thứ tự giữa các cột. Lá úp được lật khi lộ ra. Có Undo, Gợi ý và Chơi lại.',
+    'Thắng khi cả 52 lá lên 4 nền. Game sẽ có ở đợt sau.'
+  ]],
+  freeCell: ['FreeCell', [
+    '8 cột, tất cả lá đều ngửa (4 cột 7 lá, 4 cột 6 lá). 4 ô trống (free cell) mỗi ô chứa 1 lá, và 4 nền theo chất A → K.',
+    'Xếp lá trên cột theo thứ tự giảm dần và xen kẽ màu. Cột trống đặt được lá bất kỳ.',
+    'Số lá di chuyển cùng lúc tối đa = (số ô trống + 1) × 2^(số cột trống).',
+    'Thắng khi cả 52 lá lên 4 nền. Có Undo và Gợi ý. Game sẽ có ở đợt sau.'
+  ]],
+  spider: ['Spider Solitaire', [
+    'Dùng 104 lá với 1, 2 hoặc 4 chất. 10 cột (4 cột 6 lá, 6 cột 5 lá, chỉ lá cuối ngửa) và kho 50 lá.',
+    'Xếp lá giảm dần (không cần xen màu). Chỉ di chuyển được cả chuỗi khi các lá cùng chất và liên tiếp.',
+    'Bấm kho để chia 1 lá lên mỗi cột (không được có cột trống). Khi có đủ chuỗi K → A cùng chất thì chuỗi tự được gỡ khỏi bàn.',
+    'Thắng khi gỡ hết 8 chuỗi. Game sẽ có ở đợt sau.'
   ]]
 };
+const RULES_EXTRA = [
+  ['🏆 Giải đấu', [
+    'Có 6 giải: Giải nhanh (8 người), Giải hàng ngày (16 người, mỗi ngày 1 lần), Giải khu vực (8 đại diện trong khu vực), Giải quốc gia (16 người, vòng bảng + loại trực tiếp), Giải châu lục (16 đại diện của châu lục) và World Solo Championship (32 quốc gia).',
+    'Mỗi trận là một ván đấu 1-1 với AI đại diện quốc gia khác. Game thi đấu: Tiến Lên (3 bản) hoặc Sâm Lốc.',
+    'Vòng bảng: chia bảng 4 đội, mỗi đội đá 3 trận. Thắng 3 điểm, hòa 1 điểm; xếp theo điểm, số trận thắng. Top 2 mỗi bảng vào vòng loại trực tiếp.',
+    'Vòng loại trực tiếp: một ván quyết định. Thua là bị loại. Các trận của AI được mô phỏng bằng chính engine và AI của game.',
+    'World Solo Championship: Vòng bảng (8 bảng) → Vòng 16 đội → Tứ kết → Bán kết → Chung kết → 🌎 WORLD CHAMPION.',
+    'Giải đấu được lưu tự động. Mở lại game sẽ có lựa chọn "Tiếp tục giải đấu". Bỏ ván giữa chừng tính là thua trận đó.'
+  ]],
+  ['🏟️ Phòng chơi', [
+    'Có 32 phòng, mỗi phòng 64 bàn (tổng 2.048 bàn). Phòng 1–8 AI Dễ, 9–16 AI Bình thường, 17–24 AI Khó, 25–32 AI Siêu khó.',
+    'Mỗi bàn có game, số người, trạng thái: Đang chờ, Đang chơi, Đầy, Kết thúc. Chỉ bàn "Đang chờ" mới vào được; các ghế còn trống được AI lấp đầy.',
+    'Dùng ô tìm phòng, tìm bàn, lọc game, lọc trạng thái và phân trang. Nút 🔄 làm mới danh sách bàn, ⚡ Vào nhanh chọn ngẫu nhiên một bàn đang chờ.'
+  ]]
+];
 
 /* ============================ 3. HỆ THỐNG LÁ BÀI ============================ */
 const SUITS = [
@@ -335,7 +418,9 @@ function defaultData() {
     level: 12,
     currentGame: null,
     currentMatch: null,
-    tournament: null
+    tournament: null,
+    rooms: { room: 1, epoch: (Date.now() % 100000) + 1 },
+    tourMeta: { daily: '', game: 'tienLen', history: [] }
   };
 }
 function mergeDefaults(def, src) {
@@ -354,9 +439,16 @@ function sanitizeData(d) {
   x.profile.age = clamp(Math.round(Number(x.profile.age) || 25), 6, 120);
   x.level = clamp(Math.round(Number(x.level) || 1), 1, 100);
   x.xp = Math.max(0, Number(x.xp) || 0);
-  x.settings.aiLevel = clamp(Math.round(Number(x.settings.aiLevel)), 0, 4);
+  x.settings.aiLevel = Number.isFinite(Number(x.settings.aiLevel)) ? clamp(Math.round(Number(x.settings.aiLevel)), 0, 4) : 1;
   if (!TIME_OPTIONS.includes(x.settings.turnTime)) x.settings.turnTime = 15;
   if (!['light', 'dark', 'system'].includes(x.settings.theme)) x.settings.theme = 'dark';
+  x.rooms.room = clamp(Math.round(Number(x.rooms.room)) || 1, 1, 32);
+  x.rooms.epoch = Number.isFinite(Number(x.rooms.epoch)) && Number(x.rooms.epoch) > 0 ? Math.floor(Number(x.rooms.epoch)) : (Date.now() % 100000) + 1;
+  if (!Array.isArray(x.tourMeta.history)) x.tourMeta.history = [];
+  x.tourMeta.history = x.tourMeta.history.filter(e => e && typeof e.name === 'string').slice(0, 8);
+  if (typeof x.tourMeta.daily !== 'string') x.tourMeta.daily = '';
+  const t = x.tournament;
+  if (t && !(Array.isArray(t.players) && t.players.length >= 2 && ['group', 'ko', 'done'].includes(t.phase) && TOURNAMENTS[t.id] && Array.isArray(t.round) && t.log && t.stats && Tour.H2H_GAMES.includes(t.gameId))) x.tournament = null;
   return x;
 }
 function cardReplacer(k, v) {
@@ -426,8 +518,8 @@ const SFX = (function () {
 
 /* ============================ 6. XP / LEVEL / THỐNG KÊ ============================ */
 function xpNeed(level) { return 400 * level + 200; }
-function addXP(amount) {
-  amount = clamp(Math.round(amount), 0, 500); // chống cộng XP vô hạn
+function addXP(amount, cap) {
+  amount = clamp(Math.round(amount), 0, cap || 500); // chống cộng XP vô hạn
   Data.xp += amount;
   let leveled = 0;
   while (Data.level < 100 && Data.xp >= xpNeed(Data.level)) { Data.xp -= xpNeed(Data.level); Data.level++; leveled++; }
@@ -502,9 +594,9 @@ function newGameState() {
 }
 let gameState = newGameState();
 
-function pickOpponents(n, levelSetting) {
-  const myName = norm(Data.profile.name);
-  const pool = AI_ROSTER.filter(a => norm(a.name) !== myName);
+function pickOpponents(n, levelSetting, exclude) {
+  const myName = norm(Data.profile.name), ex = new Set((exclude || []).map(norm));
+  const pool = AI_ROSTER.filter(a => norm(a.name) !== myName && !ex.has(norm(a.name)));
   for (let i = pool.length - 1; i > 0; i--) { const j = rand(i + 1); [pool[i], pool[j]] = [pool[j], pool[i]]; }
   const chosen = [], usedC = new Set();
   pool.forEach(a => { if (chosen.length < n && !usedC.has(a.country)) { chosen.push(a); usedC.add(a.country); } });
@@ -519,7 +611,12 @@ function pickOpponents(n, levelSetting) {
   });
 }
 function makePlayers(count) {
-  const opp = pickOpponents(count - 1, Data.settings.aiLevel);
+  let opp;
+  if (NEXT_OPP && NEXT_OPP.length) { // đối thủ chỉ định (giải đấu / bàn trong phòng)
+    opp = NEXT_OPP.slice(0, count - 1);
+    if (opp.length < count - 1) opp = opp.concat(pickOpponents(count - 1 - opp.length, effAiLevel(), opp.map(o => o.name)));
+  } else opp = pickOpponents(count - 1, effAiLevel());
+  NEXT_OPP = null;
   const c = COUNTRY_BY_CODE[Data.profile.country] || COUNTRY_BY_CODE.VN;
   const me = { id: 0, name: Data.profile.name, avatar: Data.profile.avatar, country: c.name, code: c.code, flag: c.flag, isHuman: true, level: -1 };
   return [me].concat(opp.map((o, i) => ({ id: i + 1, name: o.name, avatar: o.avatar, country: o.country, code: o.code, flag: o.flag, isHuman: false, level: o.difficulty })));
@@ -1098,7 +1195,7 @@ const XD_ENGINE = {
   setup(opts) {
     gameState = newGameState(); gameState.currentGame = 'xiDach';
     gameState.players = makePlayers(clamp(opts.players, 1, 4)); gameState.deck = newShuffledDeck();
-    gameState.cfg = { playerMin: 16, dealerMin: 15, dealerLevel: Data.settings.aiLevel === 4 ? 1 : Data.settings.aiLevel };
+    gameState.cfg = { playerMin: 16, dealerMin: 15, dealerLevel: effAiLevel() === 4 ? 1 : effAiLevel() };
   },
   deal() {
     const gs = gameState;
@@ -1207,6 +1304,270 @@ const DEALER_PLAYER = { id: -1, name: 'Nhà cái', avatar: '🎩', country: '', 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { GAME_ENGINES, createDeck, shuffleDeck, assertValidDeck, calculateHandLayout, tlClassify, samClassify, xdTotal, xdClassify, bjValue };
 }
+
+/* ============================ 9b. GIẢI ĐẤU & PHÒNG (logic, không đụng DOM) ============================ */
+let LEVEL_OVERRIDE = null, NEXT_OPP = null;
+function effAiLevel() { return LEVEL_OVERRIDE != null ? LEVEL_OVERRIDE : Data.settings.aiLevel; }
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function hashStr(s) { let x = 2166136261; for (let i = 0; i < s.length; i++) { x ^= s.charCodeAt(i); x = Math.imul(x, 16777619); } return x >>> 0; }
+
+const SUBREGIONS = {
+  sea: { name: 'Đông Nam Á', codes: ['VN', 'TH', 'ID', 'MY', 'SG', 'PH', 'KH', 'LA', 'MM', 'BN', 'TL'] },
+  ea: { name: 'Đông Á & Trung Á', codes: ['JP', 'KR', 'CN', 'TW', 'HK', 'MN', 'KZ', 'UZ', 'KG', 'TJ', 'TM'] },
+  swa: { name: 'Nam Á & Trung Đông', codes: ['IN', 'PK', 'BD', 'LK', 'NP', 'BT', 'MV', 'SA', 'AE', 'QA', 'KW', 'OM', 'BH', 'IR', 'IQ', 'JO', 'LB', 'IL', 'TR'] },
+  weu: { name: 'Tây & Bắc Âu', codes: ['GB', 'IE', 'FR', 'DE', 'NL', 'BE', 'LU', 'CH', 'AT', 'DK', 'SE', 'NO', 'FI', 'IS'] },
+  seu: { name: 'Nam & Đông Âu', codes: ['ES', 'PT', 'IT', 'GR', 'HR', 'RS', 'PL', 'CZ', 'HU', 'RO', 'BG', 'UA', 'RU', 'SK', 'SI'] },
+  lat: { name: 'Mỹ Latinh', codes: ['MX', 'BR', 'AR', 'CL', 'CO', 'PE', 'UY', 'PY', 'EC', 'VE', 'BO', 'CR', 'PA', 'CU'] },
+  naoc: { name: 'Bắc Mỹ & Châu Đại Dương', codes: ['US', 'CA', 'AU', 'NZ', 'FJ', 'PG', 'JM', 'TT', 'CR', 'PA', 'CU', 'MX'] },
+  afr: { name: 'Châu Phi', codes: ['EG', 'MA', 'DZ', 'TN', 'NG', 'GH', 'SN', 'CI', 'CM', 'KE', 'ET', 'ZA', 'UG', 'TZ', 'AO'] }
+};
+const TOURNAMENTS = {
+  quick: { name: 'Giải nhanh', icon: '⚡', size: 8, format: 'ko', reward: 150, desc: '8 người · đấu loại trực tiếp (Tứ kết → Bán kết → Chung kết).' },
+  daily: { name: 'Giải hàng ngày', icon: '📅', size: 16, format: 'ko', reward: 250, daily: true, desc: '16 người · mỗi ngày tham gia 1 lần · bảng đấu giống nhau trong cùng một ngày.' },
+  regional: { name: 'Giải khu vực', icon: '🗺️', size: 8, format: 'ko', reward: 350, pick: 'sub', desc: '8 đại diện trong một khu vực bạn chọn · loại trực tiếp.' },
+  national: { name: 'Giải quốc gia', icon: '🏅', size: 16, format: 'groups', reward: 500, desc: '16 người cùng đại diện quốc gia của bạn · vòng bảng 3 trận rồi loại trực tiếp.' },
+  continental: { name: 'Giải châu lục', icon: '🌍', size: 16, format: 'groups', reward: 800, pick: 'region', desc: '16 đại diện của một châu lục · vòng bảng rồi loại trực tiếp.' },
+  world: { name: 'World Solo Championship', icon: '🌎', size: 32, format: 'groups', reward: 2000, desc: '32 quốc gia · 8 bảng · Vòng bảng → Vòng 16 đội → Tứ kết → Bán kết → Chung kết → WORLD CHAMPION.' }
+};
+const NEUTRAL_NAMES = ['Zara', 'Leo', 'Nina', 'Max', 'Mia', 'Ethan', 'Ivy', 'Theo', 'Luna', 'Oscar', 'Nora', 'Jade', 'Rex', 'Ada', 'Finn', 'Cleo', 'Milo', 'Vera', 'Axel', 'Lia', 'Ezra', 'Isla', 'Jude', 'Sora', 'Dara', 'Remy', 'Tess', 'Odin', 'Yara', 'Kira', 'Zane', 'Rhea', 'Nico', 'Elio', 'Maya', 'Alma', 'Soren', 'Tala', 'Idris', 'Anya', 'Joss', 'Lena', 'Ugo', 'Vik', 'Wren', 'Xena', 'Yuri', 'Zeke', 'Bram', 'Cora', 'Dax', 'Esme', 'Flor', 'Gus', 'Hana', 'Ilan', 'Juno', 'Kofi', 'Lior', 'Mina'];
+const MD_PAIRS = [[[0, 1], [2, 3]], [[0, 2], [1, 3]], [[0, 3], [1, 2]]];
+
+/* Mô phỏng một trận 1-1 bằng chính engine + AI thật (không đụng ván người chơi) */
+function simulateH2H(gameId, lvA, lvB) {
+  const saved = gameState, eng = GAME_ENGINES[gameId];
+  let winner;
+  try {
+    eng.setup({ players: 2 });
+    gameState.players[0].level = lvA; gameState.players[1].level = lvB;
+    eng.deal();
+    if (gameId === 'samLoc' && !gameState.over) {
+      for (let i = 0; i < 2; i++) if (samAIWantsBao(gameState.hands[i], gameState.players[i].level)) { eng.declareBao(i); break; }
+    }
+    if (!gameState.over) gameState.phase = 'play';
+    let guard = 0;
+    while (!gameState.over && guard++ < 3000) {
+      const p = gameState.turn, lv = gameState.players[p].level;
+      let mv = null; try { mv = eng.aiChoose(p, lv); } catch (e) { mv = null; }
+      if (!mv || !eng.validateMove(p, mv).ok) { mv = eng.timeoutMove(p); if (!eng.validateMove(p, mv).ok) mv = eng.getValidMoves(p)[0]; }
+      eng.play(p, mv); if (gameState.over) break; eng.nextTurn();
+    }
+    winner = gameState.over ? gameState.over.winner : (Math.random() < 0.5 ? 0 : 1);
+  } catch (e) { winner = Math.random() < 0.5 ? 0 : 1; }
+  gameState = saved;
+  return winner;
+}
+
+const Tour = {
+  H2H_GAMES: ['tienLen', 'tienLenMienNam', 'tienLenMienBac', 'samLoc'],
+  dateKey() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); },
+  stageLabel(T) {
+    if (T.phase === 'group') return 'Vòng bảng — Lượt ' + (T.md + 1) + '/3';
+    if (T.phase === 'done') return T.champion === 0 ? 'Vô địch' : 'Đã kết thúc';
+    const m = T.round.length;
+    return m >= 16 ? 'Vòng 32 đội' : m === 8 ? 'Vòng 16 đội' : m === 4 ? 'Tứ kết' : m === 2 ? 'Bán kết' : 'Chung kết';
+  },
+  build(defId, gameId, opt) {
+    opt = opt || {};
+    const def = TOURNAMENTS[defId], n = def.size;
+    const rng = def.daily ? mulberry32(hashStr('daily' + this.dateKey() + gameId)) : Math.random;
+    const shuffle = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); const t = b[i]; b[i] = b[j]; b[j] = t; } return b; };
+    const me = COUNTRY_BY_CODE[Data.profile.country] || COUNTRY_BY_CODE.VN;
+    let codes;
+    if (defId === 'national') codes = new Array(n - 1).fill(me.code);
+    else {
+      let pool;
+      if (defId === 'regional') pool = (SUBREGIONS[opt.sub] || SUBREGIONS.sea).codes.slice();
+      else if (defId === 'continental') pool = COUNTRIES.filter(c => c.region === (opt.region || 'AS')).map(c => c.code);
+      else pool = COUNTRIES.map(c => c.code);
+      pool = shuffle(pool.filter(c => c !== me.code && COUNTRY_BY_CODE[c]));
+      codes = pool.slice(0, n - 1);
+      if (codes.length < n - 1) {
+        const extra = shuffle(COUNTRIES.map(c => c.code).filter(c => c !== me.code && !codes.includes(c)));
+        codes = codes.concat(extra.slice(0, n - 1 - codes.length));
+      }
+    }
+    const myN = norm(Data.profile.name);
+    const names = shuffle(AI_ROSTER.filter(a => norm(a.name) !== myN));
+    const neutral = shuffle(NEUTRAL_NAMES.filter(n => norm(n) !== myN && !names.some(a => a.name === n)));
+    const take = code => { const i = names.findIndex(a => a.country === code); return i >= 0 ? names.splice(i, 1)[0] : { name: neutral.length ? neutral.pop() : names.pop().name, country: code }; };
+    const avs = shuffle(AVATARS);
+    const base = Data.settings.aiLevel === 4 ? 1 : Data.settings.aiLevel;
+    const lvPick = [-1, 0, 0, 1];
+    const players = [{ id: 0, name: Data.profile.name, avatar: Data.profile.avatar, country: me.name, code: me.code, flag: me.flag, level: -1, human: true }];
+    codes.forEach((code, i) => {
+      const c = COUNTRY_BY_CODE[code], a = take(code);
+      players.push({ id: i + 1, name: a.name, avatar: avs[i % avs.length], country: c.name, code: c.code, flag: c.flag, level: clamp(base + lvPick[Math.floor(rng() * 4)], 0, 3), human: false });
+    });
+    const T = {
+      v: 1, id: defId, name: def.name, icon: def.icon, gameId, size: n, players, phase: def.format === 'groups' ? 'group' : 'ko',
+      groups: null, md: 0, stats: {}, tie: {}, round: [], log: [], status: 'active', outLabel: '', champion: null, pending: null,
+      note: defId === 'regional' ? SUBREGIONS[opt.sub || 'sea'].name : defId === 'continental' ? REGIONS[opt.region || 'AS'] : '', startedAt: Date.now()
+    };
+    players.forEach(p => { T.tie[p.id] = Math.floor(rng() * 1e6); T.stats[p.id] = { w: 0, d: 0, l: 0, pts: 0 }; });
+    const ids = [0].concat(shuffle(players.slice(1).map(p => p.id)));
+    if (T.phase === 'group') { T.groups = []; for (let i = 0; i < ids.length; i += 4) T.groups.push(ids.slice(i, i + 4)); }
+    else { for (let i = 0; i < ids.length; i += 2) T.round.push({ a: ids[i], b: ids[i + 1], w: null }); }
+    return T;
+  },
+  start(defId, gameId, opt) {
+    const def = TOURNAMENTS[defId];
+    if (def.daily) Data.tourMeta.daily = this.dateKey();
+    Data.tourMeta.game = gameId;
+    const T = this.build(defId, gameId, opt);
+    Data.tournament = T; Data.statistics.tournaments++; saveData();
+    return T;
+  },
+  humanPair(T) {
+    if (!T || T.status !== 'active') return null;
+    if (T.phase === 'group') {
+      for (const pr of MD_PAIRS[T.md]) { const a = T.groups[0][pr[0]], b = T.groups[0][pr[1]]; if (a === 0) return [0, b]; if (b === 0) return [0, a]; }
+    } else if (T.phase === 'ko') {
+      for (const m of T.round) if (m.w == null && (m.a === 0 || m.b === 0)) return [0, m.a === 0 ? m.b : m.a];
+    }
+    return null;
+  },
+  simWinner(T, a, b) { return simulateH2H(T.gameId, T.players[a].level, T.players[b].level) === 0 ? a : b; },
+  logPush(T, a, b, w) { T.log.push({ s: this.stageLabel(T), a, b, w }); if (T.log.length > 90) T.log.shift(); },
+  applyGroup(T, a, b, w) { const l = w === a ? b : a; T.stats[w].w++; T.stats[w].pts += 3; T.stats[l].l++; this.logPush(T, a, b, w); },
+  rankGroup(T, g) {
+    return T.groups[g].slice().sort((x, y) => { const A = T.stats[x], B = T.stats[y]; return B.pts - A.pts || B.w - A.w || T.tie[y] - T.tie[x]; });
+  },
+  buildKo(T) {
+    const G = T.groups.length, win = [], run = [];
+    for (let g = 0; g < G; g++) { const r = this.rankGroup(T, g); win.push(r[0]); run.push(r[1]); }
+    const round = [];
+    for (let g = 0; g < G; g += 2) round.push({ a: win[g], b: run[g + 1], w: null });
+    for (let g = 0; g < G; g += 2) round.push({ a: win[g + 1], b: run[g], w: null });
+    T.round = round; T.phase = 'ko';
+  },
+  nextRound(T) {
+    const w = T.round.map(m => m.w), r = [];
+    for (let i = 0; i < w.length; i += 2) r.push({ a: w[i], b: w[i + 1], w: null });
+    return r;
+  },
+  simulateToEnd(T) {
+    let guard = 0;
+    while (guard++ < 10) {
+      T.round.forEach(m => { if (m.w == null) { m.w = this.simWinner(T, m.a, m.b); this.logPush(T, m.a, m.b, m.w); } });
+      if (T.round.length === 1) { T.champion = T.round[0].w; T.phase = 'done'; return; }
+      T.round = this.nextRound(T);
+    }
+  },
+  /* Gọi khi trận của người chơi kết thúc. Trả về dòng thông báo. */
+  report(win) {
+    const T = Data.tournament;
+    if (!T || T.status !== 'active') return '';
+    const pr = this.humanPair(T);
+    T.pending = null;
+    if (!pr) return '';
+    const opp = pr[1], w = win ? 0 : opp;
+    let note = '';
+    if (T.phase === 'group') {
+      this.applyGroup(T, 0, opp, w);
+      T.groups.forEach((grp, gi) => {
+        MD_PAIRS[T.md].forEach(p => {
+          const a = grp[p[0]], b = grp[p[1]]; if (a === 0 || b === 0) return;
+          this.applyGroup(T, a, b, this.simWinner(T, a, b));
+        });
+      });
+      T.md++;
+      if (T.md < 3) note = (win ? 'Thắng' : 'Thua') + ' — chuẩn bị lượt ' + (T.md + 1) + '/3';
+      else {
+        this.buildKo(T);
+        if (!T.round.some(m => m.a === 0 || m.b === 0)) {
+          T.status = 'out'; T.outLabel = 'Vòng bảng'; this.simulateToEnd(T); note = 'Bị loại ở vòng bảng';
+        } else note = 'Vào vòng loại trực tiếp: ' + this.stageLabel(T);
+      }
+    } else {
+      const mine = T.round.find(m => m.w == null && (m.a === 0 || m.b === 0));
+      mine.w = w; this.logPush(T, mine.a, mine.b, w);
+      T.round.forEach(m => { if (m.w == null) { m.w = this.simWinner(T, m.a, m.b); this.logPush(T, m.a, m.b, m.w); } });
+      if (!win) { const lbl = this.stageLabel(T); T.status = 'out'; T.outLabel = lbl; this.simulateToEnd(T); note = 'Bị loại ở ' + lbl; }
+      else if (T.round.length === 1) { T.champion = 0; T.phase = 'done'; T.status = 'champion'; note = '🏆 VÔ ĐỊCH!'; }
+      else { T.round = this.nextRound(T); note = 'Thắng — vào ' + this.stageLabel(T); }
+    }
+    if (T.status !== 'active') this.finishTour(T);
+    saveData();
+    return note;
+  },
+  finishTour(T) {
+    if (T.finished) return;
+    T.finished = true;
+    const def = TOURNAMENTS[T.id], win = T.champion === 0;
+    if (win) { T.status = 'champion'; Data.statistics.championships++; }
+    const reward = win ? def.reward : Math.round(def.reward * 0.12);
+    T.reward = reward; addXP(reward, 3000);
+    Data.tourMeta.history.unshift({ name: T.name, game: T.gameId, result: win ? 'Vô địch 🏆' : 'Bị loại: ' + T.outLabel, date: this.dateKey() });
+    if (Data.tourMeta.history.length > 8) Data.tourMeta.history.length = 8;
+    const sp = []; if (win) { sp.push('champion'); if (T.id === 'world') sp.push('worldChampion'); }
+    T.ach = checkAchievements(sp).map(a => a.name);
+  },
+  abandon() {
+    const T = Data.tournament; if (!T) return;
+    if (T.status === 'active') { Data.tourMeta.history.unshift({ name: T.name, game: T.gameId, result: 'Bỏ giải', date: this.dateKey() }); if (Data.tourMeta.history.length > 8) Data.tourMeta.history.length = 8; }
+    Data.tournament = null; saveData();
+  }
+};
+
+/* ---------- PHÒNG: 32 phòng × 64 bàn = 2048 bàn (sinh theo hạt giống, không dựng 2048 DOM) ---------- */
+const Rooms = {
+  TOTAL: 32, TABLES: 64, PAGE: 12,
+  TIERS: ['Tân thủ', 'Phổ thông', 'Cao thủ', 'Đại cao thủ'],
+  STATUS: { waiting: 'Đang chờ', playing: 'Đang chơi', full: 'Đầy', finished: 'Kết thúc' },
+  tier(room) { return Math.floor((room - 1) / 8); },
+  roomName(room) { return 'Phòng ' + room + ' — ' + this.TIERS[this.tier(room)]; },
+  info(room, table) {
+    const rng = mulberry32(hashStr('r' + room + 't' + table + 'e' + Data.rooms.epoch));
+    const game = READY_GAMES[Math.floor(rng() * READY_GAMES.length)], m = GAME_META[game];
+    const max = m.minP + Math.floor(rng() * (m.maxP - m.minP + 1));
+    const r = rng(); let status, occ;
+    if (r < 0.5) { status = 'waiting'; occ = Math.floor(rng() * max); }
+    else if (r < 0.78) { status = 'playing'; occ = max; }
+    else if (r < 0.9) { status = 'full'; occ = max; }
+    else { status = 'finished'; occ = max; }
+    return { room, table, game, max, occ, status, level: this.tier(room) };
+  },
+  occupants(inf) {
+    const rng = mulberry32(hashStr('o' + inf.room + 't' + inf.table + 'e' + Data.rooms.epoch));
+    const myN = norm(Data.profile.name);
+    const pool = AI_ROSTER.filter(a => norm(a.name) !== myN), used = new Set(), out = [];
+    while (out.length < inf.occ && used.size < pool.length) {
+      const i = Math.floor(rng() * pool.length); if (used.has(i)) continue; used.add(i);
+      const a = pool[i], c = COUNTRY_BY_CODE[a.country] || COUNTRY_BY_CODE.VN;
+      out.push({ name: a.name, avatar: AVATARS[Math.floor(rng() * AVATARS.length)], country: c.name, code: c.code, flag: c.flag, difficulty: inf.level });
+    }
+    return out;
+  },
+  /* Danh sách đối thủ khi vào bàn: người đang ngồi + AI bổ sung cho đủ chỗ */
+  opponentsFor(inf) {
+    const occ = this.occupants(inf);
+    const need = inf.max - 1 - occ.length;
+    return need > 0 ? occ.concat(pickOpponents(need, inf.level, occ.map(o => o.name))) : occ.slice(0, inf.max - 1);
+  },
+  filtered(room, f) {
+    const out = [], tq = norm(f.tq || '');
+    for (let t = 1; t <= this.TABLES; t++) {
+      const inf = this.info(room, t);
+      if (f.game && inf.game !== f.game) continue;
+      if (f.status && inf.status !== f.status) continue;
+      if (tq && !(String(t) === tq || norm(GAME_META[inf.game].name).includes(tq) || String(t).includes(tq))) continue;
+      out.push(inf);
+    }
+    return out;
+  },
+  findRooms(q) {
+    q = norm(q); const out = [];
+    for (let r = 1; r <= this.TOTAL; r++) if (!q || String(r) === q || norm(this.roomName(r)).includes(q)) out.push(r);
+    return out;
+  }
+};
 
 /* ============================ 10. GIAO DIỆN ============================ */
 function handleError(err) {
@@ -1329,9 +1690,11 @@ function miniCard(cx, cy, rot, txt, red, big) {
   return '<g transform="translate(' + cx + ' ' + cy + ') rotate(' + rot + ')"><rect x="' + (-w / 2) + '" y="' + (-hh / 2) + '" width="' + w + '" height="' + hh + '" rx="3" fill="#fffdf8" stroke="#8a8f99"/>' +
     '<text x="0" y="5" font-size="' + (big ? 15 : 13) + '" text-anchor="middle" font-weight="700" fill="' + (red ? '#c4192d' : '#15171c') + '" font-family="Georgia,serif">' + txt + '</text></g>';
 }
+let _iconSeq = 0;
 function gameIcon(kind) {
-  const bg = '<rect width="64" height="64" rx="14" fill="url(#g)"/>';
-  const defs = '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#14684b"/><stop offset="1" stop-color="#0a3a2a"/></linearGradient></defs>';
+  const gid = 'gi' + (++_iconSeq);
+  const bg = '<rect width="64" height="64" rx="14" fill="url(#' + gid + ')"/>';
+  const defs = '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#14684b"/><stop offset="1" stop-color="#0a3a2a"/></linearGradient></defs>';
   let b = '';
   switch (kind) {
     case 'fan': b = miniCard(18, 36, -24, 'A♠') + miniCard(32, 33, -8, 'K♥', 1) + miniCard(46, 36, 12, '2♦', 1); break;
@@ -1353,9 +1716,10 @@ function gameIcon(kind) {
   }
   return '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' + defs + bg + b + '</svg>';
 }
-function appLogoSvg() {
-  return '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#14684b"/><stop offset="1" stop-color="#062a1e"/></linearGradient></defs>' +
-    '<rect width="120" height="120" rx="26" fill="url(#lg)"/><g transform="rotate(-12 60 62)"><rect x="32" y="22" width="50" height="72" rx="7" fill="#fffdf8" stroke="#c9a24a" stroke-width="3"/>' +
+function appLogoSvg(uid) {
+  uid = uid || 'lg';
+  return '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="' + uid + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#14684b"/><stop offset="1" stop-color="#062a1e"/></linearGradient></defs>' +
+    '<rect width="120" height="120" rx="26" fill="url(#' + uid + ')"/><g transform="rotate(-12 60 62)"><rect x="32" y="22" width="50" height="72" rx="7" fill="#fffdf8" stroke="#c9a24a" stroke-width="3"/>' +
     '<text x="39" y="42" font-size="17" font-weight="700" font-family="Georgia,serif" fill="#15171c">A</text><text x="57" y="78" font-size="38" text-anchor="middle" fill="#15171c">♠</text></g>' +
     '<circle cx="86" cy="86" r="17" fill="#c9a24a"/><text x="86" y="93" font-size="20" text-anchor="middle" font-weight="700" font-family="Georgia,serif" fill="#062a1e">CM</text></svg>';
 }
@@ -1375,8 +1739,8 @@ function createCardElement(card, opts) {
 }
 
 /* ---------- Điều hướng ---------- */
-const SCREENS = ['home', 'games', 'play', 'profile', 'stats', 'achievements', 'settings', 'guide'];
-const SCREEN_TITLES = { home: 'CARD MASTER', games: 'Chơi game', play: '', profile: 'Hồ sơ', stats: 'Thống kê', achievements: 'Thành tích', settings: 'Cài đặt', guide: 'Hướng dẫn' };
+const SCREENS = ['home', 'games', 'play', 'tournament', 'rooms', 'profile', 'stats', 'achievements', 'settings', 'guide'];
+const SCREEN_TITLES = { home: 'CARD MASTER', games: 'Chơi game', play: '', tournament: 'Giải đấu', rooms: 'Phòng chơi', profile: 'Hồ sơ', stats: 'Thống kê', achievements: 'Thành tích', settings: 'Cài đặt', guide: 'Hướng dẫn' };
 const UI = {
   screen: 'home', stack: [], selected: new Set(), lock: false, seats: {}, lastTableKey: '', handKey: '',
   updateTimer(secs, frac) {
@@ -1455,7 +1819,10 @@ function gameCard(id, ready) {
     const r = h('button', 'btn small', '📖 Luật'); r.type = 'button'; r.dataset.action = 'rules'; r.dataset.game = id;
     const p = h('button', 'btn small primary', 'CHƠI'); p.type = 'button'; p.dataset.action = 'setup-game'; p.dataset.game = id;
     act.appendChild(r); act.appendChild(p); info.appendChild(act);
-  } else info.appendChild(h('span', 'badge-soon', m.phase + ' — chưa có trong bản này'));
+  } else {
+    info.appendChild(h('span', 'badge-soon', m.phase + ' — chưa chơi được, xem luật trước'));
+    const act = h('div', 'game-actions'); const r = h('button', 'btn small', '📖 LUẬT CHƠI'); r.type = 'button'; r.dataset.action = 'rules'; r.dataset.game = id; act.appendChild(r); info.appendChild(act);
+  }
   card.appendChild(ic); card.appendChild(info);
   return card;
 }
@@ -1463,6 +1830,7 @@ function showRules(id) {
   const r = RULES[id]; if (!r) { showToast('Luật game này sẽ có khi game ra mắt', 'info'); return; }
   const body = h('div', 'rules');
   r[1].forEach(t => body.appendChild(h('p', '', t)));
+  if (GAME_META[id] && !GAME_META[id].ready) body.appendChild(h('p', 'muted', '🔒 Game này chưa chơi được trong bản hiện tại (' + GAME_META[id].phase + ').'));
   Modal.open({ title: '📖 ' + r[0], body, buttons: [{ text: 'Đã hiểu', cls: 'primary' }] });
 }
 function segmented(options, value, onPick, labelFn) {
@@ -1657,12 +2025,244 @@ RENDERERS.guide = function () {
     lines.forEach(t => d.appendChild(h('p', '', t))); root.appendChild(d);
   };
   sec('🎴 Cách chơi chung', ['Chạm lá bài để chọn (bài nhích lên), chạm lần nữa để bỏ chọn. Bấm ĐÁNH để đánh các lá đã chọn. GỢI Ý cho nước đi hợp lệ.', 'Mỗi lượt có đồng hồ đếm ngược. Hết giờ, game tự chọn nước đi hợp lệ cho bạn.', 'Nước đi sai sẽ báo "Nước đi không hợp lệ" và không mất bài.']);
-  READY_GAMES.forEach(id => sec('📖 ' + RULES[id][0], RULES[id][1]));
+  Object.keys(GAME_META).forEach(id => { if (RULES[id]) sec('📖 ' + RULES[id][0] + (GAME_META[id].ready ? '' : ' (chưa chơi được)'), RULES[id][1]); });
   sec('🤖 AI', ['Dễ: nước đi đơn giản, đôi khi bỏ qua nước tốt. Bình thường: hợp lý, biết chặn. Khó: giữ quân mạnh, tính hết bài nhanh. Siêu khó: đánh giá nhiều nước và theo dõi lá đã ra.', 'AI không xem bài của bạn — chỉ dùng thông tin công khai.']);
   sec('⭐ XP, hồ sơ, thành tích', ['Thắng ván được XP, độ khó càng cao XP càng nhiều. Không có tiền thật, nạp hay cược.', 'Hồ sơ, thống kê, thành tích và ván đang chơi tự lưu trong trình duyệt (LocalStorage).']);
   sec('📲 Thêm vào Màn hình chính (iPhone)', ['Đặt 3 file lên một web tĩnh (GitHub Pages, Netlify…), mở bằng Safari → nút Chia sẻ → "Thêm vào MH chính". Icon app được nhúng sẵn.', 'Sau khi đã tải, game không cần Internet để chơi.']);
-  sec('🏆 Giải đấu & Phòng', ['Giải đấu, World Solo Championship và hệ thống phòng sẽ có ở các đợt tiếp theo.']);
+  RULES_EXTRA.forEach(x => sec(x[0], x[1]));
 };
+
+/* ============================ 10b. MÀN HÌNH GIẢI ĐẤU ============================ */
+function tourPlayerName(T, id) { const p = T.players[id]; return p.flag + ' ' + p.name; }
+function levelTag(p) { return p.human ? '' : ' ' + LEVEL_ICONS[clamp(p.level, 0, 3)]; }
+function buildTourBracket(T) {
+  const root = h('div', 'bracket');
+  root.appendChild(h('p', 'muted', 'Game thi đấu: ' + GAME_META[T.gameId].name + (T.note ? ' · ' + T.note : '')));
+  if (T.groups) {
+    T.groups.forEach((grp, gi) => {
+      const d = h('details', 'acc'); if (gi === 0) d.open = true;
+      d.appendChild(h('summary', '', 'Bảng ' + String.fromCharCode(65 + gi) + (gi === 0 ? ' (bảng của bạn)' : '')));
+      const head = h('div', 'trow standing head'); ['Đội', 'T', 'H', 'B', 'Đ'].forEach(x => head.appendChild(h('span', '', x))); d.appendChild(head);
+      Tour.rankGroup(T, gi).forEach((id, pos) => {
+        const s = T.stats[id], row = h('div', 'trow standing' + (id === 0 ? ' me' : '') + (pos < 2 ? ' qual' : ''));
+        row.appendChild(h('span', 'tname', (pos + 1) + '. ' + tourPlayerName(T, id) + levelTag(T.players[id])));
+        [s.w, s.d, s.l, s.pts].forEach(x => row.appendChild(h('span', '', String(x)))); d.appendChild(row);
+      });
+      root.appendChild(d);
+    });
+    root.appendChild(h('p', 'muted small', 'Top 2 mỗi bảng vào vòng loại trực tiếp · Thắng 3 điểm, hòa 1 điểm.'));
+  }
+  if (T.phase === 'ko' || T.phase === 'done') {
+    root.appendChild(h('h3', 'sub', T.phase === 'done' ? 'Vòng cuối' : 'Vòng hiện tại — ' + Tour.stageLabel(T)));
+    T.round.forEach(m => {
+      const row = h('div', 'match' + ((m.a === 0 || m.b === 0) ? ' me' : ''));
+      [m.a, m.b].forEach((id, i) => {
+        const s = h('span', 'mside' + (m.w === id ? ' win' : (m.w != null ? ' lose' : '')), tourPlayerName(T, id));
+        row.appendChild(s); if (i === 0) row.appendChild(h('em', '', 'vs'));
+      });
+      root.appendChild(row);
+    });
+  }
+  if (T.champion != null) root.appendChild(h('div', 'champ', '🏆 Vô địch: ' + tourPlayerName(T, T.champion)));
+  if (T.log.length) {
+    const d = h('details', 'acc'); d.appendChild(h('summary', '', 'Kết quả đã đấu (' + T.log.length + ')'));
+    T.log.slice(-20).reverse().forEach(l => d.appendChild(h('p', 'small', l.s + ': ' + T.players[l.a].name + ' – ' + T.players[l.b].name + ' → ' + T.players[l.w].name + ' thắng')));
+    root.appendChild(d);
+  }
+  return root;
+}
+function tourStatusCard(T) {
+  const card = h('div', 'tour-card active-tour');
+  card.appendChild(h('h3', '', T.icon + ' ' + T.name));
+  if (T.status === 'active') {
+    card.appendChild(h('p', 'muted', 'Đang diễn ra · ' + Tour.stageLabel(T) + ' · ' + GAME_META[T.gameId].name));
+    const pr = Tour.humanPair(T);
+    if (pr) {
+      const o = T.players[pr[1]];
+      const row = h('div', 'next-opp'); row.appendChild(h('span', 'seat-av', o.avatar));
+      const t = h('div', ''); t.appendChild(h('b', '', 'Đối thủ: ' + o.name)); t.appendChild(h('small', 'muted', o.flag + ' ' + o.country + ' · ' + LEVEL_ICONS[clamp(o.level, 0, 3)] + ' ' + LEVEL_NAMES[clamp(o.level, 0, 3)]));
+      row.appendChild(t); card.appendChild(row);
+    }
+    if (T.phase === 'group') {
+      const s = T.stats[0]; card.appendChild(h('p', '', 'Thành tích bảng: ' + s.w + 'T ' + s.d + 'H ' + s.l + 'B · ' + s.pts + ' điểm'));
+    }
+    const act = h('div', 'game-actions');
+    const play = h('button', 'btn primary', '▶ CHƠI TRẬN TIẾP THEO'); play.type = 'button'; play.addEventListener('click', () => Tour2.playNext());
+    act.appendChild(play); card.appendChild(act);
+    const act2 = h('div', 'game-actions');
+    const br = h('button', 'btn small', '📊 Bảng đấu'); br.type = 'button'; br.addEventListener('click', () => Modal.open({ title: T.name, body: buildTourBracket(T), buttons: [{ text: 'Đóng', cls: 'primary' }] }));
+    const ab = h('button', 'btn small danger', 'Bỏ giải'); ab.type = 'button';
+    ab.addEventListener('click', () => Modal.open({ title: 'Bỏ giải đấu?', body: 'Bạn sẽ rời giải và mất tiến trình giải này.', buttons: [{ text: 'Ở lại' }, { text: 'BỎ GIẢI', cls: 'danger', fn: () => { Tour.abandon(); RENDERERS.tournament(); } }] }));
+    act2.appendChild(br); act2.appendChild(ab); card.appendChild(act2);
+  } else {
+    const win = T.champion === 0;
+    card.appendChild(h('div', 'res-headline', win ? '🏆 BẠN LÀ NHÀ VÔ ĐỊCH!' : 'Đã kết thúc — ' + T.outLabel));
+    card.appendChild(h('p', 'res-xp', '+' + (T.reward || 0) + ' XP'));
+    (T.ach || []).forEach(n => card.appendChild(h('div', 'res-ach', '🏅 Thành tích mới: ' + n)));
+    if (T.champion != null && !win) card.appendChild(h('p', 'muted', 'Nhà vô địch: ' + tourPlayerName(T, T.champion)));
+    const act = h('div', 'game-actions');
+    const br = h('button', 'btn small', '📊 Xem bảng đấu'); br.type = 'button'; br.addEventListener('click', () => Modal.open({ title: T.name, body: buildTourBracket(T), buttons: [{ text: 'Đóng', cls: 'primary' }] }));
+    const cl = h('button', 'btn small primary', 'Đóng & chọn giải mới'); cl.type = 'button'; cl.addEventListener('click', () => { Data.tournament = null; saveData(); RENDERERS.tournament(); });
+    act.appendChild(br); act.appendChild(cl); card.appendChild(act);
+    if (win && !T.celebrated) { T.celebrated = true; saveData(); setTimeout(() => { SFX.play('win'); confetti(); }, 300); }
+  }
+  return card;
+}
+const Tour2 = {
+  playNext() {
+    const T = Data.tournament; if (!T || T.status !== 'active') return;
+    if (Data.currentMatch) {
+      if (Data.currentMatch.tour) Match.resume(); else showToast('Hãy hoàn tất hoặc bỏ ván đang chơi trước', 'warning');
+      return;
+    }
+    const pr = Tour.humanPair(T); if (!pr) return;
+    const o = T.players[pr[1]];
+    T.pending = { opp: pr[1] }; saveData();
+    Match.start(T.gameId, { players: 2, tour: true, aiLevel: o.level, opponents: [{ name: o.name, avatar: o.avatar, country: o.country, code: o.code, flag: o.flag, difficulty: o.level }] });
+  },
+  setup(id) {
+    const def = TOURNAMENTS[id];
+    if (Data.tournament && Data.tournament.status === 'active') { showToast('Bạn đang tham gia một giải — hãy hoàn tất hoặc bỏ giải trước', 'warning'); return; }
+    if (def.daily && Data.tourMeta.daily === Tour.dateKey()) { showToast('Hôm nay bạn đã tham gia giải hàng ngày — quay lại vào ngày mai', 'info'); return; }
+    let game = Tour.H2H_GAMES.includes(Data.tourMeta.game) ? Data.tourMeta.game : 'tienLen', sub = 'sea', region = 'AS';
+    const body = h('div', 'setup');
+    body.appendChild(h('p', '', def.desc));
+    body.appendChild(h('p', 'muted', 'Phần thưởng vô địch: +' + def.reward + ' XP · Mỗi trận là 1 ván đấu 1-1 với AI.'));
+    body.appendChild(h('label', 'lbl', 'Game thi đấu'));
+    body.appendChild(segmented(Tour.H2H_GAMES, game, v => { game = v; }, v => GAME_META[v].name.replace('Tiến Lên ', 'TL ')));
+    if (def.pick === 'sub') {
+      body.appendChild(h('label', 'lbl', 'Khu vực'));
+      const s = h('select', 'input'); s.setAttribute('aria-label', 'Khu vực');
+      Object.keys(SUBREGIONS).forEach(k => { const o = h('option', '', SUBREGIONS[k].name); o.value = k; s.appendChild(o); });
+      s.addEventListener('change', () => { sub = s.value; }); body.appendChild(s);
+    }
+    if (def.pick === 'region') {
+      body.appendChild(h('label', 'lbl', 'Châu lục'));
+      const s = h('select', 'input'); s.setAttribute('aria-label', 'Châu lục');
+      Object.keys(REGIONS).forEach(k => { const o = h('option', '', REGIONS[k]); o.value = k; s.appendChild(o); });
+      s.addEventListener('change', () => { region = s.value; }); body.appendChild(s);
+    }
+    Modal.open({
+      title: def.icon + ' ' + def.name, body, buttons: [
+        { text: 'Huỷ' },
+        { text: 'BẮT ĐẦU', cls: 'primary', fn: () => {
+          if (Data.currentMatch) { showToast('Hãy hoàn tất hoặc bỏ ván đang chơi trước', 'warning'); return; }
+          Tour.start(id, game, { sub, region }); RENDERERS.tournament(); showToast('Đã vào giải — chúc may mắn!', 'success'); SFX.play('notification');
+        } }
+      ]
+    });
+  }
+};
+RENDERERS.tournament = function () {
+  const root = $('#tour-body'); root.textContent = '';
+  const T = Data.tournament;
+  if (T) root.appendChild(tourStatusCard(T));
+  root.appendChild(h('h3', 'sub', 'Các giải đấu'));
+  Object.keys(TOURNAMENTS).forEach(id => {
+    const def = TOURNAMENTS[id];
+    const card = h('article', 'tour-card');
+    card.appendChild(h('h3', '', def.icon + ' ' + def.name)); card.appendChild(h('p', 'muted', def.desc));
+    const done = def.daily && Data.tourMeta.daily === Tour.dateKey();
+    const b = h('button', 'btn small primary', done ? 'Đã tham gia hôm nay' : 'THAM GIA'); b.type = 'button'; if (done) b.disabled = true;
+    b.addEventListener('click', () => Tour2.setup(id));
+    card.appendChild(b); root.appendChild(card);
+  });
+  if (Data.tourMeta.history.length) {
+    root.appendChild(h('h3', 'sub', 'Lịch sử giải đấu'));
+    Data.tourMeta.history.forEach(x => root.appendChild(h('div', 'trow hist', x.date + ' · ' + x.name + ' · ' + (GAME_META[x.game] ? GAME_META[x.game].name : '') + ' — ' + x.result)));
+  }
+};
+
+/* ============================ 10c. MÀN HÌNH PHÒNG ============================ */
+const RoomsUI = { built: false, page: 1, game: '', status: '', tq: '', rq: '' };
+function buildRoomsControls() {
+  const root = $('#rooms-body'); root.textContent = '';
+  const bar = h('div', 'room-bar');
+  const prev = h('button', 'btn small', '‹'); prev.type = 'button'; prev.setAttribute('aria-label', 'Phòng trước');
+  const sel = h('select', 'input'); sel.id = 'room-select'; sel.setAttribute('aria-label', 'Chọn phòng');
+  for (let r = 1; r <= Rooms.TOTAL; r++) { const o = h('option', '', Rooms.roomName(r)); o.value = r; sel.appendChild(o); }
+  const next = h('button', 'btn small', '›'); next.type = 'button'; next.setAttribute('aria-label', 'Phòng sau');
+  const refresh = h('button', 'btn small', '🔄'); refresh.type = 'button'; refresh.setAttribute('aria-label', 'Làm mới danh sách bàn');
+  bar.appendChild(prev); bar.appendChild(sel); bar.appendChild(next); bar.appendChild(refresh); root.appendChild(bar);
+  const rq = h('input', 'input'); rq.type = 'search'; rq.placeholder = '🔍 Tìm phòng (số hoặc tên)'; rq.setAttribute('aria-label', 'Tìm phòng');
+  const chips = h('div', 'chips'); root.appendChild(rq); root.appendChild(chips);
+  const f = h('div', 'room-filters');
+  const gs = h('select', 'input'); gs.setAttribute('aria-label', 'Lọc game');
+  const g0 = h('option', '', 'Mọi game'); g0.value = ''; gs.appendChild(g0);
+  READY_GAMES.forEach(id => { const o = h('option', '', GAME_META[id].name); o.value = id; gs.appendChild(o); });
+  const ss = h('select', 'input'); ss.setAttribute('aria-label', 'Lọc trạng thái');
+  const s0 = h('option', '', 'Mọi trạng thái'); s0.value = ''; ss.appendChild(s0);
+  Object.keys(Rooms.STATUS).forEach(k => { const o = h('option', '', Rooms.STATUS[k]); o.value = k; ss.appendChild(o); });
+  const tq = h('input', 'input'); tq.type = 'search'; tq.placeholder = '🔍 Tìm bàn (số bàn / game)'; tq.setAttribute('aria-label', 'Tìm bàn');
+  f.appendChild(gs); f.appendChild(ss); f.appendChild(tq); root.appendChild(f);
+  const quick = h('button', 'btn primary big', '⚡ VÀO NHANH'); quick.type = 'button'; root.appendChild(quick);
+  root.appendChild(h('p', 'muted small', '')).id = 'room-sum';
+  const list = h('div', 'rooms-list'); list.id = 'rooms-list'; root.appendChild(list);
+  const pager = h('nav', 'pager'); pager.id = 'rooms-pager'; pager.setAttribute('aria-label', 'Phân trang bàn'); root.appendChild(pager);
+
+  const setRoom = r => { Data.rooms.room = clamp(r, 1, Rooms.TOTAL); RoomsUI.page = 1; saveData(); sel.value = Data.rooms.room; renderRoomsList(); };
+  sel.addEventListener('change', () => setRoom(parseInt(sel.value, 10)));
+  prev.addEventListener('click', () => setRoom(Data.rooms.room - 1)); next.addEventListener('click', () => setRoom(Data.rooms.room + 1));
+  refresh.addEventListener('click', () => { Data.rooms.epoch = (Data.rooms.epoch + 1) % 1000003; saveData(); RoomsUI.page = 1; renderRoomsList(); showToast('Đã làm mới danh sách bàn', 'info'); });
+  const renderChips = () => {
+    chips.textContent = ''; const q = rq.value.trim(); if (!q) return;
+    Rooms.findRooms(q).slice(0, 8).forEach(r => {
+      const c = h('button', 'chip', Rooms.roomName(r)); c.type = 'button';
+      c.addEventListener('click', () => { rq.value = ''; chips.textContent = ''; setRoom(r); }); chips.appendChild(c);
+    });
+    if (!chips.children.length) chips.appendChild(h('span', 'muted small', 'Không có phòng phù hợp'));
+  };
+  rq.addEventListener('input', renderChips);
+  rq.addEventListener('keydown', e => { if (e.key === 'Enter') { const m = Rooms.findRooms(rq.value.trim()); if (m.length) { rq.value = ''; chips.textContent = ''; setRoom(m[0]); } } });
+  gs.addEventListener('change', () => { RoomsUI.game = gs.value; RoomsUI.page = 1; renderRoomsList(); });
+  ss.addEventListener('change', () => { RoomsUI.status = ss.value; RoomsUI.page = 1; renderRoomsList(); });
+  tq.addEventListener('input', () => { RoomsUI.tq = tq.value; RoomsUI.page = 1; renderRoomsList(); });
+  quick.addEventListener('click', () => {
+    const all = Rooms.filtered(Data.rooms.room, { status: 'waiting' });
+    if (!all.length) { showToast('Phòng này chưa có bàn chờ — thử làm mới 🔄', 'info'); return; }
+    joinTable(pick(all));
+  });
+  RoomsUI.built = true;
+}
+function joinTable(inf) {
+  if (inf.status !== 'waiting') { showToast('Bàn này không còn chỗ', 'warning'); return; }
+  if (Data.currentMatch) { showToast('Hãy hoàn tất hoặc bỏ ván đang chơi trước', 'warning'); return; }
+  Match.start(inf.game, { players: inf.max, aiLevel: inf.level, opponents: Rooms.opponentsFor(inf), room: { room: inf.room, table: inf.table } });
+}
+function pagerPages(cur, total) {
+  const set = new Set([1, total, cur - 1, cur, cur + 1]); const arr = [...set].filter(x => x >= 1 && x <= total).sort((a, b) => a - b);
+  const out = []; arr.forEach((x, i) => { if (i && x - arr[i - 1] > 1) out.push('…'); out.push(x); }); return out;
+}
+function renderRoomsList() {
+  const room = Data.rooms.room, list = $('#rooms-list'), pager = $('#rooms-pager');
+  $('#room-select').value = room;
+  const all = Rooms.filtered(room, { game: RoomsUI.game, status: RoomsUI.status, tq: RoomsUI.tq });
+  const pages = Math.max(1, Math.ceil(all.length / Rooms.PAGE)); RoomsUI.page = clamp(RoomsUI.page, 1, pages);
+  const lv = Rooms.tier(room);
+  $('#room-sum').textContent = Rooms.roomName(room) + ' · AI ' + LEVEL_ICONS[lv] + ' ' + LEVEL_NAMES[lv] + ' · ' + all.length + '/' + Rooms.TABLES + ' bàn khớp bộ lọc';
+  list.textContent = '';
+  all.slice((RoomsUI.page - 1) * Rooms.PAGE, RoomsUI.page * Rooms.PAGE).forEach(inf => { // chỉ dựng tối đa 12 bàn
+    const m = GAME_META[inf.game], card = h('article', 'table-card st-' + inf.status);
+    const ic = h('div', 'game-icon sm'); ic.innerHTML = gameIcon(m.icon);
+    const info = h('div', 'game-info');
+    info.appendChild(h('b', '', 'Bàn ' + inf.table + ' · ' + m.name));
+    const meta = h('div', 'tags');
+    meta.appendChild(h('span', 'tag', '👥 ' + inf.occ + '/' + inf.max)); meta.appendChild(h('span', 'tag st', Rooms.STATUS[inf.status]));
+    if (inf.occ) meta.appendChild(h('span', 'tag', Rooms.occupants(inf).map(o => o.avatar).join(' ')));
+    info.appendChild(meta);
+    const b = h('button', 'btn small' + (inf.status === 'waiting' ? ' primary' : ''), inf.status === 'waiting' ? 'VÀO BÀN' : Rooms.STATUS[inf.status]); b.type = 'button';
+    if (inf.status !== 'waiting') b.disabled = true; else b.addEventListener('click', () => joinTable(inf));
+    card.appendChild(ic); card.appendChild(info); card.appendChild(b); list.appendChild(card);
+  });
+  if (!all.length) list.appendChild(h('p', 'muted center', 'Không có bàn nào khớp bộ lọc.'));
+  pager.textContent = '';
+  const mk = (txt, pg, on, label) => { const b = h('button', 'pg' + (on ? ' on' : ''), txt); b.type = 'button'; b.setAttribute('aria-label', label || ('Trang ' + txt)); if (pg == null) b.disabled = true; else b.addEventListener('click', () => { RoomsUI.page = pg; renderRoomsList(); }); pager.appendChild(b); };
+  mk('‹', RoomsUI.page > 1 ? RoomsUI.page - 1 : null, false, 'Trang trước');
+  pagerPages(RoomsUI.page, pages).forEach(x => x === '…' ? mk('…', null) : mk(String(x), x, x === RoomsUI.page));
+  mk('›', RoomsUI.page < pages ? RoomsUI.page + 1 : null, false, 'Trang sau');
+}
+RENDERERS.rooms = function () { if (!RoomsUI.built) buildRoomsControls(); renderRoomsList(); };
+
 
 /* ============================ 11. MÀN HÌNH CHƠI ============================ */
 function viewport() { return { w: window.innerWidth, h: window.innerHeight }; }
@@ -1692,14 +2292,14 @@ function buildPlayScreen() {
     UI.dealerSeat = dl;
   } else UI.dealerSeat = null;
   seats.className = 'n' + (gs.players.length - 1);
-  UI.selected.clear(); UI.lastTableKey = ''; UI.handKey = '';
+  UI.selected.clear(); UI.lastTableKey = ''; UI.handKey = ''; UI.dealerWasHidden = false; UI.dealerPrevCount = 0;
   $('#table-cards').textContent = ''; $('#hand').textContent = '';
   $('#screen-play').dataset.kind = eng.kind;
   $('#screen-play').classList.remove('win-glow');
 }
 function playMetrics() {
   const v = viewport(), landscape = v.w > v.h;
-  return { v, landscape, handH: Math.round(v.h * (landscape ? 0.4 : 0.31)) };
+  return { v, landscape, handH: Math.round(v.h * (landscape ? (v.h < 400 ? 0.3 : 0.34) : 0.31)) };
 }
 /* Tính lại bố cục — gọi khi resize / xoay máy, không reset ván */
 function layoutPlay() {
@@ -1789,10 +2389,15 @@ function renderTable(fromRects) {
     $('#screen-play').dataset.alert = '';
   } else { // bj / xì dách: hiển thị bài nhà cái
     const d = gs.dealer; box.textContent = '';
+    const justRevealed = UI.dealerWasHidden && !d.hidden;
     d.cards.forEach((c, i) => {
-      const hidden = d.hidden && (gs.currentGame === 'xiDach' || i === 1);
-      box.appendChild(createCardElement(c, { faceDown: hidden }));
+      const wasBack = gs.currentGame === 'xiDach' || i === 1;
+      const hidden = d.hidden && wasBack;
+      const el = createCardElement(c, { faceDown: hidden || (justRevealed && wasBack && i < UI.dealerPrevCount) });
+      box.appendChild(el);
+      if (justRevealed && wasBack && i < UI.dealerPrevCount) setTimeout(() => flipEl(el, getCardImage(c)), 80 + i * 120);
     });
+    UI.dealerWasHidden = d.hidden; UI.dealerPrevCount = d.cards.length;
     layoutTable();
     if (gs.currentGame === 'blackjack') info.textContent = d.hidden ? 'Nhà cái: ' + bjCardVal(d.cards[0]) + ' + ?' : 'Nhà cái: ' + bjValue(d.cards).total;
     else info.textContent = d.hidden ? 'Nhà cái (' + d.cards.length + ' lá) — bài úp' : 'Nhà cái: ' + xdClassify(d.cards).name;
@@ -1802,7 +2407,7 @@ function renderMyInfo() {
   const gs = gameState, el = $('#my-info'); if (!el) return;
   if (Match.engine.kind === 'bj') {
     const hs = gs.hands[0];
-    if (gs.currentGame === 'blackjack') el.textContent = hs.map(hd => 'Điểm: ' + bjValue(hd.cards).total + (hd.doubled ? ' (x2)' : '') + (hd.bust ? ' — QUẮC' : '')).join('  |  ');
+    if (gs.currentGame === 'blackjack') el.textContent = hs.map((hd, i) => (hs.length > 1 ? (i === gs.handIdx && gs.turn === 0 ? '▶ Bài ' : 'Bài ') + (i + 1) + ': ' : 'Điểm: ') + bjValue(hd.cards).total + (hd.doubled ? ' (x2)' : '') + (hd.bust ? ' — QUẮC' : '')).join('  |  ');
     else el.textContent = 'Bạn: ' + xdClassify(hs[0].cards).name;
   } else {
     const n = gs.hands[0].length; el.textContent = n === 1 ? '⚠️ CÒN 1 LÁ' : n + ' lá';
@@ -1818,7 +2423,7 @@ function renderActions() {
     const moves = myTurn ? eng.getValidMoves(0) : [];
     const canPass = moves.some(m => m.type === 'pass');
     mk('GỢI Ý', 'hint', '', !myTurn);
-    if (canPass || (myTurn && gs.lastPlay)) mk('BỎ LƯỢT', 'pass', '', !myTurn || !canPass);
+    mk('BỎ LƯỢT', 'pass', '', !myTurn || !canPass);
     mk('ĐÁNH', 'play', 'primary', !myTurn);
   } else {
     const mv = myTurn ? eng.getValidMoves(0).map(m => m.type) : [];
@@ -1861,12 +2466,16 @@ function collectTable(done) {
 const Match = {
   running: false, gameId: null, engine: null, startedAt: 0, elapsedBefore: 0, busy: false, token: 0,
   humanTurn() { const gs = gameState; return this.running && !gs.over && gs.phase === 'play' && gs.turn === 0 && !(this.engine.kind === 'bj' && this.engine.isDealerTurn()); },
-  start(gameId) {
+  start(gameId, extra) {
+    extra = extra || {};
     try {
       Modal.closeAll(); this.cleanup();
       this.gameId = gameId; this.engine = GAME_ENGINES[gameId]; this.running = true;
+      this.extra = extra; this.tour = !!extra.tour; this.roomCtx = extra.room || null;
       this.startedAt = Date.now(); this.elapsedBefore = 0; this.token++;
-      this.engine.setup({ players: Data.settings.players[gameId] || GAME_META[gameId].defP });
+      NEXT_OPP = extra.opponents || null; LEVEL_OVERRIDE = extra.aiLevel != null ? extra.aiLevel : null;
+      try { this.engine.setup({ players: extra.players || Data.settings.players[gameId] || GAME_META[gameId].defP }); }
+      finally { NEXT_OPP = null; LEVEL_OVERRIDE = null; }
       gameState.settings = JSON.parse(JSON.stringify({ turnTime: Data.settings.turnTime, aiLevel: Data.settings.aiLevel }));
       this.engine.deal();
       Data.currentGame = gameId;
@@ -1876,7 +2485,7 @@ const Match = {
       this.persist();
       const delay = animateDeal(); UI.lock = true; const tk = this.token;
       Timers.set(() => { if (tk !== this.token) return; UI.lock = false; this.afterDeal(); }, delay + 60);
-    } catch (e) { this.running = false; handleError(e); navigateTo('home', { force: true }); }
+    } catch (e) { this.running = false; this.tour = false; handleError(e); navigateTo('home', { force: true }); }
   },
   afterDeal() {
     const gs = gameState;
@@ -2007,20 +2616,23 @@ const Match = {
     const specials = res.specials.slice();
     if (res.outcome === 'win' && eng.kind === 'shed' && gs.players.length > 1 && gs.players.slice(1).every(p => p.level === 3)) specials.push('beatHard');
     recordMatch(this.gameId, res.outcome, seconds);
+    const isTour = this.tour;
     const xp = calcXP(res.outcome, Math.round(diff), Data.statistics.streak, specials.filter(s => ['trang', 'baoSamOk', 'chanSam', 'blackjack', 'xibang', 'nguLinh', 'quad'].includes(s)).length);
     const before = Data.level; const add = addXP(xp);
     const ach = checkAchievements(specials);
     Data.currentMatch = null; Data.currentGame = null; saveData();
     this.running = false; this.token++;
+    let tourNote = '';
+    if (isTour) { try { tourNote = Tour.report(res.outcome === 'win'); } catch (e) { handleError(e); } this.tour = false; }
     renderBoard(); // trạng thái cuối
     if (res.outcome === 'win') { SFX.play('win'); confetti(); $('#screen-play').classList.add('win-glow'); } else if (res.outcome === 'lose') SFX.play('lose'); else SFX.play('notification');
-    Timers.set(() => { showResult(res, add, ach, before); }, res.outcome === 'win' ? 700 : 450);
+    Timers.set(() => { showResult(res, add, ach, before, isTour ? (tourNote || 'Trận giải đấu') : null); }, res.outcome === 'win' ? 700 : 450);
   },
   persist() {
     try {
       if (!this.running) return;
       const snap = JSON.parse(JSON.stringify(gameState, cardReplacer));
-      Data.currentMatch = { gameId: this.gameId, state: snap, elapsed: this.elapsedBefore + (Date.now() - this.startedAt) / 1000, savedAt: Date.now() };
+      Data.currentMatch = { gameId: this.gameId, state: snap, elapsed: this.elapsedBefore + (Date.now() - this.startedAt) / 1000, savedAt: Date.now(), tour: !!this.tour, room: this.roomCtx || null, extra: this.extra ? { players: this.extra.players, aiLevel: this.extra.aiLevel, opponents: this.extra.opponents, room: this.extra.room } : null };
       saveData();
     } catch (e) { /* lưu lỗi không được làm hỏng ván */ }
   },
@@ -2029,8 +2641,10 @@ const Match = {
     this.cleanup();
   },
   abort(clear) {
+    const forfeit = clear && ((this.running && this.tour) || (Data.currentMatch && Data.currentMatch.tour));
     this.cleanup();
     if (clear) { Data.currentMatch = null; Data.currentGame = null; saveData(); }
+    if (forfeit) { try { Tour.report(false); } catch (e) { handleError(e); } this.tour = false; showToast('Bỏ ván giải đấu — tính là thua trận này', 'warning'); }
   },
   cleanup() {
     this.token++; this.running = false; TurnTimer.stopTimer(); Timers.clearAll(); UI.lock = false;
@@ -2042,6 +2656,7 @@ const Match = {
       Modal.closeAll(); this.cleanup();
       gameState = Object.assign(newGameState(), JSON.parse(JSON.stringify(cm.state), cardReviver));
       this.gameId = cm.gameId; this.engine = GAME_ENGINES[cm.gameId]; this.running = true;
+      this.tour = !!cm.tour; this.roomCtx = cm.room || null; this.extra = cm.extra || {};
       this.startedAt = Date.now(); this.elapsedBefore = cm.elapsed || 0;
       navigateTo('play'); setAppHeight(); buildPlayScreen(); layoutPlayInit(); renderBoard();
       if (gameState.over) { this.finish(); return; }
@@ -2052,10 +2667,11 @@ const Match = {
 };
 function layoutPlayInit() { const m = playMetrics(); $('#hand-wrap').style.height = m.handH + 'px'; }
 
-function showResult(res, add, ach, levelBefore) {
+function showResult(res, add, ach, levelBefore, tourNote) {
   const gs = gameState, body = h('div', 'result');
   const head = res.outcome === 'win' ? '🏆 CHIẾN THẮNG!' : res.outcome === 'lose' ? 'Thua rồi' : 'Hòa';
   if (res.headline) body.appendChild(h('div', 'res-headline', res.headline));
+  if (tourNote) body.appendChild(h('div', 'res-tour', '🏆 Giải đấu: ' + tourNote));
   const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
   res.rankings.forEach((r, i) => {
     const p = gs.players[r.p]; const row = h('div', 'res-row' + (r.p === 0 ? ' me' : ''));
@@ -2067,14 +2683,16 @@ function showResult(res, add, ach, levelBefore) {
   body.appendChild(h('div', 'res-xp', '+' + add.amount + ' XP' + (Data.level > levelBefore ? '  ·  🎉 Lên Level ' + Data.level + '!' : '')));
   ach.forEach(a => body.appendChild(h('div', 'res-ach', '🏅 Thành tích mới: ' + a.name)));
   if (ach.length) setTimeout(() => SFX.play('achievement'), 400);
-  const id = Match.gameId;
-  Modal.open({
-    title: head, closable: false, body, buttons: [
-      { text: 'CHƠI LẠI', cls: 'primary', fn: () => Match.start(id) },
-      { text: 'VỀ MENU', fn: () => { navigateTo('home', { force: true }); } },
-      { text: 'XEM CHI TIẾT', keep: true, fn: () => showDetail() }
-    ]
-  });
+  const id = Match.gameId, extra = Match.extra || {};
+  const btns = tourNote ? [
+    { text: 'TIẾP TỤC GIẢI', cls: 'primary', fn: () => navigateTo('tournament', { force: true }) },
+    { text: 'XEM CHI TIẾT', keep: true, fn: () => showDetail() }
+  ] : [
+    { text: 'CHƠI LẠI', cls: 'primary', fn: () => Match.start(id, extra.room ? extra : { players: extra.players }) },
+    extra.room ? { text: 'VỀ PHÒNG', fn: () => navigateTo('rooms', { force: true }) } : { text: 'VỀ MENU', fn: () => { navigateTo('home', { force: true }); } },
+    { text: 'XEM CHI TIẾT', keep: true, fn: () => showDetail() }
+  ];
+  Modal.open({ title: head, closable: false, body, buttons: btns });
 }
 function showDetail() {
   const gs = gameState, body = h('div', 'rules');
@@ -2147,7 +2765,8 @@ function setIcons() {
       try { g.drawImage(img, 0, 0, 180, 180); const a = $('link[rel="apple-touch-icon"]'); if (a) a.href = cv.toDataURL('image/png'); } catch (e) { }
     };
     img.src = uri;
-    const lg = $('#loading-logo'); if (lg) lg.innerHTML = svg; const hl = $('#home-logo'); if (hl) hl.innerHTML = svg;
+    const lg = $('#loading-logo'); if (lg) lg.innerHTML = appLogoSvg('lg1'); const hl = $('#home-logo'); if (hl) hl.innerHTML = appLogoSvg('lg2');
+    const dp = $('#deck-pile img'); if (dp) dp.src = getCardBack();
   } catch (e) { /* bỏ qua */ }
 }
 function init() {
@@ -2188,6 +2807,12 @@ function init() {
         buttons: [{ text: 'TIẾP TỤC', cls: 'primary', fn: () => Match.resume() }, { text: 'BỎ VÁN', cls: 'danger', fn: () => { Match.abort(true); RENDERERS.home(); } }]
       });
     } else if (Data.currentMatch) { Data.currentMatch = null; saveData(); }
+    else if (Data.tournament && Data.tournament.status === 'active') {
+      Modal.open({
+        title: 'Tiếp tục giải đấu?', body: 'Bạn đang tham gia ' + Data.tournament.name + ' (' + Tour.stageLabel(Data.tournament) + ').',
+        buttons: [{ text: 'TIẾP TỤC', cls: 'primary', fn: () => navigateTo('tournament') }, { text: 'Để sau' }]
+      });
+    }
   }));
 }
 if (IN_BROWSER) {
