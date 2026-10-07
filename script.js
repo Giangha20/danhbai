@@ -410,7 +410,7 @@ function calculateHandLayout(o) {
 function defaultData() {
   return {
     v: 1,
-    profile: { name: 'Minh', avatar: '👨', country: 'VN', age: 25 },
+    profile: { name: 'Your Name', avatar: '👨', country: 'VN', age: 18 },
     settings: { sound: true, effects: true, animation: true, reducedMotion: false, theme: 'dark', aiLevel: 1, turnTime: 15, players: {} },
     statistics: { total: 0, wins: 0, losses: 0, draws: 0, streak: 0, bestStreak: 0, playTime: 0, tournaments: 0, championships: 0, games: {} },
     achievements: {},
@@ -434,9 +434,9 @@ function mergeDefaults(def, src) {
 }
 function sanitizeData(d) {
   const x = mergeDefaults(defaultData(), d);
-  x.profile.name = sanitizeName(x.profile.name) || 'Minh';
+  x.profile.name = sanitizeName(x.profile.name) || 'Your Name';
   if (!COUNTRY_BY_CODE[x.profile.country]) x.profile.country = 'VN';
-  x.profile.age = clamp(Math.round(Number(x.profile.age) || 25), 6, 120);
+  x.profile.age = clamp(Math.round(Number(x.profile.age) || 18), 6, 120);
   x.level = clamp(Math.round(Number(x.level) || 1), 1, 100);
   x.xp = Math.max(0, Number(x.xp) || 0);
   x.settings.aiLevel = Number.isFinite(Number(x.settings.aiLevel)) ? clamp(Math.round(Number(x.settings.aiLevel)), 0, 4) : 1;
@@ -700,12 +700,12 @@ function shedCanPass(p) { const gs = gameState; return !!(gs.lastPlay && gs.last
 function shedScore(m, ctx) {
   const rem = ctx.hand.filter(c => !m.cards.includes(c.id));
   const turnsAfter = tlEstimateTurns(rem);
-  let spend = 0; m.combo.cards.forEach(c => { spend += TL_IDX[c.rank] / 12; });
+  let spend = 0; m.combo.cards.forEach(c => { spend += TL_IDX[c.rank] / 1; });
   let s = -turnsAfter * 10 - spend * (ctx.level >= 3 ? 3.2 : 2.2) + m.cards.length * 1.1;
   const prev = ctx.prev;
   if (prev) {
     const same = prev.type === m.combo.type && prev.len === m.combo.len;
-    if (!same) s += (ctx.oppMin <= 3 || (prev.rank === 12 && ctx.level >= 2)) ? 4 : -7; // chặt: chỉ khi đáng
+    if (!same) s += (ctx.oppMin <= 3 || (prev.rank === 1 && ctx.level >= 2)) ? 4 : -7; // chặt: chỉ khi đáng
     else s -= (m.combo.key - prev.key) * 0.12; // ưu tiên nước nhỏ nhất vừa đủ
   }
   if (ctx.oppMin <= 2 && m.combo.type === 'single') s += prev ? m.combo.key * 0.35 : -(ctx.oppMin === 1 ? 30 : 6);
