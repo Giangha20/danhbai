@@ -410,12 +410,12 @@ function calculateHandLayout(o) {
 function defaultData() {
   return {
     v: 1,
-    profile: { name: 'Your Name', avatar: '👨', country: 'VN', age: 18 },
+    profile: { name: 'Minh', avatar: '👨', country: 'VN', age: 25 },
     settings: { sound: true, effects: true, animation: true, reducedMotion: false, theme: 'dark', aiLevel: 1, turnTime: 15, players: {} },
     statistics: { total: 0, wins: 0, losses: 0, draws: 0, streak: 0, bestStreak: 0, playTime: 0, tournaments: 0, championships: 0, games: {} },
     achievements: {},
-    xp: 4250,
-    level: 12,
+    xp: 0,
+    level: 1,
     currentGame: null,
     currentMatch: null,
     tournament: null,
@@ -434,9 +434,11 @@ function mergeDefaults(def, src) {
 }
 function sanitizeData(d) {
   const x = mergeDefaults(defaultData(), d);
-  x.profile.name = sanitizeName(x.profile.name) || 'Your Name';
+  // Reset legacy profile progression once, without disabling future XP/level gains.
+  if (x.v < 2) { x.level = 1; x.xp = 0; x.v = 2; }
+  x.profile.name = sanitizeName(x.profile.name) || 'Minh';
   if (!COUNTRY_BY_CODE[x.profile.country]) x.profile.country = 'VN';
-  x.profile.age = clamp(Math.round(Number(x.profile.age) || 18), 6, 120);
+  x.profile.age = clamp(Math.round(Number(x.profile.age) || 25), 6, 120);
   x.level = clamp(Math.round(Number(x.level) || 1), 1, 100);
   x.xp = Math.max(0, Number(x.xp) || 0);
   x.settings.aiLevel = Number.isFinite(Number(x.settings.aiLevel)) ? clamp(Math.round(Number(x.settings.aiLevel)), 0, 4) : 1;
@@ -673,7 +675,17 @@ function shedPlay(eng, p, move) {
   gs.lastPlay = { player: p, combo, cards };
   cards.forEach(c => gs.playedCards.push(c));
   gs.first = false;
-  if (gs.hands[p].length === 0) gs.over = { winner: p, reason: 'out', quadFinish: combo.type === 'quad' };
+  if (gs.hands[p].length === 0) {
+    // A 2 may never be the final card(s). Finishing with any 2 is Thối 2.
+    const finishedWithTwo = cards.some(c => c.rank === '2');
+    if (finishedWithTwo) {
+      const others = gs.players.map((_, i) => i).filter(i => i !== p);
+      const winner = others.sort((a, b) => gs.hands[a].length - gs.hands[b].length || a - b)[0];
+      gs.over = { winner, reason: 'thoi2', loser: p };
+    } else {
+      gs.over = { winner: p, reason: 'out', quadFinish: combo.type === 'quad' };
+    }
+  }
   return { type: 'play', player: p, cards, combo };
 }
 function shedNextTurn() {
@@ -700,12 +712,12 @@ function shedCanPass(p) { const gs = gameState; return !!(gs.lastPlay && gs.last
 function shedScore(m, ctx) {
   const rem = ctx.hand.filter(c => !m.cards.includes(c.id));
   const turnsAfter = tlEstimateTurns(rem);
-  let spend = 0; m.combo.cards.forEach(c => { spend += TL_IDX[c.rank] / 1; });
+  let spend = 0; m.combo.cards.forEach(c => { spend += TL_IDX[c.rank] / 12; });
   let s = -turnsAfter * 10 - spend * (ctx.level >= 3 ? 3.2 : 2.2) + m.cards.length * 1.1;
   const prev = ctx.prev;
   if (prev) {
     const same = prev.type === m.combo.type && prev.len === m.combo.len;
-    if (!same) s += (ctx.oppMin <= 3 || (prev.rank === 1 && ctx.level >= 2)) ? 4 : -7; // chặt: chỉ khi đáng
+    if (!same) s += (ctx.oppMin <= 3 || (prev.rank === 12 && ctx.level >= 2)) ? 4 : -7; // chặt: chỉ khi đáng
     else s -= (m.combo.key - prev.key) * 0.12; // ưu tiên nước nhỏ nhất vừa đủ
   }
   if (ctx.oppMin <= 2 && m.combo.type === 'single') s += prev ? m.combo.key * 0.35 : -(ctx.oppMin === 1 ? 30 : 6);
@@ -875,11 +887,12 @@ function makeTienLen(id, cfg) {
       const gs = gameState, o = gs.over, n = gs.players.length;
       const others = []; for (let i = 0; i < n; i++) if (i !== o.winner) others.push(i);
       others.sort((a, b) => gs.hands[a].length - gs.hands[b].length || a - b);
-      const rankings = [{ p: o.winner, label: o.reason === 'trang' ? 'Ăn trắng — ' + o.label : 'Hết bài' }];
+      const rankings = [{ p: o.winner, label: o.reason === 'trang' ? 'Ăn trắng — ' + o.label : o.reason === 'thoi2' ? 'Đối thủ thối 2' : 'Hết bài' }];
       others.forEach(p => {
         const left = gs.hands[p].length; let label = left + ' lá còn lại';
-        if (cfg.penalty2 && gs.hands[p].some(c => c.rank === '2')) label += ' · Thối 2';
-        if (left === gs.startCounts[p]) label += ' · Cóng';
+        if (o.reason === 'thoi2' && p === o.loser) label = 'Thối 2';
+        else if (cfg.penalty2 && gs.hands[p].some(c => c.rank === '2')) label += ' · Thối 2';
+        if (left === gs.startCounts[p] && o.reason !== 'thoi2') label += ' · Cóng';
         rankings.push({ p, label });
       });
       const specials = [];
@@ -1013,12 +1026,12 @@ const SAM_ENGINE = {
     const others = []; for (let i = 0; i < n; i++) if (i !== o.winner) others.push(i);
     others.sort((a, b) => gs.hands[a].length - gs.hands[b].length || a - b);
     if (o.reason === 'chanSam') { others.sort((a, b) => (a === o.loser ? 1 : 0) - (b === o.loser ? 1 : 0) || gs.hands[a].length - gs.hands[b].length); }
-    const heads = { trang: 'Ăn trắng — ' + (o.label || ''), baoSamOk: 'SÂM! Đi hết không ai chặn', chanSam: 'Chặn Sâm thành công', out: 'Hết bài' };
+    const heads = { trang: 'Ăn trắng — ' + (o.label || ''), baoSamOk: 'SÂM! Đi hết không ai chặn', chanSam: 'Chặn Sâm thành công', thoi2: 'Đánh 2 cuối — thua', out: 'Hết bài' };
     const rankings = [{ p: o.winner, label: heads[o.reason] }];
-    others.forEach(p => rankings.push({ p, label: p === o.loser ? 'Báo Sâm thất bại' : gs.hands[p].length + ' lá còn lại' }));
+    others.forEach(p => rankings.push({ p, label: p === o.loser ? (o.reason === 'thoi2' ? 'Thối 2' : 'Báo Sâm thất bại') : gs.hands[p].length + ' lá còn lại' }));
     const specials = [];
     if (o.winner === 0) { if (o.reason === 'trang') specials.push('trang'); if (o.reason === 'baoSamOk') specials.push('baoSamOk'); if (o.reason === 'chanSam') specials.push('chanSam'); if (o.quadFinish) specials.push('quad'); }
-    const headline = o.reason === 'trang' ? '🏆 ĂN TRẮNG' : o.reason === 'baoSamOk' ? '💥 SÂM!' : o.reason === 'chanSam' ? '🛡️ CHẶN SÂM' : null;
+    const headline = o.reason === 'trang' ? '🏆 ĂN TRẮNG' : o.reason === 'baoSamOk' ? '💥 SÂM!' : o.reason === 'chanSam' ? '🛡️ CHẶN SÂM' : o.reason === 'thoi2' ? '🃏 THỐI 2' : null;
     return { outcome: o.winner === 0 ? 'win' : 'lose', rankings, specials, headline };
   }
 };
