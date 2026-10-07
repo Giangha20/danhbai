@@ -507,6 +507,10 @@ const SFX = (function () {
     win: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.18, 'triangle', 0.07, i * 0.11)),
     lose: () => [392, 330, 262].forEach((f, i) => tone(f, 0.22, 'sawtooth', 0.04, i * 0.14)),
     notification: () => { tone(660, 0.08, 'sine', 0.06); tone(880, 0.1, 'sine', 0.06, 0.09); },
+    eat: () => { tone(520, 0.07, 'triangle', 0.055); tone(700, 0.09, 'triangle', 0.06, 0.06); },
+    chop2: () => { tone(180, 0.08, 'sawtooth', 0.05); tone(620, 0.10, 'square', 0.055, 0.08); tone(920, 0.13, 'triangle', 0.065, 0.18); },
+    turn: () => { tone(740, 0.06, 'sine', 0.045); tone(980, 0.08, 'sine', 0.055, 0.07); },
+    levelup: () => [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.17, 'triangle', 0.07, i * 0.10)),
     achievement: () => [659, 784, 988, 1319, 1568].forEach((f, i) => tone(f, 0.16, 'triangle', 0.06, i * 0.09))
   };
   return {
@@ -1629,6 +1633,26 @@ function flipEl(el, newSrc) {
     };
   } catch (e) { if (img) img.src = newSrc; }
 }
+function showFx(kind, text) {
+  if (!Data.settings.effects || !canAnimate()) return;
+  const root = $('#fx-root'); if (!root) return;
+  const el = h('div', 'fx-banner fx-' + kind, text || '');
+  root.appendChild(el);
+  try {
+    const a = el.animate([
+      { opacity: 0, transform: 'translate(-50%, 10px) scale(.72)' },
+      { opacity: 1, transform: 'translate(-50%, 0) scale(1.04)', offset: .22 },
+      { opacity: 1, transform: 'translate(-50%, 0) scale(1)', offset: .72 },
+      { opacity: 0, transform: 'translate(-50%, -28px) scale(.92)' }
+    ], { duration: kind === 'chop2' ? 1050 : 900, easing: 'ease-out' });
+    a.onfinish = () => el.remove();
+  } catch (e) { setTimeout(() => el.remove(), 1000); }
+}
+function pulseTurn() {
+  if (!Data.settings.effects || !canAnimate()) return;
+  const el = $('#turn-label'); if (!el) return;
+  try { el.animate([{ transform: 'scale(.9)', opacity: .55 }, { transform: 'scale(1.08)', opacity: 1 }, { transform: 'scale(1)', opacity: 1 }], { duration: 420, easing: 'cubic-bezier(.2,.8,.2,1)' }); } catch (e) {}
+}
 function confetti() {
   if (!Data.settings.effects || !canAnimate()) return;
   const root = $('#fx-root'); if (!root) return;
@@ -2485,7 +2509,7 @@ const Match = {
       Modal.closeAll(); this.cleanup();
       this.gameId = gameId; this.engine = GAME_ENGINES[gameId]; this.running = true;
       this.extra = extra; this.tour = !!extra.tour; this.roomCtx = extra.room || null;
-      this.startedAt = Date.now(); this.elapsedBefore = 0; this.token++;
+      this.startedAt = Date.now(); this.elapsedBefore = 0; this.token++; this._lastTurnToken = '';
       NEXT_OPP = extra.opponents || null; LEVEL_OVERRIDE = extra.aiLevel != null ? extra.aiLevel : null;
       try { this.engine.setup({ players: extra.players || Data.settings.players[gameId] || GAME_META[gameId].defP }); }
       finally { NEXT_OPP = null; LEVEL_OVERRIDE = null; }
@@ -2534,6 +2558,10 @@ const Match = {
     renderBoard();
     if (eng.kind === 'bj' && eng.isDealerTurn()) { this.dealerLoop(); return; }
     if (this.humanTurn()) {
+      if (this._lastTurnToken !== this.token + ':' + gs.turn + ':' + (gs.round || 0)) {
+        this._lastTurnToken = this.token + ':' + gs.turn + ':' + (gs.round || 0);
+        SFX.play('turn'); pulseTurn();
+      }
       TurnTimer.startTimer(gs.settings ? gs.settings.turnTime : Data.settings.turnTime, () => this.humanTimeout());
     } else {
       TurnTimer.stopTimer();
@@ -2576,8 +2604,15 @@ const Match = {
       const seat = UI.seats[p] ? $('.seat-av', UI.seats[p].root) : null;
       rects._default = seat ? rectCenter(seat) : rectCenter($('#hand'));
     }
+    const prevCombo = gs.lastPlay ? gs.lastPlay.combo : null;
     const info = eng.play(p, mv);
-    if (info.type === 'play') { SFX.play('card'); }
+    if (info.type === 'play') {
+      SFX.play('card');
+      const combo = info.combo || null;
+      const beatTwo = !!(prevCombo && prevCombo.rank === 12 && combo && (combo.type === 'quad' || combo.type === 'dthong' || combo.type !== prevCombo.type));
+      if (beatTwo) { SFX.play('chop2'); showFx('chop2', '💥 CHẶT 2!'); }
+      else if (prevCombo) { SFX.play('eat'); showFx('eat', '⚡ ĂN BÀI!'); }
+    }
     else if (info.type === 'pass') { showToast(gs.players[p].name + ' bỏ lượt', 'info'); }
     else if (eng.kind === 'bj') SFX.play('card');
     renderBoard(rects);
@@ -2639,6 +2674,7 @@ const Match = {
     if (isTour) { try { tourNote = Tour.report(res.outcome === 'win'); } catch (e) { handleError(e); } this.tour = false; }
     renderBoard(); // trạng thái cuối
     if (res.outcome === 'win') { SFX.play('win'); confetti(); $('#screen-play').classList.add('win-glow'); } else if (res.outcome === 'lose') SFX.play('lose'); else SFX.play('notification');
+    if (add.leveled > 0) { SFX.play('levelup'); showFx('levelup', '🎉 LÊN LEVEL ' + Data.level + '!'); }
     Timers.set(() => { showResult(res, add, ach, before, isTour ? (tourNote || 'Trận giải đấu') : null); }, res.outcome === 'win' ? 700 : 450);
   },
   persist() {

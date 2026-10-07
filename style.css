@@ -264,3 +264,11 @@ body[data-screen="play"] #toast-root{top:42%}
 
 .next-opp>div{display:flex;flex-direction:column;min-width:0}
 .next-opp b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ===== ÂM THANH / HIỆU ỨNG BỔ SUNG — không thay đổi layout cũ ===== */
+#fx-root{position:fixed;inset:0;z-index:9999;pointer-events:none;overflow:hidden}
+.fx-banner{position:fixed;left:50%;top:42%;transform:translate(-50%,0);padding:12px 20px;border-radius:999px;background:rgba(7,24,19,.92);border:1px solid rgba(255,255,255,.16);box-shadow:0 10px 35px rgba(0,0,0,.32);font-weight:900;font-size:clamp(18px,5vw,30px);letter-spacing:.3px;white-space:nowrap;text-shadow:0 2px 8px rgba(0,0,0,.4)}
+.fx-chop2{background:linear-gradient(135deg,rgba(100,20,10,.96),rgba(210,90,20,.94));border-color:rgba(255,205,80,.7);box-shadow:0 0 0 4px rgba(255,180,40,.12),0 14px 45px rgba(255,90,20,.32)}
+.fx-eat{background:rgba(8,70,54,.95);border-color:rgba(80,230,180,.55)}
+.fx-levelup{background:linear-gradient(135deg,rgba(55,30,110,.96),rgba(20,90,120,.94));border-color:rgba(180,220,255,.65);box-shadow:0 0 0 4px rgba(150,200,255,.1),0 14px 45px rgba(80,140,255,.3)}
+@media (prefers-reduced-motion:reduce){.fx-banner{animation:none!important}}
