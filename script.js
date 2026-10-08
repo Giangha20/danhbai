@@ -143,6 +143,7 @@ const RULES = {
     'Người có lá nhỏ nhất đi trước và phải đánh bộ có chứa lá đó. Sau đó phải đánh cùng loại, cùng số lá và lá cao nhất lớn hơn bộ trước.',
     'Không đánh được thì bỏ lượt — bỏ lượt là mất quyền đánh đến hết vòng. Khi mọi người khác đã bỏ, người đánh cuối được đi tự do.',
     'Chặt: tứ quý chặt 2 lẻ. Bản cơ bản không có đôi thông.',
+    'Luật thối 2: không được đánh quân 2 làm nước cuối cùng (hết bài bằng quân 2). Ai chỉ còn toàn quân 2 mà phải đánh tự do thì bị "Thối 2" và thua ván — hãy đánh 2 sớm.',
     'Tới trắng (thắng ngay khi chia bài): sảnh rồng 3→A hoặc tứ quý 2.'
   ]],
   tienLenMienNam: ['Tiến Lên Miền Nam', [
@@ -150,14 +151,14 @@ const RULES = {
     'Bộ hợp lệ: lẻ, đôi, ba, tứ quý, sảnh (≥3 lá, không có 2) và đôi thông (≥3 đôi liên tiếp, không có 2).',
     'Chặt 2 lẻ: tứ quý hoặc 3 đôi thông (hoặc nhiều hơn).',
     'Chặt đôi 2: tứ quý hoặc 4 đôi thông. 4 đôi thông cũng chặt được tứ quý.',
-    'Thối 2: khi ván kết thúc mà còn quân 2 trên tay thì bị đánh dấu "Thối 2". Chưa đánh được lá nào là "Cóng".',
+    'Thối 2: không được đánh quân 2 làm nước cuối cùng (hết bài bằng quân 2). Ai chỉ còn toàn quân 2 mà phải đánh tự do thì bị "Thối 2" và thua ván; còn quân 2 khi ván kết thúc cũng bị đánh dấu "Thối 2". Chưa đánh được lá nào là "Cóng".',
     'Tới trắng: sảnh rồng 3→A, tứ quý 2, hoặc 6 đôi — thắng ngay khi chia bài.'
   ]],
   tienLenMienBac: ['Tiến Lên Miền Bắc', [
     'Số người 2–4, mỗi người 13 lá. Thứ tự và chất như Tiến Lên; người có lá nhỏ nhất đi trước.',
     'Bộ hợp lệ: lẻ, đôi, ba, tứ quý, sảnh (≥3 lá, không có 2) và đôi thông (≥3 đôi liên tiếp).',
     'Chặt hạn chế hơn Miền Nam: chỉ tứ quý và đôi thông (≥3 đôi) chặt được 2 lẻ. Đôi 2 không bị chặt; đôi thông không chặt được tứ quý.',
-    'Không có luật thối 2.',
+    'Luật thối 2: không được đánh quân 2 làm nước cuối cùng (hết bài bằng quân 2). Ai chỉ còn toàn quân 2 mà phải đánh tự do thì bị "Thối 2" và thua ván.',
     'Tới trắng: sảnh rồng 3→A, tứ quý 2, hoặc tứ quý 3.'
   ]],
   samLoc: ['Sâm Lốc', [
@@ -166,6 +167,7 @@ const RULES = {
     'Chặt: tứ quý chặt 2 lẻ và đôi 2.',
     'Báo Sâm: trước khi đánh, bạn có thể báo Sâm — phải đi hết 10 lá mà không ai chặn được. Người báo được đi trước. Có người đánh bài chặn thì người báo thua, người chặn thắng.',
     'Ăn trắng: tứ quý 2, 5 đôi, hoặc sảnh rồng 10 lá liên tiếp — thắng ngay khi chia bài.',
+    'Luật thối 2: không được đánh quân 2 làm nước cuối cùng (hết bài bằng quân 2). Ai chỉ còn toàn quân 2 mà phải đánh tự do thì bị "Thối 2" và thua ván.',
     'Còn 1 lá sẽ có cảnh báo ⚠️. Ai hết bài trước là nhất.'
   ]],
   xiDach: ['Xì Dách', [
@@ -409,9 +411,9 @@ function calculateHandLayout(o) {
 /* ============================ 4. LƯU TRỮ ============================ */
 function defaultData() {
   return {
-    v: 1,
+    v: 2,
     profile: { name: 'Minh', avatar: '👨', country: 'VN', age: 25 },
-    settings: { sound: true, effects: true, animation: true, reducedMotion: false, theme: 'dark', aiLevel: 1, turnTime: 15, players: {} },
+    settings: { sound: true, notify: true, effects: true, animation: true, reducedMotion: false, theme: 'dark', aiLevel: 1, turnTime: 15, players: {} },
     statistics: { total: 0, wins: 0, losses: 0, draws: 0, streak: 0, bestStreak: 0, playTime: 0, tournaments: 0, championships: 0, games: {} },
     achievements: {},
     xp: 0,
@@ -434,8 +436,8 @@ function mergeDefaults(def, src) {
 }
 function sanitizeData(d) {
   const x = mergeDefaults(defaultData(), d);
-  // Reset legacy profile progression once, without disabling future XP/level gains.
-  if (x.v < 2) { x.level = 1; x.xp = 0; x.v = 2; }
+  if ((Number(d && d.v) || 1) < 2) { x.level = 1; x.xp = 0; } // bản cũ dùng Lv.12 mặc định giả → đặt lại Lv.1 / 0 XP
+  x.v = 2;
   x.profile.name = sanitizeName(x.profile.name) || 'Minh';
   if (!COUNTRY_BY_CODE[x.profile.country]) x.profile.country = 'VN';
   x.profile.age = clamp(Math.round(Number(x.profile.age) || 25), 6, 120);
@@ -482,6 +484,7 @@ function saveData() { return Store.save(Data); }
 /* ============================ 5. ÂM THANH (Web Audio) ============================ */
 const SFX = (function () {
   let ctx = null;
+  const NOTIFY = { notification: 1, warn: 1, error: 1, success: 1 };
   function ensure() {
     if (!IN_BROWSER) return null;
     if (!ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; ctx = new AC(); }
@@ -498,24 +501,52 @@ const SFX = (function () {
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.02);
   }
+  function glide(f1, f2, dur, type, vol, delay) { // âm trượt tần số
+    const c = ensure(); if (!c) return;
+    const t = c.currentTime + (delay || 0);
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type || 'sine'; o.frequency.setValueAtTime(f1, t); o.frequency.exponentialRampToValueAtTime(Math.max(20, f2), t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.06, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.02);
+  }
+  function noise(dur, vol, ftype, freq, delay, q) { // tiếng sột soạt của lá bài
+    const c = ensure(); if (!c) return;
+    const t = c.currentTime + (delay || 0), len = Math.max(1, Math.floor(c.sampleRate * dur));
+    const buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+    for (let k = 0; k < len; k++) d[k] = (Math.random() * 2 - 1) * (1 - k / len);
+    const src = c.createBufferSource(); src.buffer = buf;
+    const f = c.createBiquadFilter(); f.type = ftype || 'bandpass'; f.frequency.value = freq || 2500; f.Q.value = q || 0.8;
+    const g = c.createGain(); g.gain.setValueAtTime(vol || 0.1, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f); f.connect(g); g.connect(c.destination); src.start(t); src.stop(t + dur + 0.02);
+  }
   const SOUNDS = {
     click: () => tone(560, 0.05, 'square', 0.03),
-    deal: () => { tone(260, 0.06, 'triangle', 0.05); tone(190, 0.05, 'triangle', 0.04, 0.04); },
-    card: () => { tone(380, 0.06, 'triangle', 0.06); tone(300, 0.05, 'triangle', 0.04, 0.03); },
     select: () => tone(720, 0.04, 'sine', 0.05),
     timer: () => tone(900, 0.07, 'square', 0.04),
-    win: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.18, 'triangle', 0.07, i * 0.11)),
-    lose: () => [392, 330, 262].forEach((f, i) => tone(f, 0.22, 'sawtooth', 0.04, i * 0.14)),
+    // chia bài: tiếng "phạch" nhẹ của lá bài lướt qua
+    deal: () => { noise(0.07, 0.11, 'highpass', 2200); tone(240, 0.05, 'triangle', 0.03, 0.01); },
+    // đánh bài: tiếng "tạch" của lá bài úp xuống bàn
+    card: () => { noise(0.06, 0.12, 'bandpass', 900, 0, 1.2); tone(150, 0.09, 'sine', 0.13); },
+    // ăn bài: thu bài về — trượt lên và "ting"
+    eat: () => { glide(300, 900, 0.2, 'triangle', 0.07); noise(0.14, 0.07, 'bandpass', 3200, 0.02); tone(988, 0.14, 'sine', 0.05, 0.18); tone(1319, 0.14, 'sine', 0.04, 0.26); },
+    // chặt: tiếng nổ trầm + va đập
+    chat: () => { glide(170, 45, 0.5, 'sine', 0.26); glide(340, 110, 0.32, 'sawtooth', 0.07); noise(0.4, 0.15, 'lowpass', 1300); tone(110, 0.25, 'square', 0.04, 0.04); },
+    // tới lượt: chuông hai nốt nhẹ
+    turn: () => { tone(659, 0.12, 'sine', 0.05); tone(880, 0.2, 'sine', 0.05, 0.1); },
+    win: () => { [[523, 659, 784], [659, 784, 1047], [784, 1047, 1319]].forEach((ch, i) => ch.forEach(f => tone(f, i === 2 ? 0.55 : 0.2, 'triangle', 0.05, i * 0.16))); },
+    lose: () => { [392, 349, 311, 262].forEach((f, i) => tone(f, 0.26, 'sawtooth', 0.035, i * 0.17)); glide(200, 90, 0.5, 'sine', 0.05, 0.68); },
+    levelup: () => { [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => tone(f, 0.2, 'triangle', 0.06, i * 0.09)); glide(600, 2400, 0.5, 'sine', 0.04, 0.1); tone(2093, 0.4, 'sine', 0.035, 0.6); },
+    achievement: () => [659, 784, 988, 1319, 1568].forEach((f, i) => tone(f, 0.16, 'triangle', 0.06, i * 0.09)),
+    // âm thanh thông báo
     notification: () => { tone(660, 0.08, 'sine', 0.06); tone(880, 0.1, 'sine', 0.06, 0.09); },
-    eat: () => { tone(520, 0.07, 'triangle', 0.055); tone(700, 0.09, 'triangle', 0.06, 0.06); },
-    chop2: () => { tone(180, 0.08, 'sawtooth', 0.05); tone(620, 0.10, 'square', 0.055, 0.08); tone(920, 0.13, 'triangle', 0.065, 0.18); },
-    turn: () => { tone(740, 0.06, 'sine', 0.045); tone(980, 0.08, 'sine', 0.055, 0.07); },
-    levelup: () => [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.17, 'triangle', 0.07, i * 0.10)),
-    achievement: () => [659, 784, 988, 1319, 1568].forEach((f, i) => tone(f, 0.16, 'triangle', 0.06, i * 0.09))
+    success: () => { tone(784, 0.09, 'sine', 0.05); tone(1047, 0.14, 'sine', 0.05, 0.08); },
+    warn: () => { tone(440, 0.1, 'square', 0.035); tone(440, 0.1, 'square', 0.035, 0.14); },
+    error: () => { tone(220, 0.22, 'sawtooth', 0.05); tone(165, 0.25, 'sawtooth', 0.05, 0.16); }
   };
   return {
     play(name) {
       if (!Data.settings.sound) return;
+      if (NOTIFY[name] && Data.settings.notify === false) return;
       try { if (SOUNDS[name]) SOUNDS[name](); } catch (e) { /* bỏ qua lỗi âm thanh */ }
     },
     unlock() { try { ensure(); } catch (e) { } }
@@ -530,13 +561,14 @@ function addXP(amount, cap) {
   let leveled = 0;
   while (Data.level < 100 && Data.xp >= xpNeed(Data.level)) { Data.xp -= xpNeed(Data.level); Data.level++; leveled++; }
   if (Data.level >= 100) Data.xp = Math.min(Data.xp, xpNeed(100) - 1);
+  if (leveled > 0 && IN_BROWSER && typeof levelUpFx === 'function') { const lv = Data.level; setTimeout(() => levelUpFx(lv), 900); }
   return { amount, leveled };
 }
 function calcXP(outcome, diff, streak, specialCount) {
   let xp;
   if (outcome === 'win') xp = 80 + diff * 20 + Math.min(streak, 10) * 5 + specialCount * 30;
   else if (outcome === 'draw') xp = 35;
-  else xp = 15 + diff * 5;
+  else xp = 10 + diff * 3; // thua vẫn được ít XP
   return clamp(xp, 0, 400);
 }
 function recordMatch(gameId, outcome, seconds) {
@@ -664,6 +696,8 @@ function shedValidate(eng, p, move) {
   }
   const combo = eng.classify(cards);
   if (!combo) return { ok: false, reason: 'Bài chọn chưa thành bộ hợp lệ' };
+  // Luật thối 2: không được đánh quân 2 làm nước cuối cùng (hết bài bằng 2)
+  if (cards.length === hand.length && cards.some(c => c.rank === '2')) return { ok: false, reason: 'Không được đánh quân 2 cuối cùng (thối 2)' };
   if (gs.first && eng.mustFirst && !seen.has(gs.firstCardId)) return { ok: false, reason: 'Ván đầu phải đánh có ' + cardShort(CARD_BY_ID[gs.firstCardId]) };
   const prev = gs.lastPlay ? gs.lastPlay.combo : null;
   if (prev && !eng.canBeat(prev, combo)) {
@@ -679,17 +713,7 @@ function shedPlay(eng, p, move) {
   gs.lastPlay = { player: p, combo, cards };
   cards.forEach(c => gs.playedCards.push(c));
   gs.first = false;
-  if (gs.hands[p].length === 0) {
-    // A 2 may never be the final card(s). Finishing with any 2 is Thối 2.
-    const finishedWithTwo = cards.some(c => c.rank === '2');
-    if (finishedWithTwo) {
-      const others = gs.players.map((_, i) => i).filter(i => i !== p);
-      const winner = others.sort((a, b) => gs.hands[a].length - gs.hands[b].length || a - b)[0];
-      gs.over = { winner, reason: 'thoi2', loser: p };
-    } else {
-      gs.over = { winner: p, reason: 'out', quadFinish: combo.type === 'quad' };
-    }
-  }
+  if (gs.hands[p].length === 0) gs.over = { winner: p, reason: 'out', quadFinish: combo.type === 'quad' };
   return { type: 'play', player: p, cards, combo };
 }
 function shedNextTurn() {
@@ -708,11 +732,19 @@ function shedNextTurn() {
 function shedMovesFor(eng, p) {
   const gs = gameState, prev = gs.lastPlay ? gs.lastPlay.combo : null;
   let list = eng.generate(gs.hands[p]).filter(m => eng.canBeat(prev, m));
+  list = list.filter(m => !(m.cards.length === gs.hands[p].length && m.cards.some(c => c.rank === '2'))); // thối 2
   if (gs.first && eng.mustFirst) list = list.filter(m => m.cards.some(c => c.id === gs.firstCardId));
   const moves = list.map(m => ({ type: 'play', cards: m.cards.map(c => c.id), combo: m }));
   return moves;
 }
 function shedCanPass(p) { const gs = gameState; return !!(gs.lastPlay && gs.lastPlay.player !== p); }
+/* Kẹt: đang phải đánh tự do nhưng mọi nước đều là đánh 2 cuối cùng → thối 2, thua ván */
+function shedIsStuck(eng, p) { const gs = gameState; return !gs.over && gs.turn === p && !shedCanPass(p) && shedMovesFor(eng, p).length === 0; }
+function shedForceThoi(p) {
+  const gs = gameState; let w = -1, best = 99;
+  for (let i = 0; i < gs.players.length; i++) { if (i !== p && gs.hands[i].length < best) { best = gs.hands[i].length; w = i; } }
+  gs.over = { winner: w, reason: 'thoi2', loser: p };
+}
 function shedScore(m, ctx) {
   const rem = ctx.hand.filter(c => !m.cards.includes(c.id));
   const turnsAfter = tlEstimateTurns(rem);
@@ -735,6 +767,12 @@ function shedChoose(p, moves, canPass, level) {
   const gs = gameState, hand = gs.hands[p], prev = gs.lastPlay ? gs.lastPlay.combo : null;
   const oppMin = oppMinCards(p);
   if (!moves.length) return { type: 'pass' };
+  if (level >= 1) { // AI tránh để lại toàn quân 2 (không thể đi hết → thối 2)
+    const onlyTwos = m => { const rem = hand.filter(c => !m.cards.includes(c.id)); return rem.length > 0 && rem.every(c => c.rank === '2'); };
+    const safe = moves.filter(m => !onlyTwos(m));
+    if (!safe.length && canPass) return { type: 'pass' };
+    if (safe.length) moves = safe;
+  }
   if (level <= 0) { if (canPass && Math.random() < 0.2) return { type: 'pass' }; return pick(moves); }
   if (level === 1) {
     if (prev) return minBy(moves, m => (m.combo.type === prev.type && m.combo.len === prev.len ? 0 : 1000) + m.combo.key);
@@ -879,6 +917,8 @@ function makeTienLen(id, cfg) {
     },
     play: (p, move) => shedPlay(eng, p, move),
     nextTurn: shedNextTurn,
+    isStuck: p => shedIsStuck(eng, p),
+    forceThoi: p => shedForceThoi(p),
     checkWin: () => gameState.over,
     aiChoose(p, level) { return shedChoose(p, shedMovesFor(eng, p), shedCanPass(p), level); },
     timeoutMove(p) {
@@ -891,17 +931,18 @@ function makeTienLen(id, cfg) {
       const gs = gameState, o = gs.over, n = gs.players.length;
       const others = []; for (let i = 0; i < n; i++) if (i !== o.winner) others.push(i);
       others.sort((a, b) => gs.hands[a].length - gs.hands[b].length || a - b);
-      const rankings = [{ p: o.winner, label: o.reason === 'trang' ? 'Ăn trắng — ' + o.label : o.reason === 'thoi2' ? 'Đối thủ thối 2' : 'Hết bài' }];
+      if (o.reason === 'thoi2') others.sort((a, b) => (a === o.loser ? 1 : 0) - (b === o.loser ? 1 : 0));
+      const rankings = [{ p: o.winner, label: o.reason === 'trang' ? 'Ăn trắng — ' + o.label : o.reason === 'thoi2' ? 'Thắng — đối thủ thối 2' : 'Hết bài' }];
       others.forEach(p => {
         const left = gs.hands[p].length; let label = left + ' lá còn lại';
-        if (o.reason === 'thoi2' && p === o.loser) label = 'Thối 2';
-        else if (cfg.penalty2 && gs.hands[p].some(c => c.rank === '2')) label += ' · Thối 2';
-        if (left === gs.startCounts[p] && o.reason !== 'thoi2') label += ' · Cóng';
+        if (p === o.loser) label = 'Thối 2 — còn ' + left + ' lá';
+        else if (gs.hands[p].some(c => c.rank === '2')) label += ' · Thối 2';
+        if (left === gs.startCounts[p]) label += ' · Cóng';
         rankings.push({ p, label });
       });
       const specials = [];
       if (o.winner === 0) { if (o.reason === 'trang') specials.push('trang'); if (o.quadFinish) specials.push('quad'); }
-      return { outcome: o.winner === 0 ? 'win' : 'lose', rankings, specials, headline: o.reason === 'trang' ? '🏆 ĂN TRẮNG' : null };
+      return { outcome: o.winner === 0 ? 'win' : 'lose', rankings, specials, headline: o.reason === 'trang' ? '🏆 ĂN TRẮNG' : o.reason === 'thoi2' ? (o.loser === 0 ? '💥 BẠN BỊ THỐI 2' : '💥 ĐỐI THỦ THỐI 2') : null };
     }
   };
   return eng;
@@ -1008,6 +1049,8 @@ const SAM_ENGINE = {
     return info;
   },
   nextTurn: shedNextTurn,
+  isStuck: p => shedIsStuck(SAM_ENGINE, p),
+  forceThoi: p => shedForceThoi(p),
   checkWin: () => gameState.over,
   aiChoose(p, level) {
     const gs = gameState, moves = shedMovesFor(SAM_ENGINE, p), canPass = shedCanPass(p);
@@ -1029,13 +1072,13 @@ const SAM_ENGINE = {
     const gs = gameState, o = gs.over, n = gs.players.length;
     const others = []; for (let i = 0; i < n; i++) if (i !== o.winner) others.push(i);
     others.sort((a, b) => gs.hands[a].length - gs.hands[b].length || a - b);
-    if (o.reason === 'chanSam') { others.sort((a, b) => (a === o.loser ? 1 : 0) - (b === o.loser ? 1 : 0) || gs.hands[a].length - gs.hands[b].length); }
-    const heads = { trang: 'Ăn trắng — ' + (o.label || ''), baoSamOk: 'SÂM! Đi hết không ai chặn', chanSam: 'Chặn Sâm thành công', thoi2: 'Đánh 2 cuối — thua', out: 'Hết bài' };
+    if (o.reason === 'chanSam' || o.reason === 'thoi2') { others.sort((a, b) => (a === o.loser ? 1 : 0) - (b === o.loser ? 1 : 0) || gs.hands[a].length - gs.hands[b].length); }
+    const heads = { trang: 'Ăn trắng — ' + (o.label || ''), baoSamOk: 'SÂM! Đi hết không ai chặn', chanSam: 'Chặn Sâm thành công', thoi2: 'Thắng — đối thủ thối 2', out: 'Hết bài' };
     const rankings = [{ p: o.winner, label: heads[o.reason] }];
-    others.forEach(p => rankings.push({ p, label: p === o.loser ? (o.reason === 'thoi2' ? 'Thối 2' : 'Báo Sâm thất bại') : gs.hands[p].length + ' lá còn lại' }));
+    others.forEach(p => rankings.push({ p, label: p === o.loser ? (o.reason === 'thoi2' ? 'Thối 2 — còn ' + gs.hands[p].length + ' lá' : 'Báo Sâm thất bại') : gs.hands[p].length + ' lá còn lại' + (gs.hands[p].some(c => c.rank === '2') ? ' · Thối 2' : '') }));
     const specials = [];
     if (o.winner === 0) { if (o.reason === 'trang') specials.push('trang'); if (o.reason === 'baoSamOk') specials.push('baoSamOk'); if (o.reason === 'chanSam') specials.push('chanSam'); if (o.quadFinish) specials.push('quad'); }
-    const headline = o.reason === 'trang' ? '🏆 ĂN TRẮNG' : o.reason === 'baoSamOk' ? '💥 SÂM!' : o.reason === 'chanSam' ? '🛡️ CHẶN SÂM' : o.reason === 'thoi2' ? '🃏 THỐI 2' : null;
+    const headline = o.reason === 'trang' ? '🏆 ĂN TRẮNG' : o.reason === 'baoSamOk' ? '💥 SÂM!' : o.reason === 'chanSam' ? '🛡️ CHẶN SÂM' : o.reason === 'thoi2' ? (o.loser === 0 ? '💥 BẠN BỊ THỐI 2' : '💥 ĐỐI THỦ THỐI 2') : null;
     return { outcome: o.winner === 0 ? 'win' : 'lose', rankings, specials, headline };
   }
 };
@@ -1371,6 +1414,7 @@ function simulateH2H(gameId, lvA, lvB) {
     let guard = 0;
     while (!gameState.over && guard++ < 3000) {
       const p = gameState.turn, lv = gameState.players[p].level;
+      if (eng.isStuck && eng.isStuck(p)) { eng.forceThoi(p); break; }
       let mv = null; try { mv = eng.aiChoose(p, lv); } catch (e) { mv = null; }
       if (!mv || !eng.validateMove(p, mv).ok) { mv = eng.timeoutMove(p); if (!eng.validateMove(p, mv).ok) mv = eng.getValidMoves(p)[0]; }
       eng.play(p, mv); if (gameState.over) break; eng.nextTurn();
@@ -1633,26 +1677,6 @@ function flipEl(el, newSrc) {
     };
   } catch (e) { if (img) img.src = newSrc; }
 }
-function showFx(kind, text) {
-  if (!Data.settings.effects || !canAnimate()) return;
-  const root = $('#fx-root'); if (!root) return;
-  const el = h('div', 'fx-banner fx-' + kind, text || '');
-  root.appendChild(el);
-  try {
-    const a = el.animate([
-      { opacity: 0, transform: 'translate(-50%, 10px) scale(.72)' },
-      { opacity: 1, transform: 'translate(-50%, 0) scale(1.04)', offset: .22 },
-      { opacity: 1, transform: 'translate(-50%, 0) scale(1)', offset: .72 },
-      { opacity: 0, transform: 'translate(-50%, -28px) scale(.92)' }
-    ], { duration: kind === 'chop2' ? 1050 : 900, easing: 'ease-out' });
-    a.onfinish = () => el.remove();
-  } catch (e) { setTimeout(() => el.remove(), 1000); }
-}
-function pulseTurn() {
-  if (!Data.settings.effects || !canAnimate()) return;
-  const el = $('#turn-label'); if (!el) return;
-  try { el.animate([{ transform: 'scale(.9)', opacity: .55 }, { transform: 'scale(1.08)', opacity: 1 }, { transform: 'scale(1)', opacity: 1 }], { duration: 420, easing: 'cubic-bezier(.2,.8,.2,1)' }); } catch (e) {}
-}
 function confetti() {
   if (!Data.settings.effects || !canAnimate()) return;
   const root = $('#fx-root'); if (!root) return;
@@ -1667,12 +1691,56 @@ function confetti() {
       a.onfinish = () => p.remove();
     } catch (e) { p.remove(); }
   }
-  setTimeout(() => { if (root) root.innerHTML = ''; }, 3600);
+  setTimeout(() => { $$('.confetti', root).forEach(e => e.remove()); }, 3600);
+}
+
+
+/* ---------- Hiệu ứng: banner, rung bàn, chớp màn hình, tới lượt, lên level ---------- */
+function showBanner(text, cls, ms, sub) {
+  const root = $('#fx-root'); if (!root || !Data.settings.effects) return;
+  ms = ms || 1300;
+  const b = h('div', 'fx-banner ' + (cls || '')); b.appendChild(h('div', 'fx-main', text));
+  if (sub) b.appendChild(h('div', 'fx-sub', sub));
+  b.style.setProperty('--d', ms + 'ms'); if (!canAnimate()) b.classList.add('static');
+  root.appendChild(b); setTimeout(() => b.remove(), ms);
+}
+function shakeEl(el) {
+  if (!el || !Data.settings.effects || !canAnimate()) return;
+  el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); setTimeout(() => el.classList.remove('shake'), 450);
+}
+function flashScreen(color) {
+  const root = $('#fx-root'); if (!root || !Data.settings.effects || !canAnimate()) return;
+  const f = h('div', 'fx-flash'); f.style.background = color; root.appendChild(f); setTimeout(() => f.remove(), 480);
+}
+/* Chặt (đặc biệt chặt 2): âm thanh + chữ lớn + rung bàn + chớp đỏ */
+function chatEffect(prev, cur, p) {
+  const two = prev.rank === 12;
+  const kind = cur.type === 'quad' ? 'Tứ quý' : cur.type === 'dthong' ? 'Đôi thông' : '';
+  SFX.play('chat');
+  showBanner(two ? 'CHẶT 2!' : 'CHẶT!', 'chat', 1400, gameState.players[p].name + (kind ? ' · ' + kind : ''));
+  shakeEl($('#table')); flashScreen('rgba(217,67,90,.4)');
+}
+/* Tới lượt của bạn: chuông nhẹ + viền sáng quanh tay bài */
+function turnEffect() {
+  SFX.play('turn');
+  if (!Data.settings.effects || !canAnimate()) return;
+  const w = $('#hand-wrap'); if (w) { w.classList.remove('my-turn'); void w.offsetWidth; w.classList.add('my-turn'); setTimeout(() => w.classList.remove('my-turn'), 1300); }
+  const l = $('#turn-label'); if (l) { l.classList.remove('ping'); void l.offsetWidth; l.classList.add('ping'); setTimeout(() => l.classList.remove('ping'), 900); }
+}
+function levelUpFx(lv) {
+  SFX.play('levelup');
+  const root = $('#fx-root'); if (!root) return;
+  if (Data.settings.effects) {
+    const d = h('div', 'levelup'); if (!canAnimate()) d.classList.add('static');
+    d.appendChild(h('div', 'lu-ring')); d.appendChild(h('div', 'lu-title', 'LEVEL UP!')); d.appendChild(h('div', 'lu-num', 'Lv.' + lv));
+    root.appendChild(d); setTimeout(() => d.remove(), 2800); confetti();
+  } else showToast('🎉 Lên Level ' + lv + '!', 'success', { silent: true });
 }
 
 /* ---------- Toast ---------- */
-function showToast(msg, type) {
+function showToast(msg, type, opts) {
   const root = $('#toast-root'); if (!root) return;
+  if (!(opts && opts.silent)) SFX.play({ success: 'success', warning: 'warn', error: 'error' }[type] || 'notification');
   while (root.children.length >= 3) root.removeChild(root.firstChild);
   const t = h('div', 'toast ' + (type || 'info'), msg);
   t.setAttribute('role', 'status');
@@ -2018,7 +2086,8 @@ function toggleRow(label, key) {
 RENDERERS.settings = function () {
   const root = $('#settings-body'); root.textContent = '';
   root.appendChild(toggleRow('🔊 Âm thanh', 'sound'));
-  root.appendChild(toggleRow('✨ Hiệu ứng (pháo giấy)', 'effects'));
+  root.appendChild(toggleRow('🔔 Âm thông báo', 'notify'));
+  root.appendChild(toggleRow('✨ Hiệu ứng (chặt 2, tới lượt, lên level…)', 'effects'));
   root.appendChild(toggleRow('🎬 Animation bài', 'animation'));
   root.appendChild(toggleRow('♿ Reduced Motion', 'reducedMotion'));
   const th = h('div', 'setting col'); th.appendChild(h('span', '', '🌙 Giao diện'));
@@ -2064,7 +2133,7 @@ RENDERERS.guide = function () {
   sec('🎴 Cách chơi chung', ['Chạm lá bài để chọn (bài nhích lên), chạm lần nữa để bỏ chọn. Bấm ĐÁNH để đánh các lá đã chọn. GỢI Ý cho nước đi hợp lệ.', 'Mỗi lượt có đồng hồ đếm ngược. Hết giờ, game tự chọn nước đi hợp lệ cho bạn.', 'Nước đi sai sẽ báo "Nước đi không hợp lệ" và không mất bài.']);
   Object.keys(GAME_META).forEach(id => { if (RULES[id]) sec('📖 ' + RULES[id][0] + (GAME_META[id].ready ? '' : ' (chưa chơi được)'), RULES[id][1]); });
   sec('🤖 AI', ['Dễ: nước đi đơn giản, đôi khi bỏ qua nước tốt. Bình thường: hợp lý, biết chặn. Khó: giữ quân mạnh, tính hết bài nhanh. Siêu khó: đánh giá nhiều nước và theo dõi lá đã ra.', 'AI không xem bài của bạn — chỉ dùng thông tin công khai.']);
-  sec('⭐ XP, hồ sơ, thành tích', ['Thắng ván được XP, độ khó càng cao XP càng nhiều. Không có tiền thật, nạp hay cược.', 'Hồ sơ, thống kê, thành tích và ván đang chơi tự lưu trong trình duyệt (LocalStorage).']);
+  sec('⭐ XP, hồ sơ, thành tích', ['Bắt đầu từ Lv.1 với 0 XP. Thắng ván được nhiều XP (độ khó càng cao càng nhiều), thua vẫn được một ít XP. Không có tiền thật, nạp hay cược.', 'Hồ sơ, thống kê, thành tích và ván đang chơi tự lưu trong trình duyệt (LocalStorage).']);
   sec('📲 Thêm vào Màn hình chính (iPhone)', ['Đặt 3 file lên một web tĩnh (GitHub Pages, Netlify…), mở bằng Safari → nút Chia sẻ → "Thêm vào MH chính". Icon app được nhúng sẵn.', 'Sau khi đã tải, game không cần Internet để chơi.']);
   RULES_EXTRA.forEach(x => sec(x[0], x[1]));
 };
@@ -2184,7 +2253,7 @@ const Tour2 = {
         { text: 'Huỷ' },
         { text: 'BẮT ĐẦU', cls: 'primary', fn: () => {
           if (Data.currentMatch) { showToast('Hãy hoàn tất hoặc bỏ ván đang chơi trước', 'warning'); return; }
-          Tour.start(id, game, { sub, region }); RENDERERS.tournament(); showToast('Đã vào giải — chúc may mắn!', 'success'); SFX.play('notification');
+          Tour.start(id, game, { sub, region }); RENDERERS.tournament(); showToast('Đã vào giải — chúc may mắn!', 'success');
         } }
       ]
     });
@@ -2481,14 +2550,18 @@ function renderTurn() {
 function renderBoard(fromRects) {
   renderSeats(); renderTable(fromRects); renderHand(); renderMyInfo(); renderTurn(); renderActions();
 }
+function dealSounds() { // tiếng chia bài: mỗi lá một tiếng, nhịp theo animation
+  const n = clamp($$('#hand .card').length + (gameState.players ? gameState.players.length : 0), 4, 14);
+  for (let k = 0; k < n; k++) setTimeout(() => SFX.play('deal'), 40 + k * 45);
+}
 function animateDeal() {
+  dealSounds();
   const deck = $('#deck-pile'); if (!deck || !canAnimate()) return 0;
   const from = rectCenter(deck); let i = 0;
   $$('#hand .card').forEach(e => { flyEl(e, from, { dur: 380, delay: i * 45, rot: -25, scale: 0.4 }); i++; });
   const total = Math.min(i, 13);
   Object.keys(UI.seats).forEach(k => { const a = $('.seat-av', UI.seats[k].root); if (a && a.animate) a.animate([{ transform: 'scale(.8)' }, { transform: 'scale(1)' }], { duration: 260, delay: k * 80 }); });
   $$('#table-cards .card, .mini-row .card').forEach((e, j) => flyEl(e, from, { dur: 360, delay: 120 + j * 55, rot: 20, scale: 0.4 }));
-  for (let k = 0; k < Math.min(total, 6); k++) setTimeout(() => SFX.play('deal'), k * 90);
   return total * 45 + 420;
 }
 function collectTable(done) {
@@ -2508,8 +2581,8 @@ const Match = {
     try {
       Modal.closeAll(); this.cleanup();
       this.gameId = gameId; this.engine = GAME_ENGINES[gameId]; this.running = true;
-      this.extra = extra; this.tour = !!extra.tour; this.roomCtx = extra.room || null;
-      this.startedAt = Date.now(); this.elapsedBefore = 0; this.token++; this._lastTurnToken = '';
+      this.extra = extra; this.tour = !!extra.tour; this.roomCtx = extra.room || null; this._wasHuman = false;
+      this.startedAt = Date.now(); this.elapsedBefore = 0; this.token++;
       NEXT_OPP = extra.opponents || null; LEVEL_OVERRIDE = extra.aiLevel != null ? extra.aiLevel : null;
       try { this.engine.setup({ players: extra.players || Data.settings.players[gameId] || GAME_META[gameId].defP }); }
       finally { NEXT_OPP = null; LEVEL_OVERRIDE = null; }
@@ -2537,8 +2610,8 @@ const Match = {
     const decide = yes => {
       if (done || tk !== this.token) return; done = true; TurnTimer.stopTimer();
       const eng = this.engine;
-      if (yes) { eng.declareBao(0); showToast('💥 Bạn báo Sâm! Phải thắng mọi vòng', 'warning'); SFX.play('notification'); }
-      else { const who = eng.aiBaoCheck(); if (who > 0) { showToast('💥 ' + gs.players[who].name + ' BÁO SÂM — hãy chặn!', 'warning'); SFX.play('notification'); } }
+      if (yes) { eng.declareBao(0); showToast('💥 Bạn báo Sâm! Phải thắng mọi vòng', 'warning'); }
+      else { const who = eng.aiBaoCheck(); if (who > 0) { showToast('💥 ' + gs.players[who].name + ' BÁO SÂM — hãy chặn!', 'warning'); } }
       gs.phase = 'play'; this.persist(); this.advance();
     };
     const m = Modal.open({
@@ -2556,14 +2629,18 @@ const Match = {
     if (gs.over) { this.finish(); return; }
     if (gs.newRound) { gs.newRound = false; }
     renderBoard();
-    if (eng.kind === 'bj' && eng.isDealerTurn()) { this.dealerLoop(); return; }
+    if (eng.isStuck && eng.isStuck(gs.turn)) { // chỉ còn toàn quân 2 mà phải đánh tự do → thối 2
+      const sp = gs.turn; TurnTimer.stopTimer(); eng.forceThoi(sp); renderBoard();
+      showBanner(gs.players[sp].name + ' — THỐI 2!', 'thoi', 1800); SFX.play('chat'); this.persist();
+      Timers.set(() => this.finish(), 1300); return;
+    }
+    if (eng.kind === 'bj' && eng.isDealerTurn()) { this._wasHuman = false; this.dealerLoop(); return; }
     if (this.humanTurn()) {
-      if (this._lastTurnToken !== this.token + ':' + gs.turn + ':' + (gs.round || 0)) {
-        this._lastTurnToken = this.token + ':' + gs.turn + ':' + (gs.round || 0);
-        SFX.play('turn'); pulseTurn();
-      }
+      if (!this._wasHuman) turnEffect();
+      this._wasHuman = true;
       TurnTimer.startTimer(gs.settings ? gs.settings.turnTime : Data.settings.turnTime, () => this.humanTimeout());
     } else {
+      this._wasHuman = false;
       TurnTimer.stopTimer();
       const p = gs.turn, lv = gs.players[p].level;
       const wait = 650 + rand(650) + (lv >= 2 ? 150 : 0);
@@ -2592,7 +2669,7 @@ const Match = {
   humanMove(mv) {
     if (!this.humanTurn() || UI.lock) return;
     const v = this.engine.validateMove(0, mv);
-    if (!v.ok) { showToast('⚠️ Nước đi không hợp lệ — ' + (v.reason || ''), 'warning'); SFX.play('notification'); return; }
+    if (!v.ok) { showToast('⚠️ Nước đi không hợp lệ — ' + (v.reason || ''), 'warning'); return; }
     TurnTimer.stopTimer(); UI.selected.clear(); this.commit(0, mv);
   },
   commit(p, mv) {
@@ -2608,12 +2685,9 @@ const Match = {
     const info = eng.play(p, mv);
     if (info.type === 'play') {
       SFX.play('card');
-      const combo = info.combo || null;
-      const beatTwo = !!(prevCombo && prevCombo.rank === 12 && combo && (combo.type === 'quad' || combo.type === 'dthong' || combo.type !== prevCombo.type));
-      if (beatTwo) { SFX.play('chop2'); showFx('chop2', '💥 CHẶT 2!'); }
-      else if (prevCombo) { SFX.play('eat'); showFx('eat', '⚡ ĂN BÀI!'); }
+      if (prevCombo && eng.kind === 'shed' && !(info.combo.type === prevCombo.type && info.combo.len === prevCombo.len)) setTimeout(() => chatEffect(prevCombo, info.combo, p), 90);
     }
-    else if (info.type === 'pass') { showToast(gs.players[p].name + ' bỏ lượt', 'info'); }
+    else if (info.type === 'pass') { showToast(gs.players[p].name + ' bỏ lượt', 'info', { silent: true }); }
     else if (eng.kind === 'bj') SFX.play('card');
     renderBoard(rects);
     if (info.type === 'hit' || info.type === 'double' || info.type === 'split' || info.type === 'dealerHit') {
@@ -2629,7 +2703,7 @@ const Match = {
     const wasLead = gs.lastPlay;
     eng.nextTurn();
     if (gs.newRound && eng.kind === 'shed') { // thu bài về chồng rồi vòng mới
-      gs.newRound = false; this.persist();
+      gs.newRound = false; this.persist(); SFX.play('eat'); // ăn bài: thu bài về
       const tk = this.token; UI.lock = true;
       Timers.set(() => collectTable(() => { if (tk !== this.token) return; UI.lock = false; UI.lastTableKey = '__x'; $('#table-cards').textContent = ''; UI.lastTableKey = ''; this.advance(); }), 450);
       return;
@@ -2674,7 +2748,6 @@ const Match = {
     if (isTour) { try { tourNote = Tour.report(res.outcome === 'win'); } catch (e) { handleError(e); } this.tour = false; }
     renderBoard(); // trạng thái cuối
     if (res.outcome === 'win') { SFX.play('win'); confetti(); $('#screen-play').classList.add('win-glow'); } else if (res.outcome === 'lose') SFX.play('lose'); else SFX.play('notification');
-    if (add.leveled > 0) { SFX.play('levelup'); showFx('levelup', '🎉 LÊN LEVEL ' + Data.level + '!'); }
     Timers.set(() => { showResult(res, add, ach, before, isTour ? (tourNote || 'Trận giải đấu') : null); }, res.outcome === 'win' ? 700 : 450);
   },
   persist() {
@@ -2705,7 +2778,7 @@ const Match = {
       Modal.closeAll(); this.cleanup();
       gameState = Object.assign(newGameState(), JSON.parse(JSON.stringify(cm.state), cardReviver));
       this.gameId = cm.gameId; this.engine = GAME_ENGINES[cm.gameId]; this.running = true;
-      this.tour = !!cm.tour; this.roomCtx = cm.room || null; this.extra = cm.extra || {};
+      this.tour = !!cm.tour; this.roomCtx = cm.room || null; this.extra = cm.extra || {}; this._wasHuman = false;
       this.startedAt = Date.now(); this.elapsedBefore = cm.elapsed || 0;
       navigateTo('play'); setAppHeight(); buildPlayScreen(); layoutPlayInit(); renderBoard();
       if (gameState.over) { this.finish(); return; }
@@ -2784,8 +2857,8 @@ function doAction(act, t) {
     case 'hint': {
       if (!Match.humanTurn()) return; const mv = Match.engine.hint(0);
       UI.selected.clear();
-      if (mv.type === 'pass') showToast('💡 Gợi ý: bỏ lượt', 'info');
-      else { mv.cards.forEach(id => UI.selected.add(id)); renderHand(); showToast('💡 Đã chọn nước gợi ý', 'info'); }
+      if (mv.type === 'pass') showToast('💡 Gợi ý: bỏ lượt', 'info', { silent: true });
+      else { mv.cards.forEach(id => UI.selected.add(id)); renderHand(); showToast('💡 Đã chọn nước gợi ý', 'info', { silent: true }); }
       break;
     }
     case 'pass': Match.humanMove({ type: 'pass' }); break;
@@ -2820,7 +2893,7 @@ function setIcons() {
 }
 function init() {
   try { Data = Store.load(); } catch (e) { Data = defaultData(); }
-  applySettings(); setAppHeight(); setIcons();
+  saveData(); applySettings(); setAppHeight(); setIcons();
   document.addEventListener('click', e => {
     const t = e.target.closest('[data-action]'); if (!t || t.disabled) return;
     SFX.unlock(); if (t.dataset.action !== 'play') SFX.play('click');
