@@ -49,6 +49,7 @@ document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}
           <div id="home-avatar" class="avatar-lg" aria-hidden="true">👨</div>
           <div class="pc-info">
             <b id="home-name">Minh</b>
+            <small id="home-title" class="title-tag"></small>
             <span id="home-country">🇻🇳 Việt Nam</span>
             <div class="xp-row"><span id="home-level" class="lv">Lv.1</span>
               <div class="xp-bar"><i id="home-xp-fill"></i></div></div>
@@ -56,6 +57,7 @@ document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}
           </div>
         </div>
         <button id="btn-play-now" class="btn primary big" type="button" data-action="play-now">🎴 CHƠI NGAY</button>
+        <div id="home-extra" class="home-extra"></div>
       </div>
       <nav class="menu-grid" aria-label="Menu chính">
         <button class="menu-item" type="button" data-action="goto" data-target="games"><span>🎴</span>CHƠI GAME</button>
@@ -65,6 +67,10 @@ document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}
         <button class="menu-item" type="button" data-action="goto" data-target="stats"><span>📊</span>THỐNG KÊ</button>
         <button class="menu-item" type="button" data-action="goto" data-target="achievements"><span>🏅</span>THÀNH TÍCH</button>
         <button class="menu-item" type="button" data-action="goto" data-target="settings"><span>⚙️</span>CÀI ĐẶT</button>
+        <button class="menu-item" type="button" data-action="goto" data-target="missions"><span>📅</span>NHIỆM VỤ</button>
+        <button class="menu-item" type="button" data-action="goto" data-target="leaderboard"><span>🥇</span>XẾP HẠNG</button>
+        <button class="menu-item" type="button" data-action="goto" data-target="themes"><span>🎨</span>GIAO DIỆN</button>
+        <button class="menu-item" type="button" data-action="goto" data-target="history"><span>🕑</span>LỊCH SỬ</button>
         <button class="menu-item" type="button" data-action="goto" data-target="guide"><span>📖</span>HƯỚNG DẪN</button>
       </nav>
     </section>
@@ -82,6 +88,18 @@ document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}
     <!-- PHÒNG -->
     <section class="screen" id="screen-rooms" aria-label="Phòng chơi"><div id="rooms-body"></div></section>
 
+    <!-- NHIỆM VỤ -->
+    <section class="screen" id="screen-missions" aria-label="Nhiệm vụ"><div id="missions-body"></div></section>
+
+    <!-- XẾP HẠNG -->
+    <section class="screen" id="screen-leaderboard" aria-label="Bảng xếp hạng"><div id="lb-body"></div></section>
+
+    <!-- GIAO DIỆN -->
+    <section class="screen" id="screen-themes" aria-label="Giao diện"><div id="themes-body"></div></section>
+
+    <!-- LỊCH SỬ -->
+    <section class="screen" id="screen-history" aria-label="Lịch sử ván"><div id="history-body"></div></section>
+
     <!-- MÀN CHƠI -->
     <section class="screen" id="screen-play" aria-label="Bàn chơi">
       <div id="play-bar">
@@ -89,12 +107,14 @@ document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}
         <div id="play-title"></div>
         <div id="turn-label" aria-live="polite"></div>
         <div id="timer-pill" aria-label="Thời gian còn lại"><i id="timer-bar"></i><span id="timer-num">—</span></div>
+        <button id="btn-emote" class="icon-btn" type="button" data-action="emote" aria-label="Phản ứng nhanh">😀</button>
         <button class="icon-btn" type="button" data-action="play-rules" aria-label="Luật chơi">📖</button>
       </div>
       <div id="seats"></div>
       <div id="table">
         <div id="deck-pile" class="card back" aria-hidden="true"><img alt=""></div>
         <div id="table-info" aria-live="polite"></div>
+        <div id="emote-tray" hidden role="group" aria-label="Chọn phản ứng"></div>
         <div id="table-cards"></div>
       </div>
       <div id="my-info"></div>
@@ -107,7 +127,7 @@ document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}
       <div class="pf-top">
         <div id="pf-avatar" class="avatar-xl">👨</div>
         <h2 id="pf-name">Minh</h2>
-        <p id="pf-country"></p><p id="pf-age" class="muted"></p>
+        <p id="pf-country"></p><p id="pf-title" class="title-tag"></p><p id="pf-age" class="muted"></p>
         <div class="xp-row wide"><span id="pf-level" class="lv">Lv.1</span><div class="xp-bar"><i id="pf-xp-fill"></i></div></div>
         <small id="pf-xp-text"></small>
       </div>
@@ -125,6 +145,7 @@ document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}
       <div id="stats-grid" class="stat-grid"></div>
       <h3 class="sub">Theo từng game</h3>
       <div id="stats-games" class="table-rows"></div>
+      <div id="stats-bars" class="bars"></div>
     </section>
 
     <!-- THÀNH TÍCH -->

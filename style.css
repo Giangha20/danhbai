@@ -288,3 +288,41 @@ body[data-screen="play"] #toast-root{top:42%}
 @keyframes lupop{0%{transform:scale(.2);opacity:0}100%{transform:scale(1);opacity:1}}
 @keyframes luspin{to{transform:rotate(360deg)}}
 @keyframes lufade{0%{opacity:0}12%{opacity:1}78%{opacity:1}100%{opacity:0}}
+
+/* ===== Tính năng mở rộng ===== */
+.title-tag{font-size:.78rem;color:var(--gold);font-weight:700;margin:0}
+.home-extra{display:grid;gap:.5rem;margin-top:.6rem;text-align:left}
+.mini-card{display:flex;align-items:center;gap:.7rem;width:100%;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:.55rem .75rem;text-align:left}
+.mini-card.gift{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
+.mini-card.link{cursor:pointer}
+.mc-ic{font-size:1.6rem}.mc-t{flex:1;display:flex;flex-direction:column;min-width:0}.mc-t small.ready{color:var(--ok);font-weight:700}
+.streak{display:flex;gap:.3rem;margin:.3rem 0}
+.streak .day{flex:1;min-height:34px;display:grid;place-items:center;border-radius:10px;background:var(--panel2);color:var(--muted);font-weight:700}
+.streak .day.on{background:var(--gold);color:#1b1405}
+.mission.claimed{opacity:.55}
+.lb-row{display:grid;grid-template-columns:44px 36px 1fr auto;gap:.5rem;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:.4rem .6rem;margin-bottom:.3rem}
+.lb-row.me{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset;margin-top:.5rem}
+.lb-row.top .lb-rank{font-size:1.2rem}
+.lb-rank{font-weight:800;text-align:center}.lb-av{font-size:1.4rem;text-align:center}.lb-name{display:flex;flex-direction:column;min-width:0}.lb-name b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lb-score{font-weight:700;color:var(--gold)}
+.theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}
+.theme-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:.5rem .3rem;border-radius:14px;border:2px solid var(--line);background:var(--panel)}
+.theme-item.on{border-color:var(--gold)}.theme-item.locked{opacity:.55}
+.theme-card{width:56px;height:78px;border-radius:6px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.4))}
+.theme-felt{width:100%;height:78px;border-radius:12px;border:1px solid var(--line)}
+.hist-row{display:grid;grid-template-columns:34px 1fr auto;gap:.5rem;align-items:center;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:12px;padding:.45rem .6rem;margin-bottom:.35rem}
+.hist-row.win{border-left-color:var(--ok)}.hist-row.lose{border-left-color:var(--danger)}
+.hist-ic{font-size:1.4rem;text-align:center}.hist-t{display:flex;flex-direction:column;min-width:0}.hist-t small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hist-xp{color:var(--ok);font-weight:700;font-size:.85rem}
+.bars{margin-top:.4rem}.bar-row{display:grid;grid-template-columns:1.3fr 2fr 44px;gap:.5rem;align-items:center;margin-bottom:.35rem;font-size:.85rem}
+.bar{height:10px;border-radius:10px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,#22c55e,var(--gold));border-radius:10px}.bar-pct{text-align:right;font-weight:700}
+.trophies{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:.6rem .8rem;margin-bottom:.6rem}
+.trophy-row{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.3rem}.trophy{font-size:1.5rem}
+.ta{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.75rem;resize:vertical}
+.btn-pair{display:flex;gap:.4rem}
+.btn.sortbtn{flex:0 0 46px;padding:0;font-size:1.2rem}
+#emote-tray{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);display:flex;gap:.2rem;background:rgba(0,0,0,.6);border-radius:22px;padding:.25rem .4rem;z-index:5;max-width:96%}
+#emote-tray[hidden]{display:none}
+.emote-btn{min-width:38px;min-height:38px;border:0;border-radius:50%;background:transparent;font-size:1.4rem}.emote-btn:active{background:var(--line)}
+.emote{position:absolute;z-index:8;font-size:2rem;pointer-events:none;animation:emotepop 1.9s ease-out forwards}
+.seat .emote{right:4px;top:-14px}.emote.me{left:50%;bottom:8px;margin-left:-1rem}
+@keyframes emotepop{0%{transform:translateY(8px) scale(.3);opacity:0}15%{transform:translateY(0) scale(1.3);opacity:1}30%{transform:scale(1)}85%{opacity:1}100%{transform:translateY(-14px);opacity:0}}
+.seat{position:relative}
