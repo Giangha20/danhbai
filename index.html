@@ -78,7 +78,7 @@ document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}
     <!-- CHỌN GAME -->
     <section class="screen" id="screen-games" aria-label="Chọn game">
       <div id="games-list" class="games-list"></div>
-      <h3 class="sub">Sắp có</h3>
+      <h3 class="sub" id="games-soon">Sắp có</h3>
       <div id="games-locked" class="games-list"></div>
     </section>
 
@@ -115,11 +115,29 @@ document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}
         <div id="deck-pile" class="card back" aria-hidden="true"><img alt=""></div>
         <div id="table-info" aria-live="polite"></div>
         <div id="emote-tray" hidden role="group" aria-label="Chọn phản ứng"></div>
+        <div id="raise-tray" hidden role="group" aria-label="Chọn mức tố"></div>
         <div id="table-cards"></div>
       </div>
       <div id="my-info"></div>
       <div id="hand-wrap"><div id="hand" role="group" aria-label="Bài của bạn"></div></div>
       <div id="action-bar"></div>
+    </section>
+
+    <!-- XẾP BÀI MỘT NGƯỜI -->
+    <section class="screen" id="screen-solo" aria-label="Xếp bài một người">
+      <div id="solo-bar">
+        <button class="icon-btn" type="button" data-action="solo-exit" aria-label="Thoát ván">‹</button>
+        <div id="solo-title"></div><span id="solo-moves"></span><span id="solo-time"></span>
+        <button class="icon-btn" type="button" data-action="solo-rules" aria-label="Luật chơi">📖</button>
+      </div>
+      <div id="solo-board"><div id="solo-top"></div><div id="solo-tab"></div></div>
+      <div id="solo-actions">
+        <button class="btn" type="button" data-action="solo-undo">↶ Hoàn tác</button>
+        <button class="btn" type="button" data-action="solo-hint">💡 Gợi ý</button>
+        <button class="btn" id="solo-auto" type="button" data-action="solo-auto">⬆ Lên nền</button>
+        <button class="btn" type="button" data-action="solo-restart" aria-label="Chơi lại ván này">⟲</button>
+        <button class="btn primary" type="button" data-action="solo-new">Ván mới</button>
+      </div>
     </section>
 
     <!-- HỒ SƠ -->

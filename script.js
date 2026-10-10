@@ -100,18 +100,19 @@ const GAME_META = {
   samLoc: { name: 'Sâm Lốc', desc: '10 lá — báo Sâm, chặn Sâm, ăn trắng', minP: 2, maxP: 4, defP: 4, icon: 'ten', kind: 'shed', ready: true },
   xiDach: { name: 'Xì Dách', desc: 'Rút bài đạt 16–21, đấu với nhà cái', minP: 1, maxP: 4, defP: 3, icon: 'bj', kind: 'bj', ready: true },
   blackjack: { name: 'Blackjack', desc: 'Hit, stand, double, split — đấu nhà cái', minP: 1, maxP: 4, defP: 3, icon: 'bj2', kind: 'bj', ready: true },
-  lieng: { name: 'Liêng', desc: '3 lá, tố/theo/úp/bỏ', icon: 'three', phase: 'Đợt 2' },
-  baCay: { name: 'Ba Cây', desc: '3 lá, điểm 0–9', icon: 'three2', phase: 'Đợt 2' },
-  phom: { name: 'Phỏm', desc: 'Bốc, ăn, hạ phỏm, ù', icon: 'phom', phase: 'Đợt 2' },
-  mauBinh: { name: 'Mậu Binh', desc: '13 lá chia 3 chi', icon: 'mb', phase: 'Đợt 3' },
-  poker: { name: 'Poker Offline', desc: "Texas Hold'em", icon: 'chips', phase: 'Đợt 3' },
-  highCard: { name: 'High Card', desc: 'Lá cao nhất thắng', icon: 'hc', phase: 'Đợt 2' },
-  rummy: { name: 'Rummy', desc: 'Bốc, đánh, hạ bộ', icon: 'rummy', phase: 'Đợt 3' },
-  solitaire: { name: 'Solitaire', desc: 'Klondike một người', icon: 'sol', phase: 'Đợt 4' },
-  freeCell: { name: 'FreeCell', desc: '8 cột, 4 ô trống', icon: 'fc', phase: 'Đợt 4' },
-  spider: { name: 'Spider Solitaire', desc: '1/2/4 chất', icon: 'spider', phase: 'Đợt 4' }
+  lieng: { name: 'Liêng', desc: '3 lá, tố/theo/úp/bỏ rồi so bài', minP: 2, maxP: 5, defP: 4, icon: 'three', kind: 'bet', ready: true },
+  baCay: { name: 'Ba Cây', desc: '3 lá, so điểm 0–9, ba cây ảnh', minP: 2, maxP: 5, defP: 4, icon: 'three2', kind: 'show', ready: true },
+  phom: { name: 'Phỏm', desc: 'Bốc, ăn, hạ phỏm, gửi bài, ù', minP: 2, maxP: 4, defP: 4, icon: 'phom', kind: 'draw', ready: true },
+  mauBinh: { name: 'Mậu Binh', desc: '13 lá xếp 3 chi, so chi', minP: 2, maxP: 4, defP: 4, icon: 'mb', kind: 'mb', ready: true },
+  poker: { name: 'Poker Offline', desc: "Texas Hold'em: check, bet, raise, all-in", minP: 2, maxP: 6, defP: 4, icon: 'chips', kind: 'poker', ready: true },
+  highCard: { name: 'High Card', desc: 'Lá cao nhất thắng · 3 ván', minP: 2, maxP: 4, defP: 3, icon: 'hc', kind: 'show', ready: true },
+  rummy: { name: 'Rummy', desc: 'Bốc, đánh, hạ bộ, gõ khi rác ≤ 10', minP: 2, maxP: 4, defP: 2, icon: 'rummy', kind: 'draw', ready: true },
+  solitaire: { name: 'Solitaire', desc: 'Klondike một người · rút 1 hoặc 3 lá', minP: 1, maxP: 1, defP: 1, icon: 'sol', kind: 'solo', ready: true },
+  freeCell: { name: 'FreeCell', desc: '8 cột, 4 ô trống, 4 nền', minP: 1, maxP: 1, defP: 1, icon: 'fc', kind: 'solo', ready: true },
+  spider: { name: 'Spider Solitaire', desc: '104 lá · 1/2/4 chất', minP: 1, maxP: 1, defP: 1, icon: 'spider', kind: 'solo', ready: true },
 };
 const READY_GAMES = Object.keys(GAME_META).filter(k => GAME_META[k].ready);
+const ROOM_GAMES = READY_GAMES.filter(k => GAME_META[k].kind !== 'solo');
 
 /* Thành tích đạt được trong Đợt 1 (mọi thành tích đều mở được bằng gameplay thật) */
 const ACHIEVEMENTS = [
@@ -131,6 +132,14 @@ const ACHIEVEMENTS = [
   { id: 'beatHard', icon: '🔴', name: 'Hạ AI Siêu khó', desc: 'Thắng bàn toàn AI Siêu khó', test: (d, s) => s.includes('beatHard') },
   { id: 'champion', icon: '👑', name: 'Vô địch giải đấu', desc: 'Giành chức vô địch một giải đấu bất kỳ', test: (d, s) => s.includes('champion') || d.statistics.championships >= 1 },
   { id: 'worldChampion', icon: '🌎', name: 'Vô địch thế giới', desc: 'Vô địch World Solo Championship', test: (d, s) => s.includes('worldChampion') },
+  { id: 'solSol', icon: '🂱', name: 'Xếp xong Solitaire', desc: 'Hoàn thành một ván Solitaire (Klondike)', test: (d, s) => s.includes('solo:solitaire') },
+  { id: 'solFc', icon: '🆓', name: 'Giải xong FreeCell', desc: 'Hoàn thành một ván FreeCell', test: (d, s) => s.includes('solo:freeCell') },
+  { id: 'solSp', icon: '🕷️', name: 'Gỡ hết Spider', desc: 'Gỡ đủ 8 chuỗi trong Spider Solitaire', test: (d, s) => s.includes('solo:spider') },
+  { id: 'phomU', icon: '🏆', name: 'Ù Phỏm', desc: 'Ù trong một ván Phỏm', test: (d, s) => s.includes('phomU') },
+  { id: 'mbSap', icon: '💥', name: 'Sập hầm', desc: 'Thắng cả 3 chi trước một đối thủ trong Mậu Binh', test: (d, s) => s.includes('mbSap') },
+  { id: 'rumGin', icon: '♻️', name: 'Gin Rummy', desc: 'Gõ với 0 điểm rác và thắng', test: (d, s) => s.includes('rumGin') },
+  { id: 'lienSap', icon: '🎰', name: 'Liêng Sáp', desc: 'Thắng ván Liêng bằng bộ Sáp', test: (d, s) => s.includes('lienSap') },
+  { id: 'pkStrong', icon: '🃏', name: 'Poker mạnh', desc: 'Thắng ván Poker bằng Flush trở lên', test: (d, s) => s.includes('pkStrong') },
   { id: 'legendChampion', icon: '👑', name: 'Huyền thoại', desc: 'Vô địch Giải Huyền thoại (AI Siêu khó)', test: (d, s) => s.includes('legendChampion') },
   { id: 'level20', icon: '⭐', name: 'Lên cấp 20', desc: 'Đạt Level 20', test: (d) => d.level >= 20 }
 ];
@@ -185,64 +194,69 @@ const RULES = {
     'Quắc (>21) là thua. Bằng điểm là Push (hòa). Chỉ dùng điểm ảo, không có tiền thật.'
   ]],
   lieng: ['Liêng', [
-    'Mỗi người 3 lá. Xếp hạng: Sáp (3 lá cùng số) > Liêng (3 lá liên tiếp) > Ảnh (3 lá J/Q/K) > bài thường tính điểm.',
-    'Điểm bài thường: A = 1, 2–9 theo số, 10/J/Q/K = 10 (tính 0); điểm = tổng chia 10 lấy dư (cao nhất 9).',
-    'Vòng cược bằng điểm ảo: Tố (tăng mức), Theo (bằng mức), Úp/Bỏ (rời ván). Sau vòng cược các lá được lật để so bài.',
-    'Cùng hạng thì so lá cao nhất, rồi so chất (♠ < ♣ < ♦ < ♥). Game sẽ có ở đợt sau.'
+    'Số người 2–5, mỗi người 3 lá úp. Mỗi người góp 10 điểm ảo (chip) vào pot, bắt đầu với 200 chip. Chỉ dùng điểm ảo, không có tiền thật.',
+    'Xếp hạng: Sáp (3 lá cùng số) > Liêng (3 lá liên tiếp, A-2-3 và Q-K-A hợp lệ) > Ảnh (3 lá J/Q/K) > điểm (A=1, 2–9 theo số, 10/J/Q/K=0; lấy số lẻ của tổng).',
+    'Bạn có thể bấm 👁 XEM để lật xem bài của mình, hoặc chơi úp không xem.',
+    'Mỗi lượt: ÚP (qua lượt, chỉ khi chưa ai tố), THEO (bằng mức tố hiện tại), TỐ (+10, tối đa 3 lần tố mỗi ván), BỎ (bỏ ván, mất phần đã góp).',
+    'Khi mọi người còn lại đã theo xong thì so bài: bộ cao nhất ăn pot (bằng nhau thì so lá cao nhất rồi chất). Nếu chỉ còn 1 người, người đó ăn pot không cần lật bài.'
   ]],
   baCay: ['Ba Cây', [
-    'Mỗi người 3 lá. Điểm = tổng điểm 3 lá chia 10 lấy dư, từ 0 đến 9. A = 1; J/Q/K = 10 (hoặc tính 0 tuỳ cấu hình luật).',
-    'Ba cây ảnh (3 lá J/Q/K) là bài cao nhất. Sau đó so điểm 9 > 8 > … > 0.',
-    'Bằng điểm thì so lá cao nhất, rồi so chất. Game sẽ có ở đợt sau.'
+    'Số người 2–5, mỗi người 3 lá úp. Điểm = tổng 3 lá, chỉ lấy số lẻ (A=1, 2–9 theo số, 10/J/Q/K=0). Điểm cao nhất là 9.',
+    'Ba cây ảnh (3 lá J/Q/K) là bài cao nhất — có thể tắt trong màn chọn game.',
+    'Bấm LẬT BÀI để lật tất cả. Bằng điểm thì so lá cao nhất (A cao nhất), rồi so chất ♠ < ♣ < ♦ < ♥.',
+    'Mỗi ván là một lần so bài; không có cược.'
   ]],
   phom: ['Phỏm', [
-    'Dùng 52 lá, 2–4 người. Mỗi người 9 lá (người đi đầu 10 lá). Mục tiêu: ghép bài thành phỏm và còn ít điểm rác nhất.',
-    'Phỏm = 3 lá trở lên cùng số (phỏm ngang) hoặc 3 lá trở lên liên tiếp cùng chất (phỏm dọc, A có thể là 1).',
-    'Mỗi lượt: bốc 1 lá từ nọc hoặc ăn lá người trước vừa đánh (chỉ khi lá đó tạo được phỏm), rồi đánh ra 1 lá.',
-    'Hết 4 vòng đánh thì hạ phỏm. Người hạ phỏm được gửi lá còn lại vào phỏm đã hạ của mình hoặc của người khác.',
-    'Ù: hết bài sau khi hạ phỏm (hoặc 9 lá thành phỏm hết). Móm: không có phỏm nào — bị xếp bét. Tính điểm lá rác (A = 1 … K = 13), ít điểm nhất thắng. Game sẽ có ở đợt sau.'
+    'Số người 2–4, dùng 52 lá. Mỗi người 9 lá; người đi trước có 10 lá và đánh trước. Mục tiêu: ghép phỏm và còn ít điểm rác nhất.',
+    'Phỏm = 3 lá trở lên cùng số (ngang) hoặc 3 lá trở lên liên tiếp cùng chất (dọc, A chỉ là lá nhỏ nhất).',
+    'Mỗi lượt: BỐC 1 lá từ nọc hoặc ĂN lá người trước vừa đánh (chỉ khi ghép được phỏm với lá trong tay — phỏm đó được hạ ngay trước mặt), rồi ĐÁNH ra 1 lá.',
+    'Ù: toàn bộ bài trên tay thành phỏm → thắng ngay. Ván kết thúc khi mỗi người đã đánh 4 lá (hoặc hết nọc).',
+    'Hạ phỏm: bài được tự động chia thành phỏm tốt nhất, sau đó gửi lá lẻ vào các phỏm đã hạ nếu nối được. Điểm rác: A=1 … K=13; ít điểm nhất thắng. Người không có phỏm nào là MÓM và xếp cuối.',
+    'AI biết giữ quân tạo phỏm, đánh rác, ăn khi có lợi và tránh đánh quân gần với những quân đối thủ đã bỏ. Bài trên tay tự xếp phỏm lên đầu hàng.'
   ]],
   mauBinh: ['Mậu Binh', [
-    'Mỗi người 13 lá, xếp thành 3 chi: Chi 1 (đầu) 3 lá, Chi 2 (giữa) 5 lá, Chi 3 (cuối) 5 lá. Bắt buộc Chi 3 ≥ Chi 2 ≥ Chi 1, xếp sai gọi là binh lủng (thua).',
+    'Số người 2–4, mỗi người 13 lá, xếp thành 3 chi: Chi 1 (đầu) 3 lá, Chi 2 (giữa) 5 lá, Chi 3 (cuối) 5 lá. Bắt buộc Chi 3 ≥ Chi 2 ≥ Chi 1, xếp sai là binh lủng.',
     'Hạng bài (cao → thấp): Thùng phá sảnh, Tứ quý, Cù lũ, Thùng, Sảnh, Sám, Thú (2 đôi), Đôi, Mậu thầu. Chi 1 chỉ có Sám, Đôi hoặc Mậu thầu.',
-    'So từng chi với đối thủ: thắng 2/3 chi là thắng ván. Thắng cả 3 chi là "sập hầm" (thưởng thêm).',
-    'Thắng trắng (thắng ngay): sảnh rồng 13 lá, 6 đôi, 3 sảnh, 3 thùng. Game sẽ có ở đợt sau.'
+    'Cách xếp: chạm chọn các lá trong tay rồi chạm vào một chi để đặt; chạm lá đã đặt để trả về tay. TỰ XẾP nhờ AI xếp giúp. Chỉ XÁC NHẬN được khi xếp đủ 13 lá và hợp lệ.',
+    'So từng chi với từng đối thủ: thắng mỗi chi +1 điểm, thắng cả 3 chi (sập hầm) nhân đôi. Thưởng thêm: Sám chi 1 (+2), Cù lũ chi 2 (+1), Tứ quý (+4 chi 3 / +8 chi 2), Thùng phá sảnh (+5 / +10).',
+    'Thắng trắng (thắng ngay khi chia): sảnh rồng 13 lá, 6 đôi, 3 sảnh, 3 thùng.'
   ]],
-  poker: ["Poker (Texas Hold'em)", [
-    'Mỗi người 2 lá riêng và dùng 5 lá chung trên bàn để ghép bộ 5 lá tốt nhất.',
-    'Các vòng: Pre-flop (chia 2 lá) → Flop (3 lá chung) → Turn (lá thứ 4) → River (lá thứ 5) → Showdown (so bài).',
-    'Hành động: Check (bỏ qua), Bet (đặt), Call (theo), Raise (tố thêm), Fold (bỏ bài), All-in (đẩy hết điểm). Chỉ dùng điểm ảo.',
+  poker: ["Poker Offline (Texas Hold'em)", [
+    'Số người 2–6, mỗi người bắt đầu 1.000 chip ảo (không có tiền thật). Mỗi người 2 lá riêng, dùng cùng 5 lá chung để ghép bộ 5 lá tốt nhất. Mỗi lần chơi là một ván bài.',
+    'Blind: small blind 10, big blind 20. Các vòng: Pre-flop → Flop (3 lá) → Turn → River → Showdown.',
+    'Hành động: Check (qua), Call (theo), Raise (tố — chọn mức tối thiểu / ½ Pot / Pot / 2× Pot), Fold (bỏ), All-in (đẩy hết chip). Có pot phụ khi có người all-in.',
     'Xếp hạng: High Card < One Pair < Two Pair < Three of a Kind < Straight < Flush < Full House < Four of a Kind < Straight Flush < Royal Flush.',
-    'Còn nhiều người đến showdown thì bộ cao hơn thắng; bằng nhau thì chia. Game sẽ có ở đợt sau.'
+    'AI chỉ dựa vào bài của nó và bài chung công khai; các cấp độ cao dùng ước lượng xác suất thắng và tỷ lệ pot.'
   ]],
   highCard: ['High Card', [
-    'Mỗi người nhận 1 lá (hoặc rút từ bộ bài). Lá cao nhất thắng.',
+    'Số người 2–4. Mỗi ván mỗi người nhận 1 lá úp; bấm LẬT BÀI để lật. Lá cao nhất thắng ván.',
     'Thứ tự: 2 < 3 < … < 10 < J < Q < K < A. Cùng số thì so chất: ♠ < ♣ < ♦ < ♥.',
-    'Game nhanh, dùng để thi đấu giải mini. Game sẽ có ở đợt sau.'
+    'Chơi 3 ván; ai thắng nhiều ván nhất là người thắng chung cuộc.'
   ]],
-  rummy: ['Rummy', [
-    'Mỗi người nhận 10 lá (2 người) hoặc 7 lá (3–4 người). Mục tiêu: ghép hết bài thành bộ và đánh ra lá cuối.',
-    'Bộ hợp lệ: Set (3–4 lá cùng số khác chất) hoặc Sequence (≥3 lá liên tiếp cùng chất).',
-    'Mỗi lượt: bốc 1 lá (từ nọc hoặc từ chồng bỏ), hạ bộ nếu có, rồi đánh ra 1 lá.',
-    'Deadwood = lá lẻ chưa vào bộ (A = 1, J/Q/K = 10). Người hết bài thắng; hoặc kết thúc khi deadwood thấp hơn đối thủ. Game sẽ có ở đợt sau.'
+  rummy: ['Rummy (kiểu Gin Rummy)', [
+    'Số người 2–4. Mỗi người 10 lá (2 người) hoặc 7 lá (3–4 người). Một lá được lật ra làm chồng bỏ.',
+    'Bộ hợp lệ: Set (3–4 lá cùng số) hoặc Sequence (≥3 lá liên tiếp cùng chất, A là lá nhỏ nhất). Lá không vào bộ gọi là deadwood (rác): A=1, 2–9 theo số, 10/J/Q/K=10.',
+    'Mỗi lượt: bốc 1 lá (từ nọc hoặc lấy lá trên chồng bỏ), rồi đánh 1 lá — hoặc GÕ nếu sau khi đánh tổng rác ≤ 10.',
+    'Khi có người gõ, mọi người hạ bài và so rác: gõ mà rác thấp nhất thì thắng (rác = 0 là Gin); nếu có người rác bằng hoặc thấp hơn thì bị undercut, người đó thắng.',
+    'Hết nọc mà chưa ai gõ thì người ít rác nhất thắng. Bài trên tay tự động xếp bộ ở đầu hàng để dễ nhìn.'
   ]],
   solitaire: ['Solitaire (Klondike)', [
-    '7 cột (cột i có i lá, chỉ lá cuối ngửa), 4 nền theo chất từ A → K, một kho bài (stock) và chồng bỏ (waste).',
-    'Xếp lá trên cột theo thứ tự giảm dần và xen kẽ màu đỏ/đen. Chỉ lá K (hoặc chuỗi bắt đầu bằng K) được đặt vào cột trống.',
-    'Có thể chuyển cả chuỗi đúng thứ tự giữa các cột. Lá úp được lật khi lộ ra. Có Undo, Gợi ý và Chơi lại.',
-    'Thắng khi cả 52 lá lên 4 nền. Game sẽ có ở đợt sau.'
+    '7 cột (cột i có i lá, chỉ lá cuối ngửa), 4 nền theo chất từ A → K, kho bài (stock) và chồng bỏ (waste). Chọn rút 1 hoặc 3 lá mỗi lần.',
+    'Xếp lá trên cột theo thứ tự giảm dần và xen kẽ màu đỏ/đen. Chỉ lá K (hoặc chuỗi bắt đầu bằng K) được đặt vào cột trống. Có thể chuyển cả chuỗi đúng thứ tự giữa các cột; lá úp được lật khi lộ ra.',
+    'Cách chơi: chạm một lá để chọn, chạm cột hoặc nền đích để chuyển. Chạm đúp để đẩy lá lên nền. Chạm kho để rút bài; kho hết thì chạm để lật lại chồng bỏ.',
+    'Có Hoàn tác, Gợi ý, Lên nền (tự đẩy các lá lên nền), Ván mới và Chơi lại ván này. Thắng khi cả 52 lá lên 4 nền.'
   ]],
   freeCell: ['FreeCell', [
-    '8 cột, tất cả lá đều ngửa (4 cột 7 lá, 4 cột 6 lá). 4 ô trống (free cell) mỗi ô chứa 1 lá, và 4 nền theo chất A → K.',
-    'Xếp lá trên cột theo thứ tự giảm dần và xen kẽ màu. Cột trống đặt được lá bất kỳ.',
-    'Số lá di chuyển cùng lúc tối đa = (số ô trống + 1) × 2^(số cột trống).',
-    'Thắng khi cả 52 lá lên 4 nền. Có Undo và Gợi ý. Game sẽ có ở đợt sau.'
+    '8 cột, tất cả lá đều ngửa (4 cột 7 lá, 4 cột 6 lá). 4 ô tạm (free cell) mỗi ô chứa 1 lá, và 4 nền theo chất A → K.',
+    'Xếp lá trên cột theo thứ tự giảm dần và xen kẽ màu. Cột trống đặt được lá hoặc chuỗi bất kỳ.',
+    'Số lá di chuyển cùng lúc tối đa = (số ô trống + 1) × 2^(số cột trống) (không tính cột đích nếu nó đang trống).',
+    'Chạm lá để chọn, chạm đích để chuyển; chạm đúp để lên nền. Có Hoàn tác, Gợi ý. Thắng khi cả 52 lá lên 4 nền.'
   ]],
   spider: ['Spider Solitaire', [
     'Dùng 104 lá với 1, 2 hoặc 4 chất. 10 cột (4 cột 6 lá, 6 cột 5 lá, chỉ lá cuối ngửa) và kho 50 lá.',
-    'Xếp lá giảm dần (không cần xen màu). Chỉ di chuyển được cả chuỗi khi các lá cùng chất và liên tiếp.',
-    'Bấm kho để chia 1 lá lên mỗi cột (không được có cột trống). Khi có đủ chuỗi K → A cùng chất thì chuỗi tự được gỡ khỏi bàn.',
-    'Thắng khi gỡ hết 8 chuỗi. Game sẽ có ở đợt sau.'
+    'Xếp lá giảm dần (không cần xen màu): được đặt lá lên lá lớn hơn 1 bậc bất kể chất. Chỉ di chuyển được cả chuỗi khi các lá cùng chất và liên tiếp.',
+    'Chạm kho để chia 1 lá lên mỗi cột (không được có cột trống). Khi có đủ chuỗi K → A cùng chất ở cuối cột thì chuỗi tự được gỡ khỏi bàn.',
+    'Thắng khi gỡ hết 8 chuỗi. Có Hoàn tác, Gợi ý và Chơi lại.'
   ]]
 };
 const RULES_EXTRA = [
@@ -307,19 +321,27 @@ function buildCardSvg(card) {
   const su = SUIT_BY_KEY[card.suit];
   const col = su.color === 'red' ? '#c4192d' : '#15171c';
   const r = card.rank, sym = su.sym;
-  const fs = r === '10' ? 21 : 24;
+  const fs = r === '10' ? 23 : 28;
   let s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 140">' +
-    '<rect x="1" y="1" width="98" height="138" rx="9" fill="#fffdf8" stroke="#b9bcc4" stroke-width="2"/>' +
+    '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#f1ece0"/></linearGradient></defs>' +
+    '<rect x="1" y="1" width="98" height="138" rx="9" fill="url(#g)" stroke="#a9adb6" stroke-width="2"/>' +
+    '<rect x="5" y="5" width="90" height="130" rx="6" fill="none" stroke="' + col + '" stroke-opacity=".12"/>' +
     '<g fill="' + col + '" font-family="Georgia,\'Times New Roman\',serif" font-weight="700" text-anchor="middle">';
-  const corner = '<text x="15" y="25" font-size="' + fs + '">' + r + '</text><text x="15" y="44" font-size="19">' + sym + '</text>';
+  const corner = '<text x="15" y="27" font-size="' + fs + '">' + r + '</text><text x="15" y="49" font-size="23">' + sym + '</text>';
   s += corner + '<g transform="rotate(180 50 70)">' + corner + '</g>';
   if (r === 'J' || r === 'Q' || r === 'K') {
-    s += '<rect x="28" y="30" width="44" height="80" rx="4" fill="none" stroke="' + col + '" stroke-width="2" opacity=".6"/>' +
-      '<text x="50" y="82" font-size="46">' + r + '</text><text x="50" y="52" font-size="18">' + sym + '</text>' +
-      '<g transform="rotate(180 50 70)"><text x="50" y="52" font-size="18">' + sym + '</text></g>';
+    const gold = '#e0b64d', skin = '#f2d3b0';
+    const fig = (r === 'K'
+      ? '<path d="M39 46 L41 34 L46 40 L50 31 L54 40 L59 34 L61 46 Z" fill="' + gold + '" stroke="#8a6a1d"/><circle cx="50" cy="55" r="9" fill="' + skin + '" stroke="#8a6a4a"/><path d="M42 58 Q50 72 58 58 Q50 64 42 58Z" fill="#6b4a2a"/>'
+      : r === 'Q'
+        ? '<path d="M40 46 L42 36 L46 41 L50 33 L54 41 L58 36 L60 46 Z" fill="' + gold + '" stroke="#8a6a1d"/><circle cx="50" cy="55" r="9" fill="' + skin + '" stroke="#8a6a4a"/><path d="M40 52 Q38 66 44 70 L44 58Z M60 52 Q62 66 56 70 L56 58Z" fill="#6b4a2a"/><circle cx="50" cy="40" r="1.8" fill="#c4192d"/>'
+        : '<path d="M40 48 Q50 30 60 48 Z" fill="' + col + '" stroke="#333"/><path d="M58 44 Q66 36 64 30" stroke="#c4192d" stroke-width="2" fill="none"/><circle cx="50" cy="56" r="9" fill="' + skin + '" stroke="#8a6a4a"/>') +
+      '<path d="M33 86 Q35 68 50 65 Q65 68 67 86 Z" fill="' + col + '" fill-opacity=".85" stroke="#333" stroke-opacity=".4"/><text x="50" y="83" font-size="13" fill="#fff" stroke="none">' + r + '</text>';
+    s += '<rect x="26" y="26" width="48" height="88" rx="4" fill="' + col + '" fill-opacity=".06" stroke="' + col + '" stroke-width="1.6" opacity=".7"/>' + fig +
+      '<g transform="rotate(180 50 70)">' + fig + '</g>';
   } else {
     const pos = PIP_POS[r];
-    const size = r === 'A' ? 52 : 24;
+    const size = r === 'A' ? 54 : 24;
     pos.forEach(p => {
       const rot = p[1] > 70 ? ' transform="rotate(180 ' + p[0] + ' ' + p[1] + ')"' : '';
       s += '<text x="' + p[0] + '" y="' + (p[1] + size * 0.33) + '" font-size="' + size + '"' + rot + '>' + sym + '</text>';
@@ -385,7 +407,25 @@ function cardShort(c) { return c.rank + SUIT_BY_KEY[c.suit].sym; }
 
 /* Tính bố cục tay bài: KHÔNG chồng, KHÔNG tràn, dễ đọc, dễ chạm.
    viewportWidth/viewportHeight = vùng khả dụng (đã trừ vùng khác). */
+/* Bố cục MỘT HÀNG: các lá chồng nhẹ lên nhau, luôn lộ số + chất ở góc trái để đọc và chạm */
+function calcRowLayout(o) {
+  const gap = o.gap != null ? o.gap : 4, ratio = 1.4, n = Math.max(1, o.cardCount | 0);
+  const availW = Math.max(80, o.viewportWidth), availH = Math.max(40, o.viewportHeight);
+  const maxW = o.cardWidth || 84, minStep = o.minStep || 22;
+  const need = cw => (n <= 1 ? 0 : Math.max(minStep, cw * 0.3));
+  let w = Math.min(maxW, Math.floor(availH / ratio));
+  while (w > 30 && w + (n - 1) * need(w) > availW) w--;
+  w = Math.max(24, w);
+  const step = n <= 1 ? 0 : Math.max(8, Math.min(w + gap, (availW - w) / (n - 1)));
+  const ch = Math.round(w * ratio), totalWidth = Math.round(w + (n - 1) * step);
+  return {
+    cardWidth: w, cardHeight: ch, gap, step, overlap: Math.max(0, w - step), columns: n, rows: 1, totalWidth, totalHeight: ch,
+    startX: Math.max(0, (o.viewportWidth - totalWidth) / 2), startY: Math.max(0, (o.viewportHeight - ch) / 2), mode: 'row',
+    orientation: o.orientation || (o.viewportWidth >= o.viewportHeight ? 'landscape' : 'portrait')
+  };
+}
 function calculateHandLayout(o) {
+  if (o.mode === 'row') return calcRowLayout(o);
   const gap = o.gap != null ? o.gap : 6;
   const ratio = 1.4;
   const n = Math.max(1, o.cardCount | 0);
@@ -418,7 +458,7 @@ function defaultData() {
   return {
     v: 2,
     profile: { name: 'Minh', avatar: '👨', country: 'VN', age: 25 },
-    settings: { sound: true, notify: true, vibrate: true, aiSpeed: 1, cardBack: 'classic', table: 'green', effects: true, animation: true, reducedMotion: false, theme: 'dark', aiLevel: 1, turnTime: 15, players: {} },
+    settings: { gameCfg: {}, sound: true, notify: true, vibrate: true, aiSpeed: 1, cardBack: 'classic', table: 'green', effects: true, animation: true, reducedMotion: false, theme: 'dark', aiLevel: 1, turnTime: 15, players: {} },
     statistics: { total: 0, wins: 0, losses: 0, draws: 0, streak: 0, bestStreak: 0, playTime: 0, tournaments: 0, championships: 0, games: {} },
     achievements: {},
     xp: 0,
@@ -1367,6 +1407,884 @@ const XD_ENGINE = {
   }
 };
 
+
+/* ============================ 9d. CÁC GAME CÒN LẠI — bộ đánh giá bài dùng chung ============================ */
+const ci = (card, down) => ({ card, down: !!down });
+function rv(c) { return c.rank === 'A' ? 14 : c.rank === 'K' ? 13 : c.rank === 'Q' ? 12 : c.rank === 'J' ? 11 : parseInt(c.rank, 10); }
+function cmpArr(a, b) { const n = Math.max(a.length, b.length); for (let i = 0; i < n; i++) { const x = a[i] || 0, y = b[i] || 0; if (x !== y) return x > y ? 1 : -1; } return 0; }
+function cmpPrefix(a, b) { const n = Math.min(a.length, b.length); for (let i = 0; i < n; i++) { if (a[i] !== b[i]) return a[i] > b[i] ? 1 : -1; } return 0; }
+function combos(arr, k) { const out = []; (function rec(s, cur) { if (cur.length === k) { out.push(cur.slice()); return; } for (let i = s; i < arr.length; i++) { cur.push(arr[i]); rec(i + 1, cur); cur.pop(); } })(0, []); return out; }
+const IDX_COMB = {};
+function idxCombos(n, k) { const key = n + ':' + k; if (!IDX_COMB[key]) IDX_COMB[key] = combos([...Array(n).keys()], k); return IDX_COMB[key]; }
+function eval5(cs) { // [hạng, ...so sánh] — hạng 0..8 (8 = thùng phá sảnh)
+  const v = cs.map(rv).sort((a, b) => b - a), flush = cs.every(c => c.suit === cs[0].suit);
+  let sh = 0; const u = new Set(v);
+  if (u.size === 5) { if (v[0] - v[4] === 4) sh = v[0]; else if (v[0] === 14 && v[1] === 5 && v[2] === 4 && v[3] === 3 && v[4] === 2) sh = 5; }
+  const cnt = {}; v.forEach(x => { cnt[x] = (cnt[x] || 0) + 1; });
+  const g = Object.keys(cnt).map(k => [cnt[k], +k]).sort((a, b) => b[0] - a[0] || b[1] - a[1]);
+  if (sh && flush) return [8, sh];
+  if (g[0][0] === 4) return [7, g[0][1], g[1][1]];
+  if (g[0][0] === 3 && g[1][0] === 2) return [6, g[0][1], g[1][1]];
+  if (flush) return [5].concat(v);
+  if (sh) return [4, sh];
+  if (g[0][0] === 3) return [3, g[0][1]].concat(g.slice(1).map(x => x[1]));
+  if (g[0][0] === 2 && g[1][0] === 2) return [2, g[0][1], g[1][1], g[2][1]];
+  if (g[0][0] === 2) return [1, g[0][1]].concat(g.slice(1).map(x => x[1]));
+  return [0].concat(v);
+}
+function eval3(cs) { // chi 1 của Mậu Binh: 3 lá
+  const v = cs.map(rv).sort((a, b) => b - a);
+  if (v[0] === v[1] && v[1] === v[2]) return [3, v[0]];
+  if (v[0] === v[1]) return [1, v[0], v[2]];
+  if (v[1] === v[2]) return [1, v[1], v[0]];
+  return [0].concat(v);
+}
+function best5(cards) { // tốt nhất trong 5..7 lá
+  let best = null, bc = null;
+  idxCombos(cards.length, 5).forEach(ix => { const cs = ix.map(i => cards[i]), e = eval5(cs); if (!best || cmpArr(e, best) > 0) { best = e; bc = cs; } });
+  return { score: best, cards: bc };
+}
+const CHI5_NAMES = ['Mậu thầu', 'Đôi', 'Thú', 'Sám', 'Sảnh', 'Thùng', 'Cù lũ', 'Tứ quý', 'Thùng phá sảnh'];
+const PK_NAMES = ['High Card', 'One Pair', 'Two Pair', 'Three of a Kind', 'Straight', 'Flush', 'Full House', 'Four of a Kind', 'Straight Flush'];
+function chiName(e, n) { return n === 3 ? (e[0] === 3 ? 'Sám' : e[0] === 1 ? 'Đôi' : 'Mậu thầu') : CHI5_NAMES[e[0]]; }
+function pkName(e) { return e[0] === 8 && e[1] === 14 ? 'Royal Flush' : PK_NAMES[e[0]]; }
+
+/* ---------- Bộ tìm phỏm / bộ (dùng cho Phỏm và Rummy). Bộ = 3+ lá cùng số hoặc 3+ lá liên tiếp cùng chất (A thấp) ---------- */
+function meldCandidates(cards) {
+  const out = [], byRank = {}, bySuit = {};
+  cards.forEach((c, i) => { (byRank[c.rank] = byRank[c.rank] || []).push(i); (bySuit[c.suit] = bySuit[c.suit] || []).push(i); });
+  Object.keys(byRank).forEach(k => {
+    const ix = byRank[k]; if (ix.length < 3) return;
+    for (let m = 0; m < (1 << ix.length); m++) { const sub = ix.filter((_, j) => m & (1 << j)); if (sub.length >= 3) out.push(sub); }
+  });
+  Object.keys(bySuit).forEach(k => {
+    const ix = bySuit[k].slice().sort((a, b) => cards[a].value - cards[b].value);
+    for (let s = 0; s < ix.length; s++) {
+      const run = [ix[s]];
+      for (let e = s + 1; e < ix.length; e++) {
+        if (cards[ix[e]].value === cards[ix[e - 1]].value + 1) { run.push(ix[e]); if (run.length >= 3) out.push(run.slice()); } else break;
+      }
+    }
+  });
+  return out;
+}
+function bestMelds(cards, valFn) { // phân hoạch ít điểm rác nhất
+  const cand = meldCandidates(cards), n = cards.length;
+  let best = { dw: Infinity, masks: [] };
+  const total = cards.reduce((a, c) => a + valFn(c), 0);
+  const cm = cand.map(m => ({ m, mask: m.reduce((a, i) => a | (1 << i), 0), val: m.reduce((a, i) => a + valFn(cards[i]), 0) }));
+  (function dfs(start, used, cover, chosen) {
+    const dw = total - cover;
+    if (dw < best.dw || (dw === best.dw && chosen.length > best.masks.length)) best = { dw, masks: chosen.slice() };
+    for (let i = start; i < cm.length; i++) { if (cm[i].mask & used) continue; chosen.push(cm[i]); dfs(i + 1, used | cm[i].mask, cover + cm[i].val, chosen); chosen.pop(); }
+  })(0, 0, 0, []);
+  const usedMask = best.masks.reduce((a, x) => a | x.mask, 0);
+  return { melds: best.masks.map(x => x.m.map(i => cards[i])), deadwood: cards.filter((_, i) => !(usedMask & (1 << i))), dw: best.dw === Infinity ? total : best.dw };
+}
+function canAttachMeld(meld, c) { // gửi bài vào phỏm
+  const first = meld[0];
+  if (meld.every(x => x.rank === first.rank)) return c.rank === first.rank && meld.length < 4 && !meld.some(x => x.suit === c.suit);
+  if (!meld.every(x => x.suit === first.suit) || c.suit !== first.suit) return false;
+  const vs = meld.map(x => x.value).sort((a, b) => a - b);
+  return c.value === vs[0] - 1 || c.value === vs[vs.length - 1] + 1;
+}
+
+/* ============================ HIGH CARD ============================ */
+const hcPower = c => rv(c) * 4 + SUIT_ORDER[c.suit];
+const HC_ENGINE = {
+  id: 'highCard', kind: 'show',
+  setup(opts) { gameState = newGameState(); const gs = gameState; gs.currentGame = 'highCard'; gs.players = makePlayers(clamp(opts.players, 2, 4)); gs.score = gs.players.map(() => 0); gs.round = 0; gs.rounds = 3; },
+  deal() {
+    const gs = gameState; gs.deck = newShuffledDeck(); gs.hands = gs.players.map(() => [drawCard(gs.deck)]);
+    gs.revealed = false; gs.roundWinner = -1; gs.round++; gs.over = null; gs.phase = 'play'; gs.turn = 0;
+  },
+  humanTurn() { const gs = gameState; return !gs.over && (gs.phase === 'play' || gs.phase === 'result'); },
+  getValidMoves() { const gs = gameState; return gs.over ? [] : gs.phase === 'play' ? [{ type: 'reveal' }] : [{ type: 'next' }]; },
+  validateMove(p, mv) {
+    const gs = gameState;
+    if (p !== 0 || gs.over || !mv) return { ok: false, reason: 'Chưa đến lượt' };
+    if (mv.type === 'reveal' && gs.phase === 'play') return { ok: true };
+    if (mv.type === 'next' && gs.phase === 'result') return { ok: true };
+    return { ok: false, reason: 'Nước đi không hợp lệ' };
+  },
+  play(p, mv) {
+    const gs = gameState;
+    if (mv.type === 'next') { HC_ENGINE.deal(); return { type: 'next', sfx: 'deal' }; }
+    let w = 0; gs.hands.forEach((hd, i) => { if (hcPower(hd[0]) > hcPower(gs.hands[w][0])) w = i; });
+    gs.score[w]++; gs.roundWinner = w; gs.revealed = true; gs.phase = 'result';
+    if (gs.round >= gs.rounds) { gs.over = { reason: 'done' }; gs.phase = 'over'; }
+    return { type: 'reveal', sfx: 'eat' };
+  },
+  nextTurn() { }, checkWin: () => gameState.over,
+  aiChoose() { return { type: 'reveal' }; }, timeoutMove() { return { type: gameState.phase === 'result' ? 'next' : 'reveal' }; }, hint() { return HC_ENGINE.timeoutMove(); },
+  seatView(i) { const gs = gameState; return { cnt: '🏅 ' + gs.score[i], warn: gs.revealed && gs.roundWinner === i ? '★ Thắng ván' : '', rows: [[ci(gs.hands[i][0], !gs.revealed)]] }; },
+  tableView() { const gs = gameState; return { info: gs.phase === 'play' ? 'Ván ' + gs.round + '/' + gs.rounds + ' — bấm LẬT BÀI' : 'Ván ' + gs.round + ': ' + gs.players[gs.roundWinner].name + ' có lá cao nhất', rows: [] }; },
+  handView() { const gs = gameState; return { cards: [ci(gs.hands[0][0], !gs.revealed)] }; },
+  myInfo() { const gs = gameState; return 'Ván thắng của bạn: ' + gs.score[0] + ' · Lá cao nhất thắng (A cao nhất; bằng số so chất ♠ < ♣ < ♦ < ♥)'; },
+  actionsView() { const gs = gameState; return gs.phase === 'play' ? [{ txt: '🃏 LẬT BÀI', act: 'g:reveal', cls: 'primary' }] : [{ txt: 'VÁN TIẾP', act: 'g:next', cls: 'primary' }]; },
+  calculateResult() {
+    const gs = gameState, sc = gs.score, top = Math.max.apply(null, sc), tops = sc.filter(x => x === top).length;
+    const order = [...sc.keys()].sort((a, b) => sc[b] - sc[a] || a - b);
+    return { outcome: sc[0] === top ? (tops === 1 ? 'win' : 'draw') : 'lose', rankings: order.map(p => ({ p, label: sc[p] + '/' + gs.rounds + ' ván thắng' })), specials: [], headline: sc[0] === top && tops === 1 ? '🃏 LÁ CAO NHẤT!' : null };
+  },
+  detail() { return gameState.players.map((p, i) => p.name + ': ' + cardShort(gameState.hands[i][0])); }
+};
+
+/* ============================ BA CÂY ============================ */
+function bcPts(cs) { return cs.reduce((a, c) => a + (c.rank === 'A' ? 1 : (['10', 'J', 'Q', 'K'].includes(c.rank) ? 0 : parseInt(c.rank, 10))), 0) % 10; }
+function bcScore(cs, anh) {
+  const hi = Math.max.apply(null, cs.map(hcPower));
+  if (anh && cs.every(c => ['J', 'Q', 'K'].includes(c.rank))) return { s: [2, hi], name: 'Ba cây ảnh' };
+  const p = bcPts(cs); return { s: [1, p, hi], name: p + ' điểm' };
+}
+const BC_ENGINE = {
+  id: 'baCay', kind: 'show',
+  setup(opts) {
+    gameState = newGameState(); const gs = gameState; gs.currentGame = 'baCay'; gs.players = makePlayers(clamp(opts.players, 2, 5));
+    gs.cfg = { anh: ((Data.settings.gameCfg || {}).baCay || {}).anh !== false };
+  },
+  deal() { const gs = gameState; gs.deck = newShuffledDeck(); gs.hands = dealCards(gs.deck, gs.players.length, 3); gs.revealed = false; gs.over = null; gs.phase = 'play'; gs.turn = 0; },
+  humanTurn() { const gs = gameState; return !gs.over && gs.phase === 'play'; },
+  getValidMoves() { return gameState.over ? [] : [{ type: 'reveal' }]; },
+  validateMove(p, mv) { const gs = gameState; return p === 0 && !gs.over && mv && mv.type === 'reveal' ? { ok: true } : { ok: false, reason: 'Nước đi không hợp lệ' }; },
+  play() {
+    const gs = gameState; gs.revealed = true; gs.phase = 'over';
+    gs.scores = gs.hands.map(h => bcScore(h, gs.cfg.anh)); gs.over = { reason: 'done' };
+    return { type: 'reveal', sfx: 'eat' };
+  },
+  nextTurn() { }, checkWin: () => gameState.over,
+  aiChoose() { return { type: 'reveal' }; }, timeoutMove() { return { type: 'reveal' }; }, hint() { return { type: 'reveal' }; },
+  seatView(i) { const gs = gameState; return { cnt: gs.revealed ? gs.scores[i].name : '3 lá', warn: '', rows: [gs.hands[i].map(c => ci(c, !gs.revealed))] }; },
+  tableView() { const gs = gameState; return { info: gs.revealed ? 'Đã lật bài — so điểm' : 'Điểm = tổng 3 lá, lấy số lẻ (A=1, 10/J/Q/K=0)' + (gs.cfg.anh ? ' · Ba cây ảnh cao nhất' : ''), rows: [] }; },
+  handView() { const gs = gameState; return { cards: gs.hands[0].map(c => ci(c, !gs.revealed)) }; },
+  myInfo() { const gs = gameState; return gs.revealed ? 'Bài của bạn: ' + gs.scores[0].name : 'Bấm LẬT BÀI để so điểm'; },
+  actionsView() { return gameState.phase === 'play' ? [{ txt: '🃏 LẬT BÀI', act: 'g:reveal', cls: 'primary' }] : []; },
+  calculateResult() {
+    const gs = gameState, order = [...gs.players.keys()].sort((a, b) => cmpArr(gs.scores[b].s, gs.scores[a].s));
+    const win = order[0] === 0;
+    return { outcome: win ? 'win' : 'lose', rankings: order.map(p => ({ p, label: gs.scores[p].name })), specials: [], headline: win && gs.scores[0].s[0] === 2 ? '👑 BA CÂY ẢNH!' : (win ? '🃏 THẮNG!' : null) };
+  },
+  detail() { return gameState.players.map((p, i) => p.name + ': ' + gameState.hands[i].map(cardShort).join(' ') + ' → ' + gameState.scores[i].name); }
+};
+
+/* ============================ LIÊNG (có vòng cược bằng điểm ảo) ============================ */
+const LIENG = { ANTE: 10, STEP: 10, MAXR: 3, STACK: 200 };
+function lieng3(cs) {
+  const v = cs.map(rv).sort((a, b) => b - a), hi = Math.max.apply(null, cs.map(hcPower));
+  if (v[0] === v[1] && v[1] === v[2]) return { s: [4, v[0]], name: 'Sáp ' + cs[0].rank, str: 0.97 };
+  let top = 0; if (v[0] - v[1] === 1 && v[1] - v[2] === 1) top = v[0]; else if (v[0] === 14 && v[1] === 3 && v[2] === 2) top = 3;
+  if (top) return { s: [3, top, hi], name: 'Liêng', str: 0.86 };
+  if (cs.every(c => ['J', 'Q', 'K'].includes(c.rank))) return { s: [2, v[0], v[1], v[2], hi], name: 'Ảnh', str: 0.74 };
+  const p = bcPts(cs); return { s: [1, p, hi], name: p + ' điểm', str: [0.12, 0.16, 0.2, 0.24, 0.3, 0.36, 0.44, 0.54, 0.64, 0.72][p] };
+}
+const LIENG_ENGINE = {
+  id: 'lieng', kind: 'bet',
+  setup(opts) { gameState = newGameState(); const gs = gameState; gs.currentGame = 'lieng'; gs.players = makePlayers(clamp(opts.players, 2, 5)); gs.deck = newShuffledDeck(); },
+  deal() {
+    const gs = gameState, n = gs.players.length;
+    gs.hands = dealCards(gs.deck, n, 3); gs.chips = new Array(n).fill(LIENG.STACK - LIENG.ANTE); gs.pot = LIENG.ANTE * n; gs.put = new Array(n).fill(0);
+    gs.folded = new Array(n).fill(false); gs.curBet = 0; gs.raises = 0; gs.seen = false; gs.over = null; gs.phase = 'play'; gs.show = false;
+    gs.lastAct = new Array(n).fill(''); gs.needAct = [...Array(n).keys()]; gs.turn = rand(n);
+  },
+  cost(p) { return gameState.curBet - gameState.put[p]; },
+  getValidMoves(p) {
+    const gs = gameState; if (gs.over || gs.turn !== p) return [];
+    const m = [{ type: 'fold' }]; const c = gs.curBet - gs.put[p];
+    if (c === 0) m.push({ type: 'check' }); else m.push({ type: 'call' });
+    if (gs.raises < LIENG.MAXR) m.push({ type: 'raise' });
+    return m;
+  },
+  validateMove(p, mv) {
+    const gs = gameState;
+    if (!mv) return { ok: false, reason: 'Không có nước đi' };
+    if (mv.type === 'peek') return p === 0 && !gs.over ? { ok: true, free: true } : { ok: false, reason: 'Không thể xem bài' };
+    if (gs.over || gs.turn !== p) return { ok: false, reason: 'Chưa đến lượt' };
+    if (mv.type === 'check' && gs.curBet !== gs.put[p]) return { ok: false, reason: 'Đã có người tố — hãy Theo hoặc Bỏ' };
+    if (mv.type === 'call' && gs.curBet === gs.put[p]) return { ok: false, reason: 'Chưa ai tố — dùng Úp' };
+    if (mv.type === 'raise' && gs.raises >= LIENG.MAXR) return { ok: false, reason: 'Đã hết lượt tố' };
+    return ['fold', 'check', 'call', 'raise'].includes(mv.type) ? { ok: true } : { ok: false, reason: 'Nước đi không hợp lệ' };
+  },
+  play(p, mv) {
+    const gs = gameState;
+    if (mv.type === 'peek') { gs.seen = true; return { type: 'peek', sfx: 'select' }; }
+    const pay = c => { gs.chips[p] -= c; gs.put[p] += c; gs.pot += c; };
+    if (mv.type === 'fold') { gs.folded[p] = true; gs.lastAct[p] = 'Bỏ'; gs.needAct = gs.needAct.filter(x => x !== p); }
+    else if (mv.type === 'check') { gs.lastAct[p] = 'Úp'; gs.needAct = gs.needAct.filter(x => x !== p); }
+    else if (mv.type === 'call') { pay(gs.curBet - gs.put[p]); gs.lastAct[p] = 'Theo'; gs.needAct = gs.needAct.filter(x => x !== p); }
+    else { gs.curBet += LIENG.STEP; pay(gs.curBet - gs.put[p]); gs.raises++; gs.lastAct[p] = 'Tố ' + gs.curBet; gs.needAct = [...gs.players.keys()].filter(x => x !== p && !gs.folded[x]); }
+    const alive = [...gs.players.keys()].filter(x => !gs.folded[x]);
+    if (alive.length === 1) { gs.chips[alive[0]] += gs.pot; gs.over = { reason: 'fold', winners: alive }; gs.phase = 'over'; gs.show = false; }
+    else if (!gs.needAct.length) {
+      gs.show = true; const sc = {}; alive.forEach(i => { sc[i] = lieng3(gs.hands[i]); });
+      const best = alive.reduce((b, i) => (b === null || cmpArr(sc[i].s, sc[b].s) > 0 ? i : b), null);
+      const winners = alive.filter(i => cmpArr(sc[i].s, sc[best].s) === 0);
+      const share = Math.floor(gs.pot / winners.length); winners.forEach(i => { gs.chips[i] += share; }); gs.chips[winners[0]] += gs.pot - share * winners.length;
+      gs.over = { reason: 'show', winners }; gs.phase = 'over';
+    }
+    return { type: mv.type, sfx: mv.type === 'raise' ? 'chat' : 'card' };
+  },
+  nextTurn() {
+    const gs = gameState; if (gs.over) return; const n = gs.players.length;
+    for (let k = 1; k <= n; k++) { const q = (gs.turn + k) % n; if (gs.needAct.includes(q)) { gs.turn = q; return; } }
+  },
+  checkWin: () => gameState.over,
+  aiChoose(p, level) {
+    const gs = gameState, opts = LIENG_ENGINE.getValidMoves(p).map(m => m.type), has = t => opts.includes(t);
+    const str = lieng3(gs.hands[p]).str + (Math.random() - 0.5) * (level <= 0 ? 0.5 : level === 1 ? 0.18 : 0.08);
+    const cost = gs.curBet - gs.put[p], odds = cost > 0 ? cost / (gs.pot + cost) : 0, opp = gs.players.filter((_, i) => !gs.folded[i]).length - 1;
+    const call = () => (has('check') ? { type: 'check' } : { type: 'call' });
+    if (level <= 0) { const r = Math.random(); if (r < 0.15 && has('fold')) return { type: 'fold' }; if (r < 0.4 && has('raise')) return { type: 'raise' }; return call(); }
+    if (level === 1) { if (str >= 0.7 && has('raise')) return { type: 'raise' }; if (str >= 0.36 || cost === 0) return call(); return { type: 'fold' }; }
+    const need = 0.28 + 0.55 * odds + (level >= 3 ? 0.03 * (opp - 1) : 0);
+    if (str >= 0.78 && has('raise')) return { type: 'raise' };
+    if (str >= 0.6 && has('raise') && Math.random() < (level >= 3 ? 0.45 : 0.25)) return { type: 'raise' };
+    if (cost === 0 && has('raise') && Math.random() < (level >= 3 ? 0.1 : 0.04)) return { type: 'raise' }; // thỉnh thoảng tố liều
+    if (str >= need || cost === 0) return call();
+    return { type: 'fold' };
+  },
+  timeoutMove(p) { const gs = gameState, c = gs.curBet - gs.put[p]; return c === 0 ? { type: 'check' } : c <= LIENG.STEP ? { type: 'call' } : { type: 'fold' }; },
+  hint(p) { return LIENG_ENGINE.aiChoose(p, 2); },
+  seatView(i) {
+    const gs = gameState, shown = gs.show && !gs.folded[i];
+    return { cnt: '💰 ' + gs.chips[i], warn: gs.folded[i] ? 'Bỏ' : (gs.over ? (gs.over.winners.includes(i) ? '★ Thắng' : '') : (gs.lastAct[i] || '')), rows: [gs.hands[i].map(c => ci(c, !shown))], name: shown ? lieng3(gs.hands[i]).name : '' };
+  },
+  tableView() { const gs = gameState; return { info: '💰 Pot ' + gs.pot + ' · Mức tố hiện tại: +' + gs.curBet + (gs.over ? ' · ' + (gs.over.reason === 'fold' ? 'Tất cả bỏ' : 'So bài') : ''), rows: [] }; },
+  handView() { const gs = gameState; return { cards: gs.hands[0].map(c => ci(c, !(gs.seen || gs.over))) }; },
+  myInfo() { const gs = gameState; return '💰 ' + gs.chips[0] + ' · đã bỏ vào ' + (LIENG.ANTE + gs.put[0]) + (gs.seen || gs.over ? ' · ' + lieng3(gs.hands[0]).name : ' · (chưa xem bài)'); },
+  actionsView(my) {
+    const gs = gameState, mv = my ? LIENG_ENGINE.getValidMoves(0).map(m => m.type) : [], out = [];
+    if (!gs.seen && !gs.over) out.push({ txt: '👁 XEM', act: 'g:peek', cls: 'sortbtn' });
+    out.push({ txt: 'BỎ', act: 'g:fold', dis: !mv.includes('fold') });
+    if (mv.includes('check') || !my) out.push({ txt: 'ÚP', act: 'g:check', dis: !mv.includes('check') });
+    if (mv.includes('call') || !my) out.push({ txt: 'THEO ' + (my ? LIENG_ENGINE.cost(0) : ''), act: 'g:call', dis: !mv.includes('call') });
+    out.push({ txt: 'TỐ +' + LIENG.STEP, act: 'g:raise', cls: 'primary', dis: !mv.includes('raise') });
+    return out;
+  },
+  calculateResult() {
+    const gs = gameState, net = gs.chips.map(c => c - LIENG.STACK), order = [...gs.players.keys()].sort((a, b) => net[b] - net[a] || a - b);
+    const me = net[0], outcome = me > 0 ? 'win' : me < 0 ? 'lose' : 'draw', sp = [];
+    if (outcome === 'win' && !gs.folded[0] && lieng3(gs.hands[0]).s[0] === 4) sp.push('lienSap');
+    return { outcome, rankings: order.map(p => ({ p, label: (net[p] >= 0 ? '+' : '') + net[p] + ' điểm' + (!gs.folded[p] && gs.show ? ' · ' + lieng3(gs.hands[p]).name : (gs.folded[p] ? ' · Bỏ' : '')) })), specials: sp, headline: outcome === 'win' ? '💰 THẮNG POT ' + gs.pot : null };
+  },
+  detail() { return gameState.players.map((p, i) => p.name + ': ' + gameState.hands[i].map(cardShort).join(' ') + ' → ' + lieng3(gameState.hands[i]).name + (gameState.folded[i] ? ' (bỏ)' : '')); }
+};
+
+/* ============================ MẬU BINH ============================ */
+function st3(cs) { const v = cs.map(rv).sort((a, b) => b - a); return (v[0] - v[1] === 1 && v[1] - v[2] === 1) || (v[0] === 14 && v[1] === 3 && v[2] === 2); }
+function mbMask(ix) { return ix.reduce((m, i) => m | (1 << i), 0); }
+function mbSearch(hand, topN) { // liệt kê các cách xếp hợp lệ (chi3 ≥ chi2 ≥ chi1); topN giới hạn số chi 3 để chạy nhanh
+  const n = hand.length, idx = [...Array(n).keys()], C5 = idxCombos(n, 5), ev = {};
+  const list = C5.map(ix => { const e = eval5(ix.map(i => hand[i])); ev[mbMask(ix)] = e; return { ix, e }; });
+  list.sort((a, b) => cmpArr(b.e, a.e));
+  const cand = topN ? list.slice(0, topN).concat(list.slice(topN).filter(() => Math.random() < 0.02)) : list;
+  const out = [];
+  cand.forEach(a => {
+    const m3 = mbMask(a.ix), e3 = a.e, rest = idx.filter(i => !(m3 & (1 << i)));
+    combos(rest, 5).forEach(b => {
+      const m2 = mbMask(b), e2 = ev[m2]; if (cmpArr(e3, e2) < 0) return;
+      const r1 = rest.filter(i => !(m2 & (1 << i))), e1 = eval3(r1.map(i => hand[i]));
+      if (cmpPrefix(e2, e1) < 0) return;
+      out.push({ a: a.ix, b, r1, e3, e2, e1 });
+    });
+  });
+  return out;
+}
+function mbScore(x) {
+  const s = e => e[0] * 15 + (e[1] || 0);
+  return s(x.e1) + s(x.e2) * 1.2 + s(x.e3) * 1.4 + (x.e1[0] === 3 ? 10 : 0) + (x.e2[0] === 6 ? 6 : 0) + (x.e3[0] >= 7 ? 14 : 0);
+}
+function mbArrange(hand, level) { // trả về [chi1(3), chi2(5), chi3(5)]
+  let list = mbSearch(hand, level >= 2 ? 160 : 70), pickd;
+  if (!list.length) list = mbSearch(hand, 0);
+  if (!list.length) { const sorted = hand.slice().sort((a, b) => rv(a) - rv(b)); return [sorted.slice(0, 3), sorted.slice(3, 8), sorted.slice(8)]; }
+  if (level <= 0) pickd = pick(list);
+  else if (level === 1) pickd = list.reduce((b, x) => (cmpArr(x.e3, b.e3) > 0 || (cmpArr(x.e3, b.e3) === 0 && cmpArr(x.e2, b.e2) > 0) ? x : b), list[0]);
+  else pickd = maxBy(list, mbScore);
+  return [pickd.r1.map(i => hand[i]), pickd.b.map(i => hand[i]), pickd.a.map(i => hand[i])];
+}
+function mbWhite(hand) {
+  if (new Set(hand.map(c => c.value)).size === 13) return 'Sảnh rồng';
+  const cnt = {}; hand.forEach(c => { cnt[c.rank] = (cnt[c.rank] || 0) + 1; });
+  let pairs = 0; Object.keys(cnt).forEach(k => { pairs += Math.floor(cnt[k] / 2); }); if (pairs >= 6) return '6 đôi';
+  const sc = { S: 0, C: 0, D: 0, H: 0 }; hand.forEach(c => { sc[c.suit]++; });
+  const cs = Object.keys(sc).map(k => sc[k]); let flush3 = false;
+  for (let a = 0; a < 4; a++) for (let b = 0; b < 4; b++) for (let c = 0; c < 4; c++) { const need = [0, 0, 0, 0]; need[a] += 3; need[b] += 5; need[c] += 5; if (need.every((x, i) => x === cs[i])) flush3 = true; }
+  if (flush3) return '3 thùng';
+  // 3 sảnh: tìm 2 sảnh 5 lá rời nhau + 3 lá còn lại là sảnh
+  const byVal = {}; hand.forEach((c, i) => { const v = rv(c); (byVal[v] = byVal[v] || []).push(i); if (v === 14) (byVal[1] = byVal[1] || []).push(i); });
+  const S5 = [];
+  for (let s = 1; s <= 10; s++) { let lists = [[]]; for (let v = s; v < s + 5; v++) { if (!byVal[v]) { lists = []; break; } const nl = []; lists.forEach(l => byVal[v].forEach(i => nl.push(l.concat([i])))); lists = nl; } lists.forEach(l => S5.push(l)); }
+  for (let i = 0; i < S5.length; i++) for (let j = i + 1; j < S5.length; j++) {
+    if (S5[i].some(x => S5[j].includes(x))) continue;
+    const used = S5[i].concat(S5[j]), rest = hand.filter((_, k) => !used.includes(k));
+    if (rest.length === 3 && st3(rest)) return '3 sảnh';
+  }
+  return null;
+}
+function mbCompare(a, b) { // trả về [điểm của a, điểm của b]; mỗi arrangement = {chi:[c1,c2,c3], ok}
+  if (!a.ok || !b.ok) return a.ok === b.ok ? [0, 0] : (a.ok ? [3, -3] : [-3, 3]);
+  let pa = 0, wins = 0;
+  const e = [[eval3(a.chi[0]), eval3(b.chi[0]), 3], [eval5(a.chi[1]), eval5(b.chi[1]), 5], [eval5(a.chi[2]), eval5(b.chi[2]), 5]];
+  e.forEach((x, i) => {
+    const c = cmpArr(x[0], x[1]); if (!c) return;
+    const win = c > 0, w = win ? x[0] : x[1]; let pts = 1;
+    if (i === 0 && w[0] === 3) pts += 2; if (i === 1 && w[0] === 6) pts += 1;
+    if (w[0] === 7) pts += i === 2 ? 4 : 8; if (w[0] === 8) pts += i === 2 ? 5 : 10;
+    pa += win ? pts : -pts; wins += win ? 1 : -1;
+  });
+  if (wins === 3) pa *= 2; else if (wins === -3) pa *= 2; // sập hầm
+  return [pa, -pa];
+}
+function mbValid(chi) { const e1 = eval3(chi[0]), e2 = eval5(chi[1]), e3 = eval5(chi[2]); return cmpArr(e3, e2) >= 0 && cmpPrefix(e2, e1) >= 0; }
+const MB_ENGINE = {
+  id: 'mauBinh', kind: 'mb',
+  setup(opts) { gameState = newGameState(); const gs = gameState; gs.currentGame = 'mauBinh'; gs.players = makePlayers(clamp(opts.players, 2, 4)); gs.deck = newShuffledDeck(); },
+  deal() {
+    const gs = gameState, n = gs.players.length;
+    gs.hands = dealCards(gs.deck, n, 13).map(h => h.sort((a, b) => rv(a) - rv(b) || SUIT_ORDER[a.suit] - SUIT_ORDER[b.suit]));
+    gs.chi = [[], [], []]; gs.over = null; gs.phase = 'play'; gs.turn = 0; gs.arr = null; gs.white = new Array(n).fill(null);
+    for (let i = 0; i < n; i++) gs.white[i] = mbWhite(gs.hands[i]);
+    const w = gs.white.findIndex(x => x); if (w >= 0) { gs.over = { reason: 'white', winner: w, label: gs.white[w] }; gs.phase = 'over'; MB_ENGINE.settle(); }
+  },
+  humanTurn() { const gs = gameState; return !gs.over && gs.phase === 'play'; },
+  timeLimit(base) { return Math.max(60, base * 4); },
+  pool() { const gs = gameState, used = new Set([].concat.apply([], gs.chi).map(c => c.id)); return gs.hands[0].filter(c => !used.has(c.id)); },
+  getValidMoves() { return gameState.over ? [] : [{ type: 'auto_confirm' }]; },
+  validateMove(p, mv) {
+    const gs = gameState; if (p !== 0 || gs.over || !mv) return { ok: false, reason: 'Chưa đến lượt' };
+    const CAP = [3, 5, 5];
+    if (mv.type === 'place') {
+      const ids = mv.cards || [], pool = MB_ENGINE.pool().map(c => c.id);
+      if (!ids.length) return { ok: false, reason: 'Hãy chạm chọn lá bài trước' };
+      if (!ids.every(id => pool.includes(id))) return { ok: false, reason: 'Lá bài đã được xếp' };
+      if (gs.chi[mv.chi].length + ids.length > CAP[mv.chi]) return { ok: false, reason: 'Chi ' + (mv.chi + 1) + ' chỉ chứa ' + CAP[mv.chi] + ' lá' };
+      return { ok: true, free: true };
+    }
+    if (mv.type === 'unplace' || mv.type === 'clear' || mv.type === 'auto') return { ok: true, free: true };
+    if (mv.type === 'auto_confirm') return { ok: true };
+    if (mv.type === 'confirm') {
+      if (MB_ENGINE.pool().length) return { ok: false, reason: 'Hãy xếp đủ 13 lá vào 3 chi' };
+      if (!mbValid(gs.chi)) return { ok: false, reason: 'Binh lủng! Chi 3 phải ≥ Chi 2 ≥ Chi 1' };
+      return { ok: true };
+    }
+    return { ok: false, reason: 'Nước đi không hợp lệ' };
+  },
+  play(p, mv) {
+    const gs = gameState;
+    if (mv.type === 'place') { const hs = gs.hands[0]; mv.cards.forEach(id => { gs.chi[mv.chi].push(hs.find(c => c.id === id)); }); return { type: 'place', sfx: 'card' }; }
+    if (mv.type === 'unplace') { gs.chi = gs.chi.map(r => r.filter(c => !(mv.cards || []).includes(c.id))); return { type: 'unplace', sfx: 'select' }; }
+    if (mv.type === 'clear') { gs.chi = [[], [], []]; return { type: 'clear', sfx: 'select' }; }
+    if (mv.type === 'auto') { gs.chi = mbArrange(gs.hands[0], 3); return { type: 'auto', sfx: 'deal' }; }
+    if (mv.type === 'auto_confirm') gs.chi = mbArrange(gs.hands[0], 2);
+    gs.over = { reason: 'show' }; gs.phase = 'over'; MB_ENGINE.settle();
+    return { type: 'confirm', sfx: 'eat' };
+  },
+  settle() {
+    const gs = gameState, n = gs.players.length;
+    gs.arr = gs.hands.map((h, i) => { if (i === 0 && gs.over.reason !== 'white') return { chi: gs.chi.map(r => r.slice()), ok: mbValid(gs.chi) }; const chi = mbArrange(h, gs.players[i].level); return { chi, ok: mbValid(chi) }; });
+    gs.total = new Array(n).fill(0);
+    if (gs.over.reason === 'white') { for (let i = 0; i < n; i++) { if (i === gs.over.winner) gs.total[i] = 6 * (n - 1); else gs.total[i] = -6; } return; }
+    gs.sap = new Array(n).fill(0);
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) { const r = mbCompare(gs.arr[i], gs.arr[j]); gs.total[i] += r[0]; gs.total[j] += r[1]; }
+  },
+  nextTurn() { }, checkWin: () => gameState.over,
+  aiChoose() { return { type: 'auto_confirm' }; }, timeoutMove() { return { type: 'auto_confirm' }; }, hint() { return { type: 'auto' }; },
+  seatView(i) { const gs = gameState; return { cnt: gs.over ? (gs.total[i] >= 0 ? '+' : '') + gs.total[i] : '13 lá', warn: gs.over && gs.white[i] ? '🏆 ' + gs.white[i] : '', rows: [] }; },
+  tableView() {
+    const gs = gameState, names = ['Chi 1 (3 lá)', 'Chi 2 (5 lá)', 'Chi 3 (5 lá)'], rows = [];
+    for (let k = 2; k >= 0; k--) {
+      const cards = gs.over && gs.arr ? gs.arr[0].chi[k] : gs.chi[k], e = cards.length === (k === 0 ? 3 : 5) ? (k === 0 ? eval3(cards) : eval5(cards)) : null;
+      rows.push({ label: names[k] + (e ? '\n' + chiName(e, k === 0 ? 3 : 5) : ''), cards: cards.map(c => ci(c)), slots: (k === 0 ? 3 : 5) - cards.length, tapKey: String(k), tap: !gs.over });
+    }
+    return { info: gs.over ? (gs.over.reason === 'white' ? '🏆 ' + gs.players[gs.over.winner].name + ' thắng trắng: ' + gs.over.label : 'Đã so chi') : 'Xếp 13 lá: Chi 3 ≥ Chi 2 ≥ Chi 1 — chạm lá bài rồi chạm chi để đặt', rows };
+  },
+  handView() { const gs = gameState; return { cards: gs.over ? [] : MB_ENGINE.pool().map(c => ci(c)) }; },
+  tapTable(key, cardId) {
+    const gs = gameState; if (gs.over) return null;
+    if (cardId) return { type: 'unplace', cards: [cardId] };
+    return { type: 'place', chi: parseInt(key, 10), cards: [...UI.selected] };
+  },
+  myInfo() { const gs = gameState; return gs.over ? 'Điểm của bạn: ' + (gs.total[0] >= 0 ? '+' : '') + gs.total[0] : 'Còn ' + MB_ENGINE.pool().length + ' lá chưa xếp'; },
+  actionsView(my) { return gameState.over ? [] : [{ txt: 'TỰ XẾP', act: 'g:auto', dis: !my }, { txt: 'XOÁ', act: 'g:clear', dis: !my }, { txt: '✓ XÁC NHẬN', act: 'g:confirm', cls: 'primary', dis: !my }]; },
+  calculateResult() {
+    const gs = gameState, order = [...gs.players.keys()].sort((a, b) => gs.total[b] - gs.total[a] || a - b), me = gs.total[0];
+    const sp = []; if (me > 0 && gs.over.reason === 'white') sp.push('trang');
+    if (me > 0 && gs.arr && gs.arr[0].ok) { const mine = gs.arr[0]; for (let j = 1; j < gs.players.length; j++) { const e = [0, 1, 2].map(k => { const a = k === 0 ? eval3(mine.chi[0]) : eval5(mine.chi[k]), b = gs.arr[j].chi[k] ? (k === 0 ? eval3(gs.arr[j].chi[0]) : eval5(gs.arr[j].chi[k])) : [0]; return cmpArr(a, b) > 0; }); if (e.every(Boolean) && gs.arr[j].ok) { sp.push('mbSap'); break; } } }
+    return { outcome: me > 0 ? 'win' : me < 0 ? 'lose' : 'draw', rankings: order.map(p => ({ p, label: (gs.total[p] >= 0 ? '+' : '') + gs.total[p] + ' điểm' + (gs.white[p] ? ' · ' + gs.white[p] : '') })), specials: sp, headline: gs.over.reason === 'white' ? '🏆 THẮNG TRẮNG: ' + gs.over.label : (me > 0 ? '🃏 THẮNG!' : null) };
+  },
+  detail() { const gs = gameState; return gs.players.map((p, i) => p.name + ': ' + (gs.arr ? gs.arr[i].chi.map((c, k) => c.map(cardShort).join(' ') + ' [' + chiName(k === 0 ? eval3(c) : eval5(c), k === 0 ? 3 : 5) + ']').join(' | ') : '')); }
+};
+
+/* ============================ POKER — TEXAS HOLD'EM ============================ */
+const PK = { SB: 10, BB: 20, STACK: 1000 };
+const PK_ALL = Object.keys(CARD_BY_ID);
+function pkAlive(gs) { return gs.players.map((_, i) => i).filter(i => !gs.folded[i]); }
+function pkPot(gs) { return gs.contrib.reduce((a, b) => a + b, 0); }
+function pkPost(gs, p, amt) { const a = Math.max(0, Math.min(amt, gs.chips[p])); gs.chips[p] -= a; gs.bets[p] += a; gs.contrib[p] += a; if (gs.chips[p] === 0) gs.allin[p] = true; return a; }
+function pkOrderFrom(gs, start, pred) { const n = gs.players.length, out = []; for (let k = 0; k < n; k++) { const q = (start + k) % n; if (pred(q)) out.push(q); } return out; }
+/* Chia pot chính + pot phụ theo mức đóng góp */
+function pkSidePots(gs) {
+  const levels = [...new Set(gs.contrib.filter(x => x > 0))].sort((a, b) => a - b), pots = []; let prev = 0;
+  levels.forEach(L => {
+    const amt = gs.contrib.reduce((s, c) => s + Math.max(0, Math.min(c, L) - prev), 0);
+    const elig = gs.players.map((_, i) => i).filter(i => !gs.folded[i] && gs.contrib[i] >= L);
+    pots.push({ amt, elig, top: gs.players.map((_, i) => i).filter(i => gs.contrib[i] >= L) }); prev = L;
+  });
+  return pots;
+}
+/* Xác suất thắng (Monte Carlo) — chỉ dùng bài của chính AI và bài chung công khai */
+function pkEquity(gs, p, sims) {
+  const known = new Set(gs.hands[p].concat(gs.board).map(c => c.id)), rest = PK_ALL.filter(id => !known.has(id)).map(id => CARD_BY_ID[id]);
+  const opp = pkAlive(gs).filter(i => i !== p).length, need = 5 - gs.board.length; let win = 0;
+  for (let s = 0; s < sims; s++) {
+    const m = need + opp * 2;
+    for (let k = 0; k < m; k++) { const j = k + Math.floor(Math.random() * (rest.length - k)); const t = rest[k]; rest[k] = rest[j]; rest[j] = t; }
+    const board = gs.board.concat(rest.slice(0, need)), mine = best5(gs.hands[p].concat(board)).score;
+    let res = 1;
+    for (let o = 0; o < opp; o++) { const c = cmpArr(mine, best5([rest[need + o * 2], rest[need + o * 2 + 1]].concat(board)).score); if (c < 0) { res = 0; break; } if (c === 0) res = Math.min(res, 0.5); }
+    win += res;
+  }
+  return win / sims;
+}
+function pkPreflop(cs) {
+  const a = rv(cs[0]), b = rv(cs[1]), hi = Math.max(a, b), lo = Math.min(a, b);
+  if (a === b) return 0.55 + (a - 2) / 26;
+  return clamp((hi + lo) / 56 + (cs[0].suit === cs[1].suit ? 0.05 : 0) + (hi - lo <= 2 ? 0.05 : 0) + (hi >= 12 ? 0.05 : 0) - 0.05, 0.08, 0.7);
+}
+function pkMade(gs, p) {
+  if (gs.board.length < 3) return pkPreflop(gs.hands[p]);
+  const e = best5(gs.hands[p].concat(gs.board)).score;
+  return [0.22 + (e[1] || 0) / 70, 0.5, 0.68, 0.78, 0.86, 0.9, 0.94, 0.98, 1][e[0]];
+}
+const POKER_ENGINE = {
+  id: 'poker', kind: 'poker',
+  setup(opts) {
+    gameState = newGameState(); const gs = gameState; gs.currentGame = 'poker'; gs.players = makePlayers(clamp(opts.players, 2, 6));
+    gs.deck = newShuffledDeck(); gs.chips = new Array(gs.players.length).fill(PK.STACK);
+  },
+  deal() {
+    const gs = gameState, n = gs.players.length;
+    gs.hands = dealCards(gs.deck, n, 2); gs.board = []; gs.folded = new Array(n).fill(false); gs.allin = new Array(n).fill(false);
+    gs.bets = new Array(n).fill(0); gs.contrib = new Array(n).fill(0); gs.stage = 'preflop'; gs.dealer = rand(n); gs.over = null; gs.phase = 'play'; gs.lastAct = new Array(n).fill('');
+    const sb = n === 2 ? gs.dealer : (gs.dealer + 1) % n, bb = (sb + 1) % n;
+    pkPost(gs, sb, PK.SB); pkPost(gs, bb, PK.BB); gs.sb = sb; gs.bb = bb; gs.curBet = PK.BB; gs.minRaise = PK.BB;
+    gs.needAct = pkOrderFrom(gs, (bb + 1) % n, q => !gs.allin[q]); gs.turn = gs.needAct[0];
+  },
+  toCall(p) { const gs = gameState; return Math.max(0, Math.min(gs.curBet - gs.bets[p], gs.chips[p])); },
+  raiseOptions() { // các mức tố gợi ý cho người chơi
+    const gs = gameState, p = 0, pot = pkPot(gs), maxTo = gs.bets[p] + gs.chips[p], minTo = gs.curBet + gs.minRaise, out = [];
+    const add = (label, to) => { to = Math.round(to / 10) * 10; if (to >= maxTo) to = maxTo; if (to > gs.curBet && to >= Math.min(minTo, maxTo) && !out.some(o => o.to === to)) out.push({ label, to }); };
+    add('Tối thiểu', minTo); add('½ Pot', gs.curBet + pot / 2); add('Pot', gs.curBet + pot); add('2× Pot', gs.curBet + pot * 2);
+    if (!out.some(o => o.to === maxTo) && maxTo > gs.curBet) out.push({ label: 'ALL-IN', to: maxTo });
+    return out;
+  },
+  getValidMoves(p) {
+    const gs = gameState; if (gs.over || gs.turn !== p) return [];
+    const m = [{ type: 'fold' }]; if (gs.curBet === gs.bets[p]) m.push({ type: 'check' }); else m.push({ type: 'call' });
+    if (gs.chips[p] > gs.curBet - gs.bets[p]) m.push({ type: 'raise', to: Math.min(gs.bets[p] + gs.chips[p], gs.curBet + gs.minRaise) });
+    m.push({ type: 'allin' }); return m;
+  },
+  validateMove(p, mv) {
+    const gs = gameState; if (!mv) return { ok: false, reason: 'Không có nước đi' };
+    if (gs.over || gs.turn !== p) return { ok: false, reason: 'Chưa đến lượt' };
+    if (mv.type === 'check' && gs.curBet !== gs.bets[p]) return { ok: false, reason: 'Không thể Check — hãy Call hoặc Fold' };
+    if (mv.type === 'call' && gs.curBet === gs.bets[p]) return { ok: false, reason: 'Không cần Call — hãy Check' };
+    if (mv.type === 'raise') {
+      const max = gs.bets[p] + gs.chips[p];
+      if (!(mv.to > gs.curBet)) return { ok: false, reason: 'Mức tố phải lớn hơn mức hiện tại' };
+      if (mv.to > max) return { ok: false, reason: 'Không đủ chip' };
+      if (mv.to < gs.curBet + gs.minRaise && mv.to !== max) return { ok: false, reason: 'Tố tối thiểu lên ' + (gs.curBet + gs.minRaise) };
+    }
+    return ['fold', 'check', 'call', 'raise', 'allin'].includes(mv.type) ? { ok: true } : { ok: false, reason: 'Nước đi không hợp lệ' };
+  },
+  play(p, mv) {
+    const gs = gameState; let reopen = false, sfx = 'card';
+    if (mv.type === 'fold') { gs.folded[p] = true; gs.lastAct[p] = 'Fold'; sfx = 'select'; }
+    else if (mv.type === 'check') gs.lastAct[p] = 'Check';
+    else if (mv.type === 'call') { pkPost(gs, p, gs.curBet - gs.bets[p]); gs.lastAct[p] = gs.allin[p] ? 'All-in' : 'Call'; }
+    else {
+      const to = mv.type === 'allin' ? gs.bets[p] + gs.chips[p] : mv.to;
+      if (to <= gs.curBet) { pkPost(gs, p, gs.curBet - gs.bets[p]); gs.lastAct[p] = 'All-in'; }
+      else { if (to - gs.curBet >= gs.minRaise) gs.minRaise = to - gs.curBet; pkPost(gs, p, to - gs.bets[p]); gs.curBet = to; reopen = true; gs.lastAct[p] = gs.allin[p] ? 'All-in' : 'Raise ' + to; sfx = 'chat'; }
+    }
+    if (reopen) gs.needAct = pkOrderFrom(gs, (p + 1) % gs.players.length, q => q !== p && !gs.folded[q] && !gs.allin[q]);
+    else gs.needAct = gs.needAct.filter(x => x !== p);
+    POKER_ENGINE.afterAction();
+    return { type: mv.type, sfx };
+  },
+  afterAction() {
+    const gs = gameState, alive = pkAlive(gs);
+    if (alive.length === 1) { const total = pkPot(gs); gs.chips[alive[0]] += total; gs.contrib = gs.contrib.map(() => 0); gs.over = { reason: 'fold', winners: [alive[0]], pot: total }; gs.phase = 'over'; return; }
+    gs.needAct = gs.needAct.filter(q => !gs.folded[q] && !gs.allin[q]);
+    if (gs.needAct.length) return;
+    // kết thúc vòng cược: sang vòng mới hoặc so bài
+    while (true) {
+      gs.bets = gs.bets.map(() => 0); gs.curBet = 0; gs.minRaise = PK.BB;
+      if (gs.stage === 'river') { POKER_ENGINE.showdown(); return; }
+      if (gs.stage === 'preflop') { gs.board.push(drawCard(gs.deck), drawCard(gs.deck), drawCard(gs.deck)); gs.stage = 'flop'; }
+      else if (gs.stage === 'flop') { gs.board.push(drawCard(gs.deck)); gs.stage = 'turn'; }
+      else { gs.board.push(drawCard(gs.deck)); gs.stage = 'river'; }
+      const can = alive.filter(q => !gs.allin[q]);
+      if (can.length > 1) { gs.needAct = pkOrderFrom(gs, (gs.dealer + 1) % gs.players.length, q => !gs.folded[q] && !gs.allin[q]); gs.turn = gs.needAct[0]; return; }
+    }
+  },
+  showdown() {
+    const gs = gameState, alive = pkAlive(gs), sc = {}, totalPot = pkPot(gs);
+    alive.forEach(i => { sc[i] = best5(gs.hands[i].concat(gs.board)); });
+    const winnersAll = new Set();
+    pkSidePots(gs).forEach(pot => {
+      const el = pot.elig.length ? pot.elig : pot.top.slice(0, 1);
+      let best = null; el.forEach(i => { if (sc[i] && (best === null || cmpArr(sc[i].score, sc[best].score) > 0)) best = i; });
+      const ws = best === null ? el : el.filter(i => cmpArr(sc[i].score, sc[best].score) === 0), share = Math.floor(pot.amt / ws.length);
+      ws.forEach(i => { gs.chips[i] += share; winnersAll.add(i); }); gs.chips[ws[0]] += pot.amt - share * ws.length;
+    });
+    gs.sc = {}; alive.forEach(i => { gs.sc[i] = { name: pkName(sc[i].score), score: sc[i].score }; });
+    gs.over = { reason: 'show', winners: [...winnersAll], pot: totalPot }; gs.phase = 'over'; gs.contrib = gs.contrib.map(() => 0);
+  },
+  nextTurn() {
+    const gs = gameState; if (gs.over) return; const n = gs.players.length;
+    if (gs.needAct.includes(gs.turn)) return; // người này vẫn phải hành động (sau khi sang vòng mới)
+    for (let k = 1; k <= n; k++) { const q = (gs.turn + k) % n; if (gs.needAct.includes(q)) { gs.turn = q; return; } }
+  },
+  checkWin: () => gameState.over,
+  aiChoose(p, level) {
+    const gs = gameState, call = POKER_ENGINE.toCall(p), pot = pkPot(gs), chips = gs.chips[p], oppN = pkAlive(gs).length - 1;
+    let eq;
+    if (level <= 0 || (level === 1 && gs.board.length === 0)) eq = pkMade(gs, p);
+    else if (level === 1) eq = pkMade(gs, p) * 0.5 + pkEquity(gs, p, 50) * 0.5;
+    else eq = pkEquity(gs, p, level === 2 ? 120 : 300);
+    eq += (Math.random() - 0.5) * (level <= 0 ? 0.5 : level === 1 ? 0.12 : level === 2 ? 0.05 : 0.02);
+    const odds = call > 0 ? call / (pot + call) : 0;
+    const R = [0.74, 0.7, 0.66, 0.62][clamp(level, 0, 3)], margin = [-0.06, 0, 0.02, 0.03][clamp(level, 0, 3)];
+    const raiseTo = frac => { const size = Math.max(gs.minRaise, Math.round(pot * frac / 10) * 10), to = gs.curBet + size; return to - gs.bets[p] >= chips ? { type: 'allin' } : { type: 'raise', to }; };
+    if (call === 0) {
+      if (eq > R && chips > 0) return raiseTo(eq > 0.85 ? 0.75 : 0.5);
+      if (level >= 3 && gs.board.length >= 3 && eq < 0.4 && Math.random() < 0.1) return raiseTo(0.4);
+      return { type: 'check' };
+    }
+    if (eq > R + 0.05 && chips > call) return raiseTo(eq > 0.85 ? 0.8 : 0.55);
+    if (eq >= odds + margin + (oppN > 2 ? 0.02 * (oppN - 2) : 0)) return call >= chips ? { type: 'allin' } : { type: 'call' };
+    return { type: 'fold' };
+  },
+  timeoutMove(p) { const gs = gameState; return gs.curBet === gs.bets[p] ? { type: 'check' } : { type: 'fold' }; },
+  hint(p) { return POKER_ENGINE.aiChoose(p, 2); },
+  seatView(i) {
+    const gs = gameState, shown = gs.over && gs.over.reason === 'show' && !gs.folded[i];
+    let warn = gs.folded[i] ? 'Fold' : gs.allin[i] ? 'ALL-IN' : (gs.lastAct[i] || '');
+    if (gs.over && gs.over.winners.includes(i)) warn = '★ Thắng';
+    return { cnt: '💰 ' + gs.chips[i] + (gs.bets[i] ? ' · cược ' + gs.bets[i] : ''), warn: (gs.dealer === i ? '🔘D ' : '') + warn, rows: [gs.hands[i].map(c => ci(c, !shown || gs.folded[i]))], name: shown && gs.sc && gs.sc[i] ? gs.sc[i].name : '' };
+  },
+  tableView() {
+    const gs = gameState, cards = gs.board.map(c => ci(c)), pot = pkPot(gs) + (gs.over ? 0 : 0);
+    const stageName = { preflop: 'Pre-flop', flop: 'Flop', turn: 'Turn', river: 'River' }[gs.stage];
+    return { info: '💰 Pot ' + (gs.over ? gs.over.pot || '' : pot) + ' · ' + stageName + (gs.curBet ? ' · Mức cược ' + gs.curBet : ''), rows: [{ label: 'Bài chung', cards, slots: 5 - cards.length }] };
+  },
+  handView() { return { cards: gameState.hands[0].map(c => ci(c)) }; },
+  myInfo() {
+    const gs = gameState; let t = '💰 ' + gs.chips[0] + (gs.bets[0] ? ' · cược ' + gs.bets[0] : '');
+    if (gs.board.length >= 3 && !gs.folded[0]) t += ' · ' + pkName(best5(gs.hands[0].concat(gs.board)).score);
+    return t + (gs.folded[0] ? ' · Đã Fold' : '');
+  },
+  actionsView(my) {
+    const gs = gameState, mv = my ? POKER_ENGINE.getValidMoves(0).map(m => m.type) : [], call = my ? POKER_ENGINE.toCall(0) : 0, out = [];
+    out.push({ txt: 'FOLD', act: 'g:fold', dis: !my });
+    out.push({ txt: call > 0 ? 'CALL ' + call : 'CHECK', act: call > 0 ? 'g:call' : 'g:check', dis: !my });
+    out.push({ txt: 'RAISE ▲', act: 'raise-menu', cls: 'primary', dis: !my || !mv.includes('raise') });
+    out.push({ txt: 'ALL-IN', act: 'g:allin', dis: !my });
+    return out;
+  },
+  calculateResult() {
+    const gs = gameState, net = gs.chips.map(c => c - PK.STACK), order = [...gs.players.keys()].sort((a, b) => net[b] - net[a] || a - b), me = net[0], sp = [];
+    if (me > 0 && gs.sc && gs.sc[0] && gs.sc[0].score[0] >= 5) sp.push('pkStrong');
+    return { outcome: me > 0 ? 'win' : me < 0 ? 'lose' : 'draw', rankings: order.map(p => ({ p, label: (net[p] >= 0 ? '+' : '') + net[p] + ' chip' + (gs.sc && gs.sc[p] ? ' · ' + gs.sc[p].name : (gs.folded[p] ? ' · Fold' : '')) })), specials: sp, headline: me > 0 ? '🃏 THẮNG ' + (gs.sc && gs.sc[0] ? gs.sc[0].name.toUpperCase() : 'VÁN POKER') : null };
+  },
+  detail() { const gs = gameState; return ['Bài chung: ' + (gs.board.map(cardShort).join(' ') || '(chưa có)')].concat(gs.players.map((p, i) => p.name + ': ' + gs.hands[i].map(cardShort).join(' ') + (gs.sc && gs.sc[i] ? ' → ' + gs.sc[i].name : (gs.folded[i] ? ' (fold)' : '')))); }
+};
+
+/* ============================ PHỎM ============================ */
+const phomVal = c => c.value; // A=1 … K=13
+const rumVal = c => (c.value >= 10 ? 10 : c.value); // A=1, 2–9, 10/J/Q/K=10
+function drawPrev(gs, p) { return (p + gs.players.length - 1) % gs.players.length; }
+/* Cách ăn bài tốt nhất: bộ chứa lá vừa bỏ, ghép từ ≥2 lá trong tay */
+function phomEatOption(p) {
+  const gs = gameState, last = gs.last; if (!last || last.player !== drawPrev(gs, p)) return null;
+  const hand = gs.hands[p], cards = hand.concat([last.card]), li = cards.length - 1;
+  const cand = meldCandidates(cards).filter(m => m.includes(li)); if (!cand.length) return null;
+  let best = null, bd = Infinity;
+  cand.forEach(m => {
+    const used = new Set(m), rest = cards.filter((_, i) => !used.has(i)), r = bestMelds(rest, phomVal);
+    const score = r.dw - m.length * 0.01; if (score < bd) { bd = score; best = m; }
+  });
+  return best.map(i => cards[i]);
+}
+function phomPotential(rest) { // số cặp tiềm năng thành phỏm (cùng số hoặc cùng chất liền kề)
+  let pot = 0;
+  for (let i = 0; i < rest.length; i++) for (let j = i + 1; j < rest.length; j++) {
+    const a = rest[i], b = rest[j];
+    if (a.rank === b.rank) pot += 1; else if (a.suit === b.suit && Math.abs(a.value - b.value) <= 2) pot += 0.7;
+  }
+  return pot;
+}
+function drawDiscardChoice(p, level, valFn, selfOnly) { // chọn lá bỏ: ít điểm rác nhất, giữ lá tạo bộ
+  const gs = gameState, hand = gs.hands[p];
+  if (level <= 0 && Math.random() < 0.35) return pick(hand);
+  const nxt = (p + 1) % gs.players.length, nd = (gs.discards && gs.discards[nxt]) || [];
+  let best = null, bs = Infinity;
+  hand.forEach(c => {
+    const rest = hand.filter(x => x !== c), r = bestMelds(rest, valFn);
+    let sc = r.dw - (level >= 1 ? 0.9 * phomPotential(rest) : 0) - c.value * 0.01;
+    if (level >= 2 && !selfOnly) { // đoán an toàn: lá giống thứ đối thủ kế tiếp đã bỏ thì ít bị ăn
+      let safe = 0; nd.forEach(d => { if (d.rank === c.rank || (d.suit === c.suit && Math.abs(d.value - c.value) <= 2)) safe++; });
+      sc += 0.5 - 0.3 * Math.min(safe, 2);
+    }
+    if (sc < bs) { bs = sc; best = c; }
+  });
+  return best;
+}
+function phomSettle(ender) {
+  const gs = gameState, n = gs.players.length;
+  const res = gs.hands.map((h, i) => { const r = bestMelds(h, phomVal); return { melds: r.melds, left: r.deadwood.slice() }; });
+  const table = []; // tất cả phỏm đã hạ
+  res.forEach((r, i) => { gs.melds[i].concat(r.melds).forEach(m => table.push({ owner: i, cards: m.slice() })); });
+  const mom = res.map((r, i) => gs.melds[i].length + r.melds.length === 0);
+  for (let i = 0; i < n; i++) { // gửi bài vào phỏm trên bàn
+    if (mom[i]) continue;
+    res[i].left.sort((a, b) => b.value - a.value);
+    res[i].left = res[i].left.filter(c => { const m = table.find(t => canAttachMeld(t.cards, c)); if (m) { m.cards.push(c); return false; } return true; });
+  }
+  const pts = res.map(r => r.left.reduce((a, c) => a + phomVal(c), 0));
+  gs.final = { res, pts, mom, table };
+  const order = [...Array(n).keys()].sort((a, b) => (mom[a] ? 1 : 0) - (mom[b] ? 1 : 0) || pts[a] - pts[b] || res[a].left.length - res[b].left.length || a - b);
+  if (ender != null) { order.splice(order.indexOf(ender), 1); order.unshift(ender); }
+  gs.final.order = order;
+}
+const PHOM_ENGINE = {
+  id: 'phom', kind: 'draw',
+  setup(opts) { gameState = newGameState(); const gs = gameState; gs.currentGame = 'phom'; gs.players = makePlayers(clamp(opts.players, 2, 4)); gs.deck = newShuffledDeck(); },
+  deal() {
+    const gs = gameState, n = gs.players.length;
+    gs.hands = dealCards(gs.deck, n, 9); gs.stock = gs.deck; gs.melds = gs.players.map(() => []); gs.discards = gs.players.map(() => []);
+    gs.dcount = new Array(n).fill(0); gs.last = null; gs.over = null; gs.phase = 'play'; gs.pendingNext = false; gs.final = null;
+    gs.starter = rand(n); gs.hands[gs.starter].push(drawCard(gs.stock)); gs.turn = gs.starter; gs.dphase = 'discard';
+    gs.hands.forEach(h => h.sort((a, b) => a.value - b.value || SUIT_ORDER[a.suit] - SUIT_ORDER[b.suit]));
+    const r = bestMelds(gs.hands[gs.starter], phomVal);
+    if (r.dw === 0) { gs.over = { reason: 'u', winner: gs.starter }; gs.phase = 'over'; phomSettle(gs.starter); }
+  },
+  getValidMoves(p) {
+    const gs = gameState; if (gs.over || gs.turn !== p) return [];
+    if (gs.dphase === 'draw') { const m = [{ type: 'draw', src: 'stock' }]; if (phomEatOption(p)) m.push({ type: 'eat' }); return m; }
+    return gs.hands[p].map(c => ({ type: 'discard', card: c.id }));
+  },
+  validateMove(p, mv) {
+    const gs = gameState; if (!mv) return { ok: false, reason: 'Không có nước đi' };
+    if (gs.over || gs.turn !== p) return { ok: false, reason: 'Chưa đến lượt' };
+    if (mv.type === 'turn') return gs.dphase === 'draw' ? { ok: true } : { ok: false, reason: 'Đã bốc bài rồi' };
+    if (mv.type === 'draw') return gs.dphase === 'draw' ? { ok: true, free: p === 0 } : { ok: false, reason: 'Bạn phải đánh một lá' };
+    if (mv.type === 'eat') { if (gs.dphase !== 'draw') return { ok: false, reason: 'Bạn phải đánh một lá' }; return phomEatOption(p) ? { ok: true, free: p === 0 } : { ok: false, reason: 'Không ăn được: lá này không tạo thành phỏm' }; }
+    if (mv.type === 'discard') { if (gs.dphase !== 'discard') return { ok: false, reason: 'Hãy bốc hoặc ăn bài trước' }; return gs.hands[p].some(c => c.id === mv.card) ? { ok: true } : { ok: false, reason: 'Hãy chọn 1 lá để đánh' }; }
+    return { ok: false, reason: 'Nước đi không hợp lệ' };
+  },
+  doDraw(p) {
+    const gs = gameState;
+    if (!gs.stock.length) { gs.over = { reason: 'end' }; gs.phase = 'over'; phomSettle(null); return false; }
+    gs.hands[p].push(drawCard(gs.stock)); gs.dphase = 'discard';
+    if (bestMelds(gs.hands[p], phomVal).dw === 0) { gs.over = { reason: 'u', winner: p }; gs.phase = 'over'; phomSettle(p); }
+    return true;
+  },
+  doEat(p) {
+    const gs = gameState, m = phomEatOption(p), last = gs.last.card;
+    m.forEach(c => { if (c !== last) { const i = gs.hands[p].indexOf(c); if (i >= 0) gs.hands[p].splice(i, 1); } });
+    gs.melds[p].push(m); const dp = gs.discards[gs.last.player]; dp.pop(); gs.last = null; gs.dphase = 'discard';
+    if (!gs.hands[p].length || bestMelds(gs.hands[p], phomVal).dw === 0) { gs.over = { reason: 'u', winner: p }; gs.phase = 'over'; phomSettle(p); }
+  },
+  doDiscard(p, id) {
+    const gs = gameState, i = gs.hands[p].findIndex(c => c.id === id), c = gs.hands[p].splice(i, 1)[0];
+    gs.discards[p].push(c); gs.last = { player: p, card: c }; gs.dcount[p]++; gs.dphase = 'draw'; gs.pendingNext = true;
+    if (!gs.hands[p].length) { gs.over = { reason: 'u', winner: p }; gs.phase = 'over'; phomSettle(p); return; }
+    if (gs.dcount.every(x => x >= 4)) { gs.over = { reason: 'end' }; gs.phase = 'over'; phomSettle(null); }
+  },
+  play(p, mv) {
+    const gs = gameState;
+    if (mv.type === 'draw') { PHOM_ENGINE.doDraw(p); return { type: 'draw', sfx: 'deal' }; }
+    if (mv.type === 'eat') { PHOM_ENGINE.doEat(p); return { type: 'eat', sfx: 'eat' }; }
+    if (mv.type === 'turn') { // AI / hết giờ: bốc hoặc ăn rồi đánh luôn
+      const lv = mv.lv != null ? mv.lv : gs.players[p].level;
+      let ate = false;
+      if (mv.src === 'eat' && phomEatOption(p)) { PHOM_ENGINE.doEat(p); ate = true; } else if (!PHOM_ENGINE.doDraw(p)) return { type: 'draw' };
+      if (gs.over) return { type: 'turn', sfx: ate ? 'eat' : 'deal' };
+      PHOM_ENGINE.doDiscard(p, drawDiscardChoice(p, Math.max(0, lv), phomVal).id);
+      return { type: 'turn', sfx: ate ? 'eat' : 'card' };
+    }
+    PHOM_ENGINE.doDiscard(p, mv.card); return { type: 'discard', sfx: 'card' };
+  },
+  nextTurn() { const gs = gameState; if (gs.over) return; if (gs.pendingNext) { gs.pendingNext = false; gs.turn = (gs.turn + 1) % gs.players.length; } },
+  checkWin: () => gameState.over,
+  aiChoose(p, level) {
+    const eatable = phomEatOption(p);
+    if (gameState.dphase === 'discard') return { type: 'discard', card: drawDiscardChoice(p, level, phomVal).id };
+    const eat = eatable && (level >= 1 || Math.random() < 0.6);
+    return { type: 'turn', src: eat ? 'eat' : 'stock', lv: level };
+  },
+  timeoutMove(p) { const gs = gameState; return gs.dphase === 'discard' ? { type: 'discard', card: drawDiscardChoice(p, 2, phomVal, true).id } : { type: 'turn', src: 'stock', lv: 1 }; },
+  hint(p) { const gs = gameState; if (gs.dphase === 'discard') return { type: 'discard', card: drawDiscardChoice(p, 3, phomVal).id }; return phomEatOption(p) ? { type: 'eat' } : { type: 'draw', src: 'stock' }; },
+  seatView(i) {
+    const gs = gameState, rows = [];
+    gs.melds[i].forEach(m => rows.push(m.map(c => ci(c))));
+    if (gs.discards[i].length) rows.push(gs.discards[i].map(c => ci(c)));
+    if (gs.over && gs.final) { const r = gs.final.res[i]; if (r.melds.length) r.melds.forEach(m => rows.push(m.map(c => ci(c)))); if (r.left.length) rows.push(r.left.map(c => ci(c))); }
+    return { cnt: gs.over ? '' : '🂠 ' + gs.hands[i].length, warn: gs.over && gs.final ? (gs.final.mom[i] ? 'MÓM' : (gs.over.winner === i ? 'Ù! ' : '') + gs.final.pts[i] + ' điểm') : (gs.discards[i].length + '/4 lá bỏ'), rows };
+  },
+  tableView() {
+    const gs = gameState, rows = [];
+    rows.push({ label: 'Nọc ' + gs.stock.length, cards: [ci(gs.stock[0] || gs.hands[0][0], true)].concat(gs.last ? [ci(gs.last.card)] : []) });
+    const tall = typeof window === 'undefined' || window.innerHeight >= 600;
+    if (tall && gs.melds[0].length) rows.push({ label: 'Phỏm bạn ăn', cards: [].concat.apply([], gs.melds[0]).map(c => ci(c)) });
+    if (tall && gs.discards[0].length) rows.push({ label: 'Bạn đã bỏ', cards: gs.discards[0].map(c => ci(c)) });
+    let info = gs.over ? (gs.over.reason === 'u' ? '🏆 Ù! ' + gs.players[gs.over.winner].name : 'Hết 4 vòng — hạ phỏm, gửi bài, tính điểm') : (gs.turn === 0 ? (gs.dphase === 'draw' ? 'Bốc nọc hoặc ăn lá vừa bỏ (nếu tạo được phỏm)' : 'Chọn 1 lá để đánh') : gs.players[gs.turn].name + ' đang chơi');
+    return { info, rows };
+  },
+  handView() {
+    const gs = gameState, r = bestMelds(gs.hands[0], phomVal), inM = new Set([].concat.apply([], r.melds).map(c => c.id));
+    return { cards: [].concat.apply([], r.melds).concat(r.deadwood.slice().sort((a, b) => a.value - b.value)).map(c => ci(c)), melded: inM };
+  },
+  myInfo() { const gs = gameState, r = bestMelds(gs.hands[0], phomVal); return 'Phỏm: ' + (r.melds.length + gs.melds[0].length) + ' · điểm rác ' + r.dw + ' · bài bỏ ' + gs.dcount[0] + '/4'; },
+  actionsView(my) {
+    const gs = gameState, out = []; if (gs.over) return out;
+    if (gs.dphase === 'draw' || !my) {
+      out.push({ txt: '🂠 BỐC NỌC', act: 'g:draw', cls: 'primary', dis: !my || gs.dphase !== 'draw' });
+      out.push({ txt: '🍽 ĂN', act: 'g:eat', dis: !my || gs.dphase !== 'draw' || !phomEatOption(0) });
+    } else out.push({ txt: '⬇ ĐÁNH', act: 'g:discard', cls: 'primary' });
+    out.push({ txt: '💡', act: 'hint', cls: 'sortbtn', dis: !my });
+    return out;
+  },
+  calculateResult() {
+    const gs = gameState, f = gs.final, order = f.order, me = order.indexOf(0), sp = [];
+    if (gs.over.reason === 'u' && gs.over.winner === 0) sp.push('phomU');
+    return { outcome: me === 0 ? 'win' : 'lose', rankings: order.map(p => ({ p, label: f.mom[p] ? 'Móm' : (gs.over.reason === 'u' && gs.over.winner === p ? 'Ù! ' : '') + f.pts[p] + ' điểm rác' })), specials: sp, headline: gs.over.reason === 'u' ? (gs.over.winner === 0 ? '🏆 BẠN Ù!' : '💥 ' + gs.players[gs.over.winner].name + ' Ù!') : (f.mom[0] ? '😵 BẠN BỊ MÓM' : null) };
+  },
+  detail() { const gs = gameState, f = gs.final; return gs.players.map((p, i) => p.name + ': ' + (f.res[i].melds.concat(gs.melds[i]).map(m => '[' + m.map(cardShort).join(' ') + ']').join(' ') || '(không phỏm)') + ' + rác ' + (f.res[i].left.map(cardShort).join(' ') || '0') + ' = ' + f.pts[i]); }
+};
+
+/* ============================ RUMMY (kiểu Gin Rummy: gõ khi rác ≤ 10) ============================ */
+const RUM = { KNOCK: 10 };
+const RUMMY_ENGINE = {
+  id: 'rummy', kind: 'draw',
+  setup(opts) { gameState = newGameState(); const gs = gameState; gs.currentGame = 'rummy'; gs.players = makePlayers(clamp(opts.players, 2, 4)); gs.deck = newShuffledDeck(); },
+  deal() {
+    const gs = gameState, n = gs.players.length;
+    gs.hands = dealCards(gs.deck, n, n === 2 ? 10 : 7); gs.stock = gs.deck; gs.pile = [drawCard(gs.stock)]; gs.melds = gs.players.map(() => []);
+    gs.over = null; gs.phase = 'play'; gs.pendingNext = false; gs.final = null; gs.turn = rand(n); gs.dphase = 'draw'; gs.dcount = new Array(n).fill(0); gs.discards = gs.players.map(() => []);
+    gs.hands.forEach(h => h.sort((a, b) => a.value - b.value || SUIT_ORDER[a.suit] - SUIT_ORDER[b.suit]));
+  },
+  dwAfter(p, id) { const gs = gameState; return bestMelds(gs.hands[p].filter(c => c.id !== id), rumVal).dw; },
+  getValidMoves(p) {
+    const gs = gameState; if (gs.over || gs.turn !== p) return [];
+    if (gs.dphase === 'draw') return [{ type: 'draw', src: 'stock' }, { type: 'draw', src: 'pile' }];
+    const m = gs.hands[p].map(c => ({ type: 'discard', card: c.id }));
+    gs.hands[p].forEach(c => { if (RUMMY_ENGINE.dwAfter(p, c.id) <= RUM.KNOCK) m.push({ type: 'knock', card: c.id }); });
+    return m;
+  },
+  validateMove(p, mv) {
+    const gs = gameState; if (!mv) return { ok: false, reason: 'Không có nước đi' };
+    if (gs.over || gs.turn !== p) return { ok: false, reason: 'Chưa đến lượt' };
+    if (mv.type === 'turn') return gs.dphase === 'draw' ? { ok: true } : { ok: false, reason: 'Đã bốc bài rồi' };
+    if (mv.type === 'draw') { if (gs.dphase !== 'draw') return { ok: false, reason: 'Bạn phải đánh một lá' }; if (mv.src === 'pile' && !gs.pile.length) return { ok: false, reason: 'Chồng bỏ đang trống' }; return { ok: true, free: p === 0 }; }
+    if (mv.type === 'discard' || mv.type === 'knock') {
+      if (gs.dphase !== 'discard') return { ok: false, reason: 'Hãy bốc bài trước' };
+      if (!gs.hands[p].some(c => c.id === mv.card)) return { ok: false, reason: 'Hãy chọn 1 lá để đánh' };
+      if (mv.type === 'knock' && RUMMY_ENGINE.dwAfter(p, mv.card) > RUM.KNOCK) return { ok: false, reason: 'Chỉ gõ được khi điểm rác ≤ ' + RUM.KNOCK };
+      return { ok: true };
+    }
+    return { ok: false, reason: 'Nước đi không hợp lệ' };
+  },
+  doDraw(p, src) {
+    const gs = gameState;
+    if (src === 'pile' && gs.pile.length) gs.hands[p].push(gs.pile.pop());
+    else { if (gs.stock.length <= 2) { RUMMY_ENGINE.settle(null, true); return false; } gs.hands[p].push(drawCard(gs.stock)); }
+    gs.dphase = 'discard'; return true;
+  },
+  doDiscard(p, id, knock) {
+    const gs = gameState, i = gs.hands[p].findIndex(c => c.id === id), c = gs.hands[p].splice(i, 1)[0];
+    gs.pile.push(c); gs.dphase = 'draw'; gs.pendingNext = true; gs.tcount = (gs.tcount || 0) + 1;
+    if (knock) RUMMY_ENGINE.settle(p, false);
+    else if (gs.tcount >= 60) RUMMY_ENGINE.settle(null, true); // quá nhiều lượt mà chưa ai gõ → so điểm rác
+  },
+  settle(knocker, stockOut) {
+    const gs = gameState, n = gs.players.length;
+    const res = gs.hands.map(h => { const r = bestMelds(h, rumVal); return { melds: r.melds, left: r.deadwood, dw: r.dw }; });
+    gs.final = { res, knocker, stockOut };
+    let winner;
+    if (knocker == null) { winner = res.map((r, i) => i).sort((a, b) => res[a].dw - res[b].dw || a - b)[0]; const tie = res.filter(r => r.dw === res[winner].dw).length > 1; gs.final.tie = tie; }
+    else { const others = res.map((r, i) => i).filter(i => i !== knocker), low = others.reduce((b, i) => (b === null || res[i].dw < res[b].dw ? i : b), null); winner = res[knocker].dw < res[low].dw ? knocker : low; gs.final.undercut = winner !== knocker; gs.final.gin = res[knocker].dw === 0; }
+    gs.over = { reason: knocker == null ? 'stock' : 'knock', winner }; gs.phase = 'over';
+    gs.final.order = [...Array(n).keys()].sort((a, b) => (a === winner ? -1 : b === winner ? 1 : res[a].dw - res[b].dw || a - b));
+  },
+  play(p, mv) {
+    const gs = gameState;
+    if (mv.type === 'draw') { RUMMY_ENGINE.doDraw(p, mv.src); return { type: 'draw', sfx: mv.src === 'pile' ? 'eat' : 'deal' }; }
+    if (mv.type === 'turn') {
+      const lv = mv.lv != null ? mv.lv : gs.players[p].level, top = gs.pile[gs.pile.length - 1];
+      let src = 'stock';
+      if (top && lv >= 0) {
+        const cur = bestMelds(gs.hands[p], rumVal).dw, withTop = bestMelds(gs.hands[p].concat([top]), rumVal);
+        const bestDrop = withTop.dw - Math.max.apply(null, withTop.deadwood.map(rumVal).concat([0]));
+        if ((lv >= 1 && bestDrop < cur - 2) || (lv === 0 && Math.random() < 0.3)) src = 'pile';
+      }
+      if (!RUMMY_ENGINE.doDraw(p, src)) return { type: 'draw' };
+      if (gs.over) return { type: 'turn' };
+      let bc = null, bs = Infinity; // chọn lá bỏ làm rác ít nhất
+      gs.hands[p].forEach(c => { const dw = RUMMY_ENGINE.dwAfter(p, c.id) - (lv >= 1 ? 0.2 * phomPotential(gs.hands[p].filter(x => x !== c)) : 0) - rumVal(c) * 0.001; if (dw < bs) { bs = dw; bc = c; } });
+      if (lv <= 0 && Math.random() < 0.3) bc = pick(gs.hands[p]);
+      const dwNow = RUMMY_ENGINE.dwAfter(p, bc.id), lim = lv <= 0 ? 0 : lv === 1 ? 5 : lv === 2 ? 8 : RUM.KNOCK;
+      RUMMY_ENGINE.doDiscard(p, bc.id, dwNow <= lim);
+      return { type: 'turn', sfx: src === 'pile' ? 'eat' : 'card' };
+    }
+    RUMMY_ENGINE.doDiscard(p, mv.card, mv.type === 'knock'); return { type: mv.type, sfx: mv.type === 'knock' ? 'chat' : 'card' };
+  },
+  nextTurn() { const gs = gameState; if (gs.over) return; if (gs.pendingNext) { gs.pendingNext = false; gs.turn = (gs.turn + 1) % gs.players.length; } },
+  checkWin: () => gameState.over,
+  aiChoose(p, level) { return gameState.dphase === 'discard' ? RUMMY_ENGINE.timeoutMove(p) : { type: 'turn', lv: level }; },
+  timeoutMove(p) {
+    const gs = gameState; if (gs.dphase === 'draw') return { type: 'turn', lv: 1 };
+    const c = minBy(gs.hands[p], x => RUMMY_ENGINE.dwAfter(p, x.id) - rumVal(x) * 0.001); return { type: 'discard', card: c.id };
+  },
+  hint(p) {
+    const gs = gameState; if (gs.dphase === 'draw') { const top = gs.pile[gs.pile.length - 1]; if (top && bestMelds(gs.hands[p].concat([top]), rumVal).dw < bestMelds(gs.hands[p], rumVal).dw - 2) return { type: 'draw', src: 'pile' }; return { type: 'draw', src: 'stock' }; }
+    const c = minBy(gs.hands[p], x => RUMMY_ENGINE.dwAfter(p, x.id) - rumVal(x) * 0.001); return { type: RUMMY_ENGINE.dwAfter(p, c.id) <= RUM.KNOCK ? 'knock' : 'discard', card: c.id };
+  },
+  seatView(i) {
+    const gs = gameState, rows = [];
+    if (gs.over && gs.final) { const r = gs.final.res[i]; r.melds.forEach(m => rows.push(m.map(c => ci(c)))); if (r.left.length) rows.push(r.left.map(c => ci(c))); }
+    return { cnt: gs.over ? '' : '🂠 ' + gs.hands[i].length, warn: gs.over && gs.final ? 'rác ' + gs.final.res[i].dw + (gs.over.winner === i ? ' ★' : '') : '', rows };
+  },
+  tableView() {
+    const gs = gameState, top = gs.pile[gs.pile.length - 1];
+    const info = gs.over ? (gs.over.reason === 'knock' ? (gs.final.gin ? '🏆 GIN! ' : '✊ Gõ! ') + (gs.final.undercut ? 'Bị undercut' : '') : 'Hết nọc — so điểm rác') : (gs.turn === 0 ? (gs.dphase === 'draw' ? 'Bốc nọc hoặc lấy lá bỏ' : 'Đánh 1 lá, hoặc GÕ nếu rác ≤ ' + RUM.KNOCK) : gs.players[gs.turn].name + ' đang chơi');
+    return { info, rows: [{ label: 'Nọc ' + gs.stock.length + '\nChồng bỏ', cards: [ci(gs.stock[0] || top, true)].concat(top ? [ci(top)] : []) }] };
+  },
+  handView() {
+    const gs = gameState, r = bestMelds(gs.hands[0], rumVal);
+    return { cards: [].concat.apply([], r.melds).concat(r.deadwood.slice().sort((a, b) => a.value - b.value)).map(c => ci(c)) };
+  },
+  myInfo() { const gs = gameState, r = bestMelds(gs.hands[0], rumVal); return 'Bộ: ' + r.melds.length + ' · điểm rác ' + r.dw + (r.dw <= RUM.KNOCK ? ' (có thể gõ)' : ''); },
+  actionsView(my) {
+    const gs = gameState, out = []; if (gs.over) return out;
+    if (gs.dphase === 'draw' || !my) {
+      out.push({ txt: '🂠 BỐC NỌC', act: 'g:draw', cls: 'primary', dis: !my || gs.dphase !== 'draw', data: { src: 'stock' } });
+      out.push({ txt: '♻ LẤY BÀI BỎ', act: 'g:draw', dis: !my || gs.dphase !== 'draw' || !gs.pile.length, data: { src: 'pile' } });
+    } else { out.push({ txt: '⬇ ĐÁNH', act: 'g:discard', cls: 'primary' }); out.push({ txt: '✊ GÕ', act: 'g:knock' }); }
+    out.push({ txt: '💡', act: 'hint', cls: 'sortbtn', dis: !my });
+    return out;
+  },
+  calculateResult() {
+    const gs = gameState, f = gs.final, order = f.order, me = order.indexOf(0), sp = [];
+    if (gs.over.winner === 0 && f.gin) sp.push('rumGin');
+    const draw = f.knocker == null && f.tie && f.res[0].dw === f.res[order[0]].dw;
+    return { outcome: me === 0 ? (draw ? 'draw' : 'win') : 'lose', rankings: order.map(p => ({ p, label: 'rác ' + f.res[p].dw + (p === f.knocker ? ' · gõ' : '') })), specials: sp, headline: gs.over.winner === 0 ? (f.gin ? '🏆 GIN RUMMY!' : '🏆 THẮNG!') : null };
+  },
+  detail() { const gs = gameState, f = gs.final; return gs.players.map((p, i) => p.name + ': ' + (f.res[i].melds.map(m => '[' + m.map(cardShort).join(' ') + ']').join(' ') || '(không bộ)') + ' + rác ' + (f.res[i].left.map(cardShort).join(' ') || '0') + ' = ' + f.res[i].dw); }
+};
+
 /* ============================ ĐĂNG KÝ ENGINE ============================ */
 const GAME_ENGINES = {
   tienLen: makeTienLen('tienLen', { quad: true, dthong: false, dthongChatTwo: false, chatDoi2: false, dthong4ChatQuad: false, penalty2: false, white: ['rong', 'tuQuy2'] }),
@@ -1374,7 +2292,14 @@ const GAME_ENGINES = {
   tienLenMienBac: makeTienLen('tienLenMienBac', { quad: true, dthong: true, dthongChatTwo: true, chatDoi2: false, dthong4ChatQuad: false, penalty2: false, white: ['rong', 'tuQuy2', 'tuQuy3'] }),
   samLoc: SAM_ENGINE,
   xiDach: XD_ENGINE,
-  blackjack: BJ_ENGINE
+  blackjack: BJ_ENGINE,
+  highCard: HC_ENGINE,
+  baCay: BC_ENGINE,
+  lieng: LIENG_ENGINE,
+  mauBinh: MB_ENGINE,
+  poker: POKER_ENGINE,
+  phom: PHOM_ENGINE,
+  rummy: RUMMY_ENGINE
 };
 const DEALER_PLAYER = { id: -1, name: 'Nhà cái', avatar: '🎩', country: '', code: '', flag: '🏦', isHuman: false, level: 2 };
 
@@ -1789,7 +2714,7 @@ const Rooms = {
   roomName(room) { return 'Phòng ' + room + ' — ' + this.TIERS[this.tier(room)]; },
   info(room, table) {
     const rng = mulberry32(hashStr('r' + room + 't' + table + 'e' + Data.rooms.epoch));
-    const game = READY_GAMES[Math.floor(rng() * READY_GAMES.length)], m = GAME_META[game];
+    const game = ROOM_GAMES[Math.floor(rng() * ROOM_GAMES.length)], m = GAME_META[game];
     const max = m.minP + Math.floor(rng() * (m.maxP - m.minP + 1));
     const r = rng(); let status, occ;
     if (r < 0.5) { status = 'waiting'; occ = Math.floor(rng() * max); }
@@ -2041,14 +2966,14 @@ function createCardElement(card, opts) {
   img.alt = opts.faceDown ? 'Lá bài úp' : cardLabel(card);
   img.src = opts.faceDown ? getCardBack() : getCardImage(card);
   e.appendChild(img);
-  if (card) e.dataset.id = card.id;
-  if (opts.tag === 'button') { e.type = 'button'; e.setAttribute('aria-label', cardLabel(card)); }
+  if (card && !opts.faceDown) e.dataset.id = card.id;
+  if (opts.tag === 'button') { e.type = 'button'; e.setAttribute('aria-label', opts.faceDown ? 'Lá bài úp' : cardLabel(card)); }
   return e;
 }
 
 /* ---------- Điều hướng ---------- */
-const SCREENS = ['home', 'games', 'play', 'tournament', 'rooms', 'missions', 'leaderboard', 'themes', 'history', 'profile', 'stats', 'achievements', 'settings', 'guide'];
-const SCREEN_TITLES = { home: 'CARD MASTER', games: 'Chơi game', play: '', tournament: 'Giải đấu', rooms: 'Phòng chơi', missions: 'Nhiệm vụ', leaderboard: 'Xếp hạng', themes: 'Giao diện', history: 'Lịch sử ván', profile: 'Hồ sơ', stats: 'Thống kê', achievements: 'Thành tích', settings: 'Cài đặt', guide: 'Hướng dẫn' };
+const SCREENS = ['home', 'games', 'play', 'solo', 'tournament', 'rooms', 'missions', 'leaderboard', 'themes', 'history', 'profile', 'stats', 'achievements', 'settings', 'guide'];
+const SCREEN_TITLES = { home: 'CARD MASTER', games: 'Chơi game', play: '', solo: '', tournament: 'Giải đấu', rooms: 'Phòng chơi', missions: 'Nhiệm vụ', leaderboard: 'Xếp hạng', themes: 'Giao diện', history: 'Lịch sử ván', profile: 'Hồ sơ', stats: 'Thống kê', achievements: 'Thành tích', settings: 'Cài đặt', guide: 'Hướng dẫn' };
 const UI = {
   screen: 'home', stack: [], selected: new Set(), lock: false, seats: {}, lastTableKey: '', handKey: '',
   updateTimer(secs, frac) {
@@ -2063,6 +2988,7 @@ function navigateTo(name, opts) {
   opts = opts || {};
   if (!SCREENS.includes(name)) name = 'home';
   if (UI.screen === 'play' && name !== 'play' && Match.running && !opts.force) { confirmExit(name); return; }
+  if (UI.screen === 'solo' && name !== 'solo' && Solo.running && !opts.force) { confirmExitSolo(name); return; }
   if (!opts.back && UI.screen !== name && !opts.noStack) UI.stack.push(UI.screen);
   if (UI.stack.length > 12) UI.stack.shift();
   UI.screen = name;
@@ -2076,8 +3002,19 @@ function navigateTo(name, opts) {
 }
 function goBack() {
   if (UI.screen === 'play') { confirmExit('home'); return; }
+  if (UI.screen === 'solo') { if (Solo.running) confirmExitSolo('home'); else navigateTo('home', { force: true }); return; }
   const prev = UI.stack.pop() || 'home';
   navigateTo(prev === 'play' ? 'home' : prev, { back: true });
+}
+function confirmExitSolo(target) {
+  Modal.open({
+    title: 'Thoát ván?', body: 'Ván đang chơi được lưu tự động — bạn có thể tiếp tục sau. Bỏ ván sẽ tính là thua nếu bạn đã đi từ 8 nước.',
+    buttons: [
+      { text: 'Chơi tiếp', cls: 'primary' },
+      { text: 'Thoát & lưu', fn: () => { Solo.leave(); navigateTo(target || 'home', { force: true }); } },
+      { text: 'Bỏ ván', cls: 'danger', fn: () => { Solo.abort(true); navigateTo(target || 'home', { force: true }); } }
+    ]
+  });
 }
 function confirmExit(target) {
   Modal.open({
@@ -2111,6 +3048,7 @@ RENDERERS.games = function () {
   READY_GAMES.forEach(id => root.appendChild(gameCard(id, true)));
   const lockedRoot = $('#games-locked'); lockedRoot.textContent = '';
   Object.keys(GAME_META).filter(k => !GAME_META[k].ready).forEach(id => lockedRoot.appendChild(gameCard(id, false)));
+  const soon = $('#games-soon'); if (soon) soon.hidden = !lockedRoot.children.length;
 };
 function gameCard(id, ready) {
   const m = GAME_META[id];
@@ -2121,9 +3059,12 @@ function gameCard(id, ready) {
   info.appendChild(h('p', 'game-desc', m.desc));
   if (ready) {
     const tags = h('div', 'tags');
-    tags.appendChild(h('span', 'tag', '👥 ' + (m.minP === m.maxP ? m.minP : m.minP + '–' + m.maxP) + (m.kind === 'bj' ? ' + nhà cái' : '')));
-    tags.appendChild(h('span', 'tag', '⏱ ' + Data.settings.turnTime + 's'));
-    tags.appendChild(h('span', 'tag', Data.settings.aiLevel === 4 ? '🎲 Ngẫu nhiên' : LEVEL_ICONS[Data.settings.aiLevel] + ' ' + LEVEL_NAMES[Data.settings.aiLevel]));
+    if (m.kind === 'solo') { tags.appendChild(h('span', 'tag', '👤 1 người')); tags.appendChild(h('span', 'tag', '↶ Hoàn tác')); tags.appendChild(h('span', 'tag', '💡 Gợi ý')); }
+    else {
+      tags.appendChild(h('span', 'tag', '👥 ' + (m.minP === m.maxP ? m.minP : m.minP + '–' + m.maxP) + (m.kind === 'bj' ? ' + nhà cái' : '')));
+      tags.appendChild(h('span', 'tag', '⏱ ' + Data.settings.turnTime + 's'));
+      tags.appendChild(h('span', 'tag', Data.settings.aiLevel === 4 ? '🎲 Ngẫu nhiên' : LEVEL_ICONS[Data.settings.aiLevel] + ' ' + LEVEL_NAMES[Data.settings.aiLevel]));
+    }
     info.appendChild(tags);
     const act = h('div', 'game-actions');
     const r = h('button', 'btn small', '📖 Luật'); r.type = 'button'; r.dataset.action = 'rules'; r.dataset.game = id;
@@ -2160,6 +3101,14 @@ function setupGame(id) {
       { text: 'TIẾP TỤC', cls: 'primary', fn: () => Match.resume() }, { text: 'Bỏ ván & chơi mới', cls: 'danger', fn: () => { Match.abort(true); setupGame(id); } }] });
     return;
   }
+  if (m.kind === 'solo') {
+    const cfgAll = Data.settings.gameCfg || (Data.settings.gameCfg = {}), cfg = Object.assign({}, cfgAll[id] || {}), sb = h('div', 'setup');
+    sb.appendChild(h('p', 'muted', m.desc));
+    if (id === 'solitaire') { sb.appendChild(h('label', 'lbl', 'Số lá rút từ kho')); sb.appendChild(segmented([1, 3], cfg.draw === 3 ? 3 : 1, v => { cfg.draw = v; }, v => 'Rút ' + v + ' lá')); }
+    if (id === 'spider') { sb.appendChild(h('label', 'lbl', 'Số chất (độ khó)')); sb.appendChild(segmented([1, 2, 4], [1, 2, 4].includes(cfg.suits) ? cfg.suits : 1, v => { cfg.suits = v; }, v => v + ' chất')); }
+    Modal.open({ title: m.name, body: sb, buttons: [{ text: '📖 Luật', keep: true, fn: () => showRules(id) }, { text: 'CHƠI', cls: 'primary', fn: () => { cfgAll[id] = cfg; saveData(); Solo.start(id, cfg); } }] });
+    return;
+  }
   let players = clamp(Data.settings.players[id] || m.defP, m.minP, m.maxP), level = Data.settings.aiLevel, time = Data.settings.turnTime;
   const body = h('div', 'setup');
   if (m.minP !== m.maxP) {
@@ -2171,10 +3120,12 @@ function setupGame(id) {
   body.appendChild(segmented([0, 1, 2, 3, 4], level, v => { level = v; }, v => v === 4 ? '🎲' : LEVEL_ICONS[v] + ' ' + LEVEL_NAMES[v]));
   body.appendChild(h('label', 'lbl', 'Thời gian mỗi lượt'));
   body.appendChild(segmented(TIME_OPTIONS, time, v => { time = v; }, v => v + 's'));
+  const gcfg = Data.settings.gameCfg || (Data.settings.gameCfg = {}); let anh = ((gcfg.baCay || {}).anh) !== false;
+  if (id === 'baCay') { body.appendChild(h('label', 'lbl', 'Luật Ba Cây')); body.appendChild(segmented([true, false], anh, v => { anh = v; }, v => v ? 'Ba cây ảnh: Bật' : 'Ba cây ảnh: Tắt')); }
   Modal.open({
     title: m.name, body, buttons: [
       { text: '📖 Luật', keep: true, fn: () => showRules(id) },
-      { text: 'CHƠI', cls: 'primary', fn: () => { Data.settings.players[id] = players; Data.settings.aiLevel = level; Data.settings.turnTime = time; saveData(); Match.start(id, { players }); } }
+      { text: 'CHƠI', cls: 'primary', fn: () => { if (id === 'baCay') gcfg.baCay = { anh }; Data.settings.players[id] = players; Data.settings.aiLevel = level; Data.settings.turnTime = time; saveData(); Match.start(id, { players }); } }
     ]
   });
 }
@@ -2742,7 +3693,7 @@ function buildRoomsControls() {
   const f = h('div', 'room-filters');
   const gs = h('select', 'input'); gs.setAttribute('aria-label', 'Lọc game');
   const g0 = h('option', '', 'Mọi game'); g0.value = ''; gs.appendChild(g0);
-  READY_GAMES.forEach(id => { const o = h('option', '', GAME_META[id].name); o.value = id; gs.appendChild(o); });
+  ROOM_GAMES.forEach(id => { const o = h('option', '', GAME_META[id].name); o.value = id; gs.appendChild(o); });
   const ss = h('select', 'input'); ss.setAttribute('aria-label', 'Lọc trạng thái');
   const s0 = h('option', '', 'Mọi trạng thái'); s0.value = ''; ss.appendChild(s0);
   Object.keys(Rooms.STATUS).forEach(k => { const o = h('option', '', Rooms.STATUS[k]); o.value = k; ss.appendChild(o); });
@@ -2846,13 +3797,14 @@ function buildPlayScreen() {
   } else UI.dealerSeat = null;
   seats.className = 'n' + (gs.players.length - 1);
   UI.selected.clear(); UI.lastTableKey = ''; UI.handKey = ''; UI.dealerWasHidden = false; UI.dealerPrevCount = 0;
-  $('#table-cards').textContent = ''; $('#hand').textContent = '';
+  $('#table-cards').textContent = ''; $('#hand').textContent = ''; $('#table-cards').className = eng.tableView ? 'rows' : '';
+  const rt = $('#raise-tray'); if (rt) rt.hidden = true; const et = $('#emote-tray'); if (et) et.hidden = true;
   $('#screen-play').dataset.kind = eng.kind;
   $('#screen-play').classList.remove('win-glow');
 }
 function playMetrics() {
   const v = viewport(), landscape = v.w > v.h;
-  return { v, landscape, handH: Math.round(v.h * (landscape ? (v.h < 400 ? 0.3 : 0.34) : 0.31)) };
+  return { v, landscape, handH: Math.round(clamp(v.h * (landscape ? (v.h < 400 ? 0.34 : 0.4) : 0.27), 118, 168)) };
 }
 /* Tính lại bố cục — gọi khi resize / xoay máy, không reset ván */
 function layoutPlay() {
@@ -2864,39 +3816,78 @@ function layoutPlay() {
 function layoutHand() {
   const wrap = $('#hand-wrap'), hand = $('#hand'); if (!wrap || !hand) return;
   const n = hand.children.length; if (!n) return;
-  const sa = safeInsets();
   const L = calculateHandLayout({
-    viewportWidth: wrap.clientWidth - 12, viewportHeight: wrap.clientHeight - 20, cardCount: n, cardWidth: 84, gap: 5,
-    safeArea: { left: 0, right: 0, top: 0, bottom: 0 }, orientation: playMetrics().landscape ? 'landscape' : 'portrait'
+    mode: 'row', viewportWidth: wrap.clientWidth - 12, viewportHeight: wrap.clientHeight - 22, cardCount: n, cardWidth: 86, gap: 6, minStep: 22,
+    orientation: playMetrics().landscape ? 'landscape' : 'portrait'
   });
-  hand.style.setProperty('--cw', L.cardWidth + 'px'); hand.style.setProperty('--ch', L.cardHeight + 'px');
-  hand.style.gap = L.gap + 'px'; hand.style.width = (L.totalWidth + 1) + 'px';
+  hand.style.setProperty('--cw', L.cardWidth + 'px'); hand.style.setProperty('--ch', L.cardHeight + 'px'); hand.style.setProperty('--ov', L.overlap + 'px');
+  hand.style.gap = '0px'; hand.style.width = (L.totalWidth + 2) + 'px';
 }
 function layoutTable() {
-  const box = $('#table-cards'), tc = $('#table-cards'); if (!box) return;
+  const box = $('#table-cards'); if (!box) return;
   const n = box.children.length; if (!n) return;
-  const L = calculateHandLayout({ viewportWidth: box.clientWidth - 8, viewportHeight: box.clientHeight - 6, cardCount: n, cardWidth: 64, gap: 4 });
-  box.style.setProperty('--cw', L.cardWidth + 'px'); box.style.setProperty('--ch', L.cardHeight + 'px'); box.style.gap = L.gap + 'px';
+  if (box.classList.contains('rows')) { layoutRows(box); return; }
+  const L = calculateHandLayout({ mode: 'row', viewportWidth: box.clientWidth - 8, viewportHeight: box.clientHeight - 6, cardCount: n, cardWidth: 74, gap: 5, minStep: 18 });
+  box.style.setProperty('--cw', L.cardWidth + 'px'); box.style.setProperty('--ch', L.cardHeight + 'px'); box.style.setProperty('--ov', L.overlap + 'px'); box.style.gap = '0px';
+}
+/* Bố cục nhiều hàng bài trên bàn (Mậu Binh, Poker, Phỏm...) — mỗi hàng một dải chồng nhẹ */
+function layoutRows(box) {
+  const rows = $$('.t-row', box); if (!rows.length) return;
+  const rowH = Math.max(30, Math.floor((box.clientHeight - 4) / rows.length) - 8);
+  rows.forEach(r => {
+    const n = $$('.card, .t-slot', r).length || 1;
+    const L = calculateHandLayout({ mode: 'row', viewportWidth: box.clientWidth - 70, viewportHeight: rowH, cardCount: n, cardWidth: 58, gap: 4, minStep: 16 });
+    r.style.setProperty('--cw', L.cardWidth + 'px'); r.style.setProperty('--ch', L.cardHeight + 'px'); r.style.setProperty('--ov', L.overlap + 'px');
+  });
 }
 function renderHand() {
-  const gs = gameState, hand = $('#hand'); const eng = Match.engine;
-  let cards;
-  if (eng.kind === 'shed') cards = sortHand(gs.hands[0].slice());
-  else cards = gs.hands[0].reduce((a, x) => a.concat(x.cards), []);
-  const key = cards.map(c => c.id).join(',');
+  const gs = gameState, hand = $('#hand'), eng = Match.engine;
+  let items;
+  if (eng.handView) items = eng.handView().cards;
+  else if (eng.kind === 'shed') items = sortHand(gs.hands[0].slice()).map(c => ({ card: c, down: false }));
+  else items = gs.hands[0].reduce((a, x) => a.concat(x.cards), []).map(c => ({ card: c, down: false }));
+  const key = items.map(x => (x.down ? 'x' : x.card.id)).join(',');
   const sel = UI.selected;
-  [...sel].forEach(id => { if (!cards.some(c => c.id === id)) sel.delete(id); });
-  if (key === UI.handKey) { $$('.card', hand).forEach(e => e.classList.toggle('selected', sel.has(e.dataset.id))); return false; }
-  const newCards = !UI.handKey || cards.length > hand.children.length;
+  [...sel].forEach(id => { if (!items.some(x => !x.down && x.card.id === id)) sel.delete(id); });
+  if (key === UI.handKey) { $$('.card', hand).forEach(e => e.classList.toggle('selected', !!e.dataset.id && sel.has(e.dataset.id))); return false; }
   UI.handKey = key; hand.textContent = '';
-  cards.forEach(c => {
-    const e = createCardElement(c, { tag: 'button' }); e.classList.add('hand-card'); if (sel.has(c.id)) e.classList.add('selected'); hand.appendChild(e);
+  items.forEach(x => {
+    const e = createCardElement(x.card, { tag: 'button', faceDown: x.down }); e.classList.add('hand-card');
+    if (x.down) e.classList.add('down'); else if (sel.has(x.card.id)) e.classList.add('selected');
+    hand.appendChild(e);
   });
   layoutHand();
   return true;
 }
+/* Ghế AI cho các game dùng seatView (Poker, Liêng, Phỏm...) */
+function renderSeatsGeneric() {
+  const gs = gameState, eng = Match.engine;
+  gs.players.forEach((p, i) => {
+    if (i === 0) return; const s = UI.seats[i]; if (!s) return;
+    s.root.classList.toggle('turn', gs.turn === i && !gs.over);
+    const v = eng.seatView(i);
+    s.cnt.textContent = v.cnt || ''; s.warn.textContent = (v.name ? v.name + ' · ' : '') + (v.warn || ''); s.warn.classList.toggle('alert', !!v.alert);
+    s.sc.textContent = '';
+    (v.rows || []).forEach(r => { const row = h('div', 'mini-row'); r.forEach(x => row.appendChild(createCardElement(x.card, { faceDown: x.down }))); s.sc.appendChild(row); });
+  });
+}
+/* Bàn chơi nhiều hàng (Mậu Binh, Poker, Phỏm, Rummy...) */
+function renderTableGeneric() {
+  const eng = Match.engine, box = $('#table-cards'), info = $('#table-info'), v = eng.tableView();
+  info.textContent = v.info || ''; box.classList.add('rows'); box.textContent = '';
+  (v.rows || []).forEach(r => {
+    const row = h('div', 't-row' + (r.tap ? ' tap' : '')); if (r.tapKey != null) row.dataset.key = r.tapKey;
+    if (r.label) { const l = h('div', 't-lbl'); l.textContent = r.label; l.style.whiteSpace = 'pre-line'; row.appendChild(l); }
+    const cs = h('div', 't-cards');
+    r.cards.forEach(x => cs.appendChild(createCardElement(x.card, { faceDown: x.down, tag: r.tap && !x.down ? 'button' : 'div' })));
+    for (let k = 0; k < (r.slots || 0); k++) cs.appendChild(h('div', 't-slot'));
+    row.appendChild(cs); box.appendChild(row);
+  });
+  layoutRows(box);
+}
 function renderSeats() {
   const gs = gameState, eng = Match.engine;
+  if (eng.seatView) { renderSeatsGeneric(); return; }
   gs.players.forEach((p, i) => {
     if (i === 0) return; const s = UI.seats[i]; if (!s) return;
     const myTurn = gs.turn === i && !gs.over;
@@ -2924,6 +3915,7 @@ function renderSeats() {
 }
 function renderTable(fromRects) {
   const gs = gameState, eng = Match.engine, box = $('#table-cards'), info = $('#table-info');
+  if (eng.tableView) { renderTableGeneric(); return; }
   if (eng.kind === 'shed') {
     const lp = gs.lastPlay;
     const key = lp ? lp.cards.map(c => c.id).join(',') : '';
@@ -2958,6 +3950,7 @@ function renderTable(fromRects) {
 }
 function renderMyInfo() {
   const gs = gameState, el = $('#my-info'); if (!el) return;
+  if (Match.engine.myInfo) { el.textContent = Match.engine.myInfo(); el.classList.remove('alert'); return; }
   if (Match.engine.kind === 'bj') {
     const hs = gs.hands[0];
     if (gs.currentGame === 'blackjack') el.textContent = hs.map((hd, i) => (hs.length > 1 ? (i === gs.handIdx && gs.turn === 0 ? '▶ Bài ' : 'Bài ') + (i + 1) + ': ' : 'Điểm: ') + bjValue(hd.cards).total + (hd.doubled ? ' (x2)' : '') + (hd.bust ? ' — QUẮC' : '')).join('  |  ');
@@ -2972,6 +3965,7 @@ function renderActions() {
   bar.textContent = '';
   const mk = (txt, act, cls, dis) => { const b = h('button', 'btn ' + (cls || ''), txt); b.type = 'button'; b.dataset.action = act; if (dis) b.disabled = true; bar.appendChild(b); return b; };
   if (gs.over || gs.phase === 'bao') return;
+  if (eng.actionsView) { eng.actionsView(myTurn).forEach(a => { const b = mk(a.txt, a.act, a.cls, a.dis); if (a.data) Object.keys(a.data).forEach(k => { b.dataset[k] = a.data[k]; }); }); return; }
   if (eng.kind === 'shed') {
     const moves = myTurn ? eng.getValidMoves(0) : [];
     const canPass = moves.some(m => m.type === 'pass');
@@ -3023,8 +4017,9 @@ function collectTable(done) {
 /* ============================ 12. ĐIỀU KHIỂN VÁN CHƠI ============================ */
 const Match = {
   running: false, gameId: null, engine: null, startedAt: 0, elapsedBefore: 0, busy: false, token: 0,
-  humanTurn() { const gs = gameState; return this.running && !gs.over && gs.phase === 'play' && gs.turn === 0 && !(this.engine.kind === 'bj' && this.engine.isDealerTurn()); },
+  humanTurn() { const gs = gameState; if (this.running && this.engine && this.engine.humanTurn) return this.engine.humanTurn(); return this.running && !gs.over && gs.phase === 'play' && gs.turn === 0 && !(this.engine.kind === 'bj' && this.engine.isDealerTurn()); },
   start(gameId, extra) {
+    if (GAME_META[gameId] && GAME_META[gameId].kind === 'solo') { Solo.start(gameId); return; }
     extra = extra || {};
     try {
       Modal.closeAll(); this.cleanup();
@@ -3067,6 +4062,7 @@ const Match = {
       body: 'Báo Sâm = phải đi hết 10 lá mà không ai chặn được. Chặn thành công thì người báo thua. Có chắc bài mạnh không?',
       buttons: [{ text: 'Không báo', fn: () => decide(false) }, { text: 'BÁO SÂM', cls: 'primary', fn: () => decide(true) }]
     });
+    this.baoModal = m;
     TurnTimer.stopTimer();
     // hết giờ → không báo
     const tt = Timers.set(() => { if (!done) { Modal.close(m); decide(false); } }, Math.max(8, gs.settings.turnTime) * 1000);
@@ -3086,7 +4082,8 @@ const Match = {
     if (this.humanTurn()) {
       if (!this._wasHuman) turnEffect();
       this._wasHuman = true;
-      TurnTimer.startTimer(gs.settings ? gs.settings.turnTime : Data.settings.turnTime, () => this.humanTimeout());
+      const tl = gs.settings ? gs.settings.turnTime : Data.settings.turnTime;
+      TurnTimer.startTimer(eng.timeLimit ? eng.timeLimit(tl) : tl, () => this.humanTimeout());
     } else {
       this._wasHuman = false;
       TurnTimer.stopTimer();
@@ -3118,9 +4115,9 @@ const Match = {
     if (!this.humanTurn() || UI.lock) return;
     const v = this.engine.validateMove(0, mv);
     if (!v.ok) { showToast('⚠️ Nước đi không hợp lệ — ' + (v.reason || ''), 'warning'); vibrate(40); return; }
-    TurnTimer.stopTimer(); UI.selected.clear(); this.commit(0, mv);
+    if (!v.free) TurnTimer.stopTimer(); UI.selected.clear(); this.commit(0, mv, v);
   },
-  commit(p, mv) {
+  commit(p, mv, vres) {
     const eng = this.engine, gs = gameState;
     // ghi nhận vị trí xuất phát của bài để làm animation bay
     const rects = {};
@@ -3142,11 +4139,13 @@ const Match = {
     }
     else if (info.type === 'pass') { showToast(gs.players[p].name + ' bỏ lượt', 'info', { silent: true }); }
     else if (eng.kind === 'bj') SFX.play('card');
+    if (info.sfx) SFX.play(info.sfx);
     renderBoard(rects);
     if (info.type === 'hit' || info.type === 'double' || info.type === 'split' || info.type === 'dealerHit') {
       const hand = p === 0 && info.type !== 'dealerHit' ? $$('#hand .card') : [];
       const last = hand[hand.length - 1]; if (last) flyEl(last, rectCenter($('#deck-pile')), { dur: 320, rot: 15, scale: 0.5 });
     }
+    if (vres && vres.free) { this.persist(); return; } // nước đi tự do: vẫn là lượt của bạn
     this.afterMove(info);
   },
   afterMove() {
@@ -3223,15 +4222,18 @@ const Match = {
     this.cleanup();
   },
   abort(clear) {
+    if (Data.currentMatch && Data.currentMatch.solo) { Solo.abort(clear); return; }
     const forfeit = clear && ((this.running && this.tour) || (Data.currentMatch && Data.currentMatch.tour));
     this.cleanup();
     if (clear) { Data.currentMatch = null; Data.currentGame = null; saveData(); }
     if (forfeit) { try { Tour.report(false); } catch (e) { handleError(e); } this.tour = false; showToast('Bỏ ván giải đấu — tính là thua trận này', 'warning'); }
   },
   cleanup() {
+    if (this.baoModal) { try { Modal.close(this.baoModal); } catch (e) { } this.baoModal = null; }
     this.token++; this.running = false; TurnTimer.stopTimer(); Timers.clearAll(); UI.lock = false;
   },
   resume() {
+    if (Data.currentMatch && Data.currentMatch.solo) { Solo.resume(); return; }
     const cm = Data.currentMatch;
     try {
       if (!cm || !GAME_ENGINES[cm.gameId]) throw new Error('Không có ván để tiếp tục');
@@ -3278,6 +4280,7 @@ function showResult(res, add, ach, levelBefore, tourNote) {
 }
 function showDetail() {
   const gs = gameState, body = h('div', 'rules');
+  if (Match.engine.detail) { Match.engine.detail().forEach(t => body.appendChild(h('p', '', t))); Modal.open({ title: 'Chi tiết ván', body, buttons: [{ text: 'Đóng', cls: 'primary' }] }); return; }
   gs.players.forEach((p, i) => {
     let t;
     if (Match.engine.kind === 'shed') t = gs.hands[i].map(cardShort).join(' ') || '(hết bài)';
@@ -3288,10 +4291,398 @@ function showDetail() {
   Modal.open({ title: 'Chi tiết ván', body, buttons: [{ text: 'Đóng', cls: 'primary' }] });
 }
 
+
+/* ============================ 14. GAME XẾP BÀI MỘT NGƯỜI: SOLITAIRE / FREECELL / SPIDER ============================ */
+const SOLO_SUITS = ['S', 'H', 'D', 'C'];
+const isRed = c => c.suit === 'H' || c.suit === 'D';
+const cloneCard = c => Object.assign({}, c);
+function soloFullDeck() { return createDeck(); }
+
+/* ---------- Luật từng game: tạo ván, kiểm tra, di chuyển (thuần dữ liệu, không đụng DOM) ---------- */
+const SoloRules = {
+  /* ----- Klondike ----- */
+  klondike: {
+    deal(cfg) {
+      const d = newShuffledDeck(), tab = [];
+      for (let i = 0; i < 7; i++) { const col = []; for (let k = 0; k <= i; k++) col.push({ c: d.pop(), up: k === i }); tab.push(col); }
+      return { tab, found: { S: [], H: [], D: [], C: [] }, stock: d, waste: [], draw: cfg.draw === 3 ? 3 : 1 };
+    },
+    canFound(st, c) { const f = st.found[c.suit]; return f.length === c.value - 1; },
+    canTab(st, col, c) { const t = st.tab[col]; if (!t.length) return c.value === 13; const top = t[t.length - 1]; return top.up && isRed(top.c) !== isRed(c) && top.c.value === c.value + 1; },
+    /* nguồn: {k:'tab',col,idx} | {k:'waste'} | {k:'found',suit} */
+    cardsOf(st, src) {
+      if (src.k === 'waste') return st.waste.length ? [st.waste[st.waste.length - 1]] : [];
+      if (src.k === 'found') { const f = st.found[src.suit]; return f.length ? [f[f.length - 1]] : []; }
+      const col = st.tab[src.col]; if (!col[src.idx] || !col[src.idx].up) return [];
+      const seq = col.slice(src.idx);
+      for (let i = 0; i < seq.length - 1; i++) { if (!(isRed(seq[i].c) !== isRed(seq[i + 1].c) && seq[i].c.value === seq[i + 1].c.value + 1)) return []; }
+      return seq.map(x => x.c);
+    },
+    move(st, src, dst) { // dst: {k:'tab',col} | {k:'found'}
+      const cs = SoloRules.klondike.cardsOf(st, src); if (!cs.length) return false;
+      if (dst.k === 'found') { if (cs.length !== 1 || !SoloRules.klondike.canFound(st, cs[0])) return false; }
+      else { if (src.k === 'tab' && src.col === dst.col) return false; if (!SoloRules.klondike.canTab(st, dst.col, cs[0])) return false; }
+      if (src.k === 'tab') { st.tab[src.col].splice(src.idx); const col = st.tab[src.col]; if (col.length && !col[col.length - 1].up) col[col.length - 1].up = true; }
+      else if (src.k === 'waste') st.waste.pop(); else st.found[src.suit].pop();
+      if (dst.k === 'found') st.found[cs[0].suit].push(cs[0]); else cs.forEach(c => st.tab[dst.col].push({ c, up: true }));
+      return true;
+    },
+    stockClick(st) {
+      if (st.stock.length) { for (let i = 0; i < st.draw && st.stock.length; i++) st.waste.push(st.stock.pop()); return true; }
+      if (st.waste.length) { while (st.waste.length) st.stock.push(st.waste.pop()); return true; }
+      return false;
+    },
+    won(st) { return SOLO_SUITS.every(s => st.found[s].length === 13); },
+    hints(st) {
+      const out = [], R = SoloRules.klondike;
+      const srcs = []; if (st.waste.length) srcs.push({ k: 'waste' });
+      st.tab.forEach((col, ci2) => col.forEach((x, idx) => { if (x.up) srcs.push({ k: 'tab', col: ci2, idx }); }));
+      srcs.forEach(src => {
+        const cs = R.cardsOf(st, src); if (!cs.length) return;
+        if (cs.length === 1 && R.canFound(st, cs[0])) out.push({ src, dst: { k: 'found' }, pri: 0 });
+        for (let c2 = 0; c2 < 7; c2++) {
+          if (src.k === 'tab' && src.col === c2) continue;
+          if (R.canTab(st, c2, cs[0])) {
+            const reveals = src.k === 'tab' && src.idx > 0 && !st.tab[src.col][src.idx - 1].up;
+            const pointless = src.k === 'tab' && src.idx === 0 && cs[0].value === 13 && !st.tab[c2].length;
+            if (!pointless) out.push({ src, dst: { k: 'tab', col: c2 }, pri: reveals ? 1 : (src.k === 'waste' ? 2 : 3) });
+          }
+        }
+      });
+      out.sort((a, b) => a.pri - b.pri);
+      if (!out.length && (st.stock.length || st.waste.length)) out.push({ stock: true, pri: 9 });
+      return out;
+    }
+  },
+  /* ----- FreeCell ----- */
+  freecell: {
+    deal() {
+      const d = newShuffledDeck(), tab = Array.from({ length: 8 }, () => []);
+      let i = 0; while (d.length) { tab[i % 8].push(d.pop()); i++; }
+      return { tab, cells: [null, null, null, null], found: { S: [], H: [], D: [], C: [] } };
+    },
+    canFound(st, c) { return st.found[c.suit].length === c.value - 1; },
+    maxMove(st, toEmpty) { const free = st.cells.filter(x => !x).length, empties = st.tab.filter(c => !c.length).length - (toEmpty ? 1 : 0); return (free + 1) * Math.pow(2, Math.max(0, empties)); },
+    seqOk(a, b) { return isRed(a) !== isRed(b) && a.value === b.value + 1; },
+    cardsOf(st, src) {
+      if (src.k === 'cell') return st.cells[src.i] ? [st.cells[src.i]] : [];
+      if (src.k === 'found') { const f = st.found[src.suit]; return f.length ? [f[f.length - 1]] : []; }
+      const col = st.tab[src.col]; if (!col[src.idx]) return [];
+      const seq = col.slice(src.idx);
+      for (let i = 0; i < seq.length - 1; i++) if (!SoloRules.freecell.seqOk(seq[i], seq[i + 1])) return [];
+      return seq;
+    },
+    move(st, src, dst) {
+      const R = SoloRules.freecell, cs = R.cardsOf(st, src); if (!cs.length) return false;
+      if (dst.k === 'found') { if (cs.length !== 1 || !R.canFound(st, cs[0])) return false; }
+      else if (dst.k === 'cell') { if (cs.length !== 1 || st.cells[dst.i]) return false; }
+      else {
+        if (src.k === 'tab' && src.col === dst.col) return false;
+        const t = st.tab[dst.col];
+        if (t.length && !R.seqOk(t[t.length - 1], cs[0])) return false;
+        if (cs.length > R.maxMove(st, !t.length)) return false;
+      }
+      if (src.k === 'tab') st.tab[src.col].splice(src.idx); else if (src.k === 'cell') st.cells[src.i] = null; else st.found[src.suit].pop();
+      if (dst.k === 'found') st.found[cs[0].suit].push(cs[0]); else if (dst.k === 'cell') st.cells[dst.i] = cs[0]; else cs.forEach(c => st.tab[dst.col].push(c));
+      return true;
+    },
+    won(st) { return SOLO_SUITS.every(s => st.found[s].length === 13); },
+    hints(st) {
+      const R = SoloRules.freecell, out = [];
+      const srcs = []; st.cells.forEach((c, i) => { if (c) srcs.push({ k: 'cell', i }); });
+      st.tab.forEach((col, ci2) => { if (col.length) { for (let idx = col.length - 1; idx >= 0; idx--) { if (idx < col.length - 1 && !R.seqOk(col[idx], col[idx + 1])) break; srcs.push({ k: 'tab', col: ci2, idx }); } } });
+      srcs.forEach(src => {
+        const cs = R.cardsOf(st, src); if (!cs.length) return;
+        if (cs.length === 1 && R.canFound(st, cs[0])) out.push({ src, dst: { k: 'found' }, pri: 0 });
+        for (let c2 = 0; c2 < 8; c2++) {
+          if (src.k === 'tab' && src.col === c2) continue;
+          const t = st.tab[c2];
+          if (t.length && R.seqOk(t[t.length - 1], cs[0]) && cs.length <= R.maxMove(st, false)) out.push({ src, dst: { k: 'tab', col: c2 }, pri: src.k === 'cell' ? 1 : 2 });
+        }
+        if (src.k === 'tab' && cs.length === 1) { const ei = st.cells.findIndex(x => !x); if (ei >= 0) out.push({ src, dst: { k: 'cell', i: ei }, pri: 5 }); }
+      });
+      out.sort((a, b) => a.pri - b.pri); return out;
+    }
+  },
+  /* ----- Spider ----- */
+  spider: {
+    deal(cfg) {
+      const suits = [1, 2, 4].includes(cfg.suits) ? cfg.suits : 1, keys = ['S', 'H', 'D', 'C'], cards = [];
+      for (let k = 0; k < 8; k++) { const key = keys[k % suits]; RANKS.forEach(rk => { const c = cloneCard(CARD_BY_ID[rk + key]); c.image = getCardImage(c); cards.push(c); }); }
+      for (let i = cards.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = cards[i]; cards[i] = cards[j]; cards[j] = t; }
+      const tab = Array.from({ length: 10 }, () => []);
+      for (let i = 0; i < 54; i++) tab[i % 10].push({ c: cards.pop(), up: false });
+      tab.forEach(col => { col[col.length - 1].up = true; });
+      return { tab, stock: cards, done: 0, suits };
+    },
+    cardsOf(st, src) {
+      const col = st.tab[src.col]; if (!col[src.idx] || !col[src.idx].up) return [];
+      const seq = col.slice(src.idx);
+      for (let i = 0; i < seq.length - 1; i++) if (!(seq[i].c.suit === seq[i + 1].c.suit && seq[i].c.value === seq[i + 1].c.value + 1)) return [];
+      return seq.map(x => x.c);
+    },
+    canTab(st, col, c) { const t = st.tab[col]; if (!t.length) return true; const top = t[t.length - 1]; return top.up && top.c.value === c.value + 1; },
+    removeRuns(st) {
+      let removed = 0;
+      st.tab.forEach(col => {
+        if (col.length >= 13) {
+          const seq = col.slice(col.length - 13);
+          if (seq.every((x, i) => x.up && x.c.suit === seq[0].c.suit && x.c.value === 13 - i)) { col.splice(col.length - 13); if (col.length && !col[col.length - 1].up) col[col.length - 1].up = true; st.done++; removed++; }
+        }
+      });
+      return removed;
+    },
+    move(st, src, dst) {
+      const R = SoloRules.spider, cs = R.cardsOf(st, src); if (!cs.length) return false;
+      if (src.col === dst.col || !R.canTab(st, dst.col, cs[0])) return false;
+      st.tab[src.col].splice(src.idx); const col = st.tab[src.col]; if (col.length && !col[col.length - 1].up) col[col.length - 1].up = true;
+      cs.forEach(c => st.tab[dst.col].push({ c, up: true })); R.removeRuns(st); return true;
+    },
+    stockClick(st) {
+      if (!st.stock.length) return false;
+      if (st.tab.some(c => !c.length)) return 'empty';
+      for (let i = 0; i < 10; i++) st.tab[i].push({ c: st.stock.pop(), up: true });
+      SoloRules.spider.removeRuns(st); return true;
+    },
+    won(st) { return st.done >= 8; },
+    hints(st) {
+      const R = SoloRules.spider, out = [];
+      st.tab.forEach((col, ci2) => {
+        for (let idx = 0; idx < col.length; idx++) {
+          if (!col[idx].up) continue; const cs = R.cardsOf(st, { col: ci2, idx }); if (!cs.length) continue;
+          for (let c2 = 0; c2 < 10; c2++) {
+            if (c2 === ci2 || !R.canTab(st, c2, cs[0])) continue;
+            const t = st.tab[c2], sameSuit = t.length && t[t.length - 1].c.suit === cs[0].suit;
+            const reveals = idx > 0 && !col[idx - 1].up, pointless = idx === 0 && !t.length;
+            if (pointless) continue;
+            out.push({ src: { k: 'tab', col: ci2, idx }, dst: { k: 'tab', col: c2 }, pri: (sameSuit ? 0 : 3) + (reveals ? 0 : 1) + (!t.length ? 2 : 0) });
+          }
+        }
+      });
+      out.sort((a, b) => a.pri - b.pri);
+      if (!out.length && st.stock.length) out.push({ stock: true, pri: 9 });
+      return out;
+    }
+  }
+};
+const SOLO_RULE_KEY = { solitaire: 'klondike', freeCell: 'freecell', spider: 'spider' };
+
+const Solo = {
+  running: false, gameId: null, st: null, hist: [], moves: 0, startedAt: 0, elapsedBefore: 0, sel: null, ticker: null, won: false, cfg: {}, lastTap: 0,
+  R() { return SoloRules[SOLO_RULE_KEY[this.gameId]]; },
+  snapshot() { return JSON.stringify(this.st, cardReplacer); },
+  restore(txt) { this.st = JSON.parse(txt, cardReviver); },
+  start(gameId, cfg) {
+    Modal.closeAll(); this.cleanup();
+    this.gameId = gameId; this.cfg = Object.assign({}, (Data.settings.gameCfg || {})[gameId] || {}, cfg || {});
+    this.st = this.R().deal(this.cfg); this.hist = []; this.moves = 0; this.sel = null; this.won = false;
+    this.startedAt = Date.now(); this.elapsedBefore = 0; this.running = true; this.initialSnap = this.snapshot();
+    Data.currentGame = gameId; navigateTo('solo'); this.build(); this.render(); this.startTicker(); this.persist(); SFX.play('deal');
+  },
+  restart() { if (!this.running) return; this.restore(this.initialSnap); this.hist = []; this.moves = 0; this.sel = null; this.won = false; this.render(); this.persist(); SFX.play('deal'); },
+  startTicker() { clearInterval(this.ticker); this.ticker = setInterval(() => { const el = $('#solo-time'); if (el) el.textContent = '⏱ ' + fmtTime(this.seconds()); }, 1000); },
+  seconds() { return this.elapsedBefore + (Date.now() - this.startedAt) / 1000; },
+  cleanup() { clearInterval(this.ticker); this.ticker = null; this.running = false; this.sel = null; },
+  persist() {
+    if (!this.running || this.won) return;
+    try { Data.currentMatch = { solo: true, gameId: this.gameId, state: JSON.parse(this.snapshot()), initial: this.initialSnap, moves: this.moves, elapsed: this.seconds(), cfg: this.cfg, savedAt: Date.now() }; saveData(); } catch (e) { }
+  },
+  resume() {
+    const cm = Data.currentMatch;
+    try {
+      if (!cm || !cm.solo || !SOLO_RULE_KEY[cm.gameId]) throw new Error('Không có ván để tiếp tục');
+      Modal.closeAll(); this.cleanup(); this.gameId = cm.gameId; this.cfg = cm.cfg || {};
+      this.st = JSON.parse(JSON.stringify(cm.state), cardReviver); this.initialSnap = cm.initial || this.snapshot(); this.hist = []; this.moves = cm.moves || 0; this.sel = null; this.won = false;
+      this.startedAt = Date.now(); this.elapsedBefore = cm.elapsed || 0; this.running = true;
+      navigateTo('solo'); this.build(); this.render(); this.startTicker();
+    } catch (e) { this.running = false; Data.currentMatch = null; saveData(); handleError(e); navigateTo('home', { force: true }); }
+  },
+  leave() { this.persist(); this.cleanup(); },
+  abort(clear) { // bỏ ván: tính thua nếu đã đi ≥ 8 nước
+    const had = this.running || (Data.currentMatch && Data.currentMatch.solo), mv = this.running ? this.moves : (Data.currentMatch ? Data.currentMatch.moves : 0), gid = this.running ? this.gameId : (Data.currentMatch || {}).gameId, secs = this.running ? this.seconds() : ((Data.currentMatch || {}).elapsed || 0);
+    this.cleanup();
+    if (clear) { Data.currentMatch = null; Data.currentGame = null; if (had && gid && mv >= 8 && !this.won) { recordMatch(gid, 'lose', secs); addXP(8); } saveData(); }
+  },
+  /* ---------- hành động ---------- */
+  push() { this.hist.push(this.snapshot()); if (this.hist.length > 300) this.hist.shift(); },
+  afterChange(sfx) {
+    this.moves++; this.sel = null; this.render(); this.persist(); if (sfx) SFX.play(sfx);
+    if (this.R().won(this.st)) this.win();
+  },
+  undo() {
+    if (!this.running || !this.hist.length) { showToast('Chưa có nước đi để hoàn tác', 'info', { silent: true }); return; }
+    this.restore(this.hist.pop()); this.moves = Math.max(0, this.moves - 1); this.sel = null; this.render(); this.persist(); SFX.play('select');
+  },
+  tryMove(src, dst) {
+    this.push(); const ok = this.R().move(this.st, src, dst);
+    if (!ok) { this.hist.pop(); return false; }
+    this.afterChange(dst.k === 'found' ? 'eat' : 'card'); return true;
+  },
+  clickStock() {
+    if (!this.running) return; this.push(); const r = this.R().stockClick(this.st);
+    if (r === 'empty') { this.hist.pop(); showToast('Spider: cần có ít nhất 1 lá ở mỗi cột trước khi chia', 'warning'); return; }
+    if (!r) { this.hist.pop(); return; } this.afterChange('deal');
+  },
+  autoFound(src) { // chạm đúp: tự lên nền
+    const R = this.R(), cs = R.cardsOf(this.st, src); if (cs.length !== 1 || this.gameId === 'spider') return false;
+    return this.tryMove(src, { k: 'found' });
+  },
+  autoFinish() { // đẩy mọi lá có thể lên nền
+    if (this.gameId === 'spider') return; let moved = true, guard = 0, any = false;
+    while (moved && guard++ < 80) {
+      moved = false; const st = this.st, R = this.R();
+      const srcs = []; if (this.gameId === 'solitaire') { if (st.waste.length) srcs.push({ k: 'waste' }); st.tab.forEach((col, i) => { if (col.length && col[col.length - 1].up) srcs.push({ k: 'tab', col: i, idx: col.length - 1 }); }); }
+      else { st.cells.forEach((c, i) => { if (c) srcs.push({ k: 'cell', i }); }); st.tab.forEach((col, i) => { if (col.length) srcs.push({ k: 'tab', col: i, idx: col.length - 1 }); }); }
+      for (const s of srcs) { const cs = R.cardsOf(st, s); if (cs.length === 1 && R.canFound(st, cs[0])) { this.push(); R.move(st, s, { k: 'found' }); this.moves++; moved = true; any = true; break; } }
+    }
+    this.sel = null; this.render(); this.persist(); if (any) { SFX.play('eat'); if (this.R().won(this.st)) this.win(); } else showToast('Chưa có lá nào lên nền được', 'info', { silent: true });
+  },
+  hint() {
+    if (!this.running) return; const hs = this.R().hints(this.st);
+    if (!hs.length) { showToast('💡 Không còn nước đi — hãy hoàn tác hoặc chia lại', 'warning'); return; }
+    const h0 = hs[0];
+    if (h0.stock) { showToast('💡 Gợi ý: bốc bài từ kho', 'info', { silent: true }); this.flashStock(); return; }
+    this.sel = h0.src; this.render(); this.flash(h0.dst);
+    showToast('💡 Gợi ý: chuyển lá được chọn sang vị trí nhấp nháy', 'info', { silent: true });
+  },
+  /* ---------- giao diện ---------- */
+  build() {
+    const g = this.gameId; $('#solo-title').textContent = GAME_META[g].name;
+    $('#screen-solo').dataset.game = g;
+    const top = $('#solo-top'); top.textContent = '';
+    const mkSlot = (cls, attrs, label) => { const d = h('div', 'slot ' + cls); Object.keys(attrs).forEach(k => { d.dataset[k] = attrs[k]; }); if (label) d.appendChild(h('span', 'slot-lbl', label)); return d; };
+    if (g === 'solitaire') {
+      top.appendChild(mkSlot('stock', { zone: 'stock' }, '↻'));
+      top.appendChild(mkSlot('waste', { zone: 'waste' }));
+      top.appendChild(h('div', 'slot-gap'));
+      SOLO_SUITS.forEach(s => top.appendChild(mkSlot('found', { zone: 'found', suit: s }, SUIT_BY_KEY[s].sym)));
+    } else if (g === 'freeCell') {
+      for (let i = 0; i < 4; i++) top.appendChild(mkSlot('cell', { zone: 'cell', i }, ''));
+      SOLO_SUITS.forEach(s => top.appendChild(mkSlot('found', { zone: 'found', suit: s }, SUIT_BY_KEY[s].sym)));
+    } else {
+      top.appendChild(mkSlot('stock', { zone: 'stock' }, ''));
+      const dn = h('div', 'spider-done'); dn.id = 'spider-done'; top.appendChild(dn);
+    }
+    const tab = $('#solo-tab'); tab.textContent = '';
+    const cols = g === 'solitaire' ? 7 : g === 'freeCell' ? 8 : 10;
+    for (let i = 0; i < cols; i++) { const c = h('div', 'col'); c.dataset.zone = 'col'; c.dataset.col = i; tab.appendChild(c); }
+    tab.dataset.cols = cols;
+  },
+  cardW() { const w = $('#solo-board').clientWidth, cols = this.gameId === 'solitaire' ? 7 : this.gameId === 'freeCell' ? 8 : 10; const gap = cols >= 10 ? 3 : 5; const bh = $('#solo-board').clientHeight || 600; return { cw: Math.max(24, Math.min(74, Math.floor(bh * 0.21), Math.floor((w - 8 - gap * (cols - 1)) / cols))), gap }; },
+  render() {
+    if (!this.running && !this.st) return;
+    const st = this.st, g = this.gameId, { cw, gap } = this.cardW(), ch = Math.round(cw * 1.4);
+    const board = $('#solo-board'); board.style.setProperty('--cw', cw + 'px'); board.style.setProperty('--ch', ch + 'px'); $('#solo-tab').style.gap = gap + 'px'; $('#solo-top').style.gap = gap + 'px';
+    const isSel = (k, o) => this.sel && this.sel.k === k && Object.keys(o).every(x => this.sel[x] === o[x]);
+    const card = (c, up, extra) => { const e = createCardElement(c, { faceDown: !up }); if (extra) e.classList.add(extra); return e; };
+    // khu trên
+    $$('#solo-top .slot').forEach(sl => {
+      const z = sl.dataset.zone; $$('.card', sl).forEach(x => x.remove());
+      sl.classList.remove('sel', 'flash');
+      if (g === 'solitaire' && z === 'stock') { if (st.stock.length) sl.appendChild(card(null, false)); sl.dataset.n = st.stock.length; sl.classList.toggle('empty', !st.stock.length); }
+      else if (g === 'solitaire' && z === 'waste') { if (st.waste.length) { const e = card(st.waste[st.waste.length - 1], true); if (isSel('waste', {})) e.classList.add('selected'); sl.appendChild(e); } }
+      else if (z === 'found') { const f = st.found[sl.dataset.suit]; if (f.length) sl.appendChild(card(f[f.length - 1], true)); }
+      else if (z === 'cell') { const c = st.cells[sl.dataset.i]; if (c) { const e = card(c, true); if (isSel('cell', { i: +sl.dataset.i })) e.classList.add('selected'); sl.appendChild(e); } }
+      else if (g === 'spider' && z === 'stock') { sl.dataset.n = st.stock.length; sl.classList.toggle('empty', !st.stock.length); if (st.stock.length) sl.appendChild(card(null, false)); }
+    });
+    if (g === 'spider') { const dn = $('#spider-done'); dn.textContent = ''; for (let i = 0; i < 8; i++) dn.appendChild(h('span', 'done-pip' + (i < st.done ? ' on' : ''), '♠')); }
+    // cột
+    const colsEl = $$('#solo-tab .col'); const tallest = Math.max.apply(null, st.tab.map(c => c.length).concat([1]));
+    const availH = Math.max(120, board.clientHeight - $('#solo-top').offsetHeight - 14);
+    const upStep = Math.max(16, Math.min(Math.round(ch * 0.5), Math.floor((availH - ch) / Math.max(1, tallest - 1))));
+    const dnStep = Math.max(7, Math.round(upStep * 0.38));
+    colsEl.forEach((colEl, i) => {
+      colEl.textContent = ''; const col = st.tab[i];
+      let y = 0; colEl.style.minHeight = ch + 'px';
+      col.forEach((x, idx) => {
+        const c = g === 'freeCell' ? x : x.c, up = g === 'freeCell' ? true : x.up;
+        const e = card(c, up); e.classList.add('tc'); e.style.top = y + 'px'; e.dataset.idx = idx; e.dataset.col = i;
+        if (this.sel && this.sel.k === 'tab' && this.sel.col === i && idx >= this.sel.idx) e.classList.add('selected');
+        colEl.appendChild(e); y += up ? upStep : dnStep;
+      });
+      colEl.style.height = (col.length ? y - (col.length ? (col[col.length - 1].up !== false ? upStep : dnStep) : 0) + ch : ch) + 'px';
+    });
+    $('#solo-moves').textContent = '↦ ' + this.moves; $('#solo-time').textContent = '⏱ ' + fmtTime(this.seconds());
+    const af = $('#solo-auto'); if (af) af.hidden = g === 'spider';
+  },
+  flash(dst) {
+    let el = null;
+    if (dst.k === 'found') el = $$('#solo-top .slot.found').find(x => this.gameId === 'spider' ? false : true);
+    else if (dst.k === 'cell') el = $('#solo-top .slot.cell[data-i="' + dst.i + '"]');
+    else el = $('#solo-tab .col[data-col="' + dst.col + '"]');
+    if (el) { el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1400); }
+  },
+  flashStock() { const s = $('#solo-top .slot.stock'); if (s) { s.classList.add('flash'); setTimeout(() => s.classList.remove('flash'), 1400); } },
+  /* chạm một vùng */
+  tap(e) {
+    if (!this.running || this.won) return;
+    const slot = e.target.closest('.slot'), cardEl = e.target.closest('.card'), colEl = e.target.closest('.col');
+    const g = this.gameId, st = this.st, R = this.R();
+    // kho
+    if (slot && slot.dataset.zone === 'stock') { this.clickStock(); return; }
+    // nền
+    if (slot && slot.dataset.zone === 'found') {
+      if (this.sel) { const ok = this.tryMove(this.sel, { k: 'found' }); if (!ok) showToast('Chưa thể đặt lên nền', 'warning', { silent: true }); }
+      else if (g !== 'spider') { const f = st.found[slot.dataset.suit]; if (f.length) { this.sel = { k: 'found', suit: slot.dataset.suit }; this.render(); } }
+      return;
+    }
+    // ô tạm FreeCell
+    if (slot && slot.dataset.zone === 'cell') {
+      const i = +slot.dataset.i;
+      if (this.sel) { if (this.sel.k === 'cell' && this.sel.i === i) { this.sel = null; this.render(); return; } const ok = this.tryMove(this.sel, { k: 'cell', i }); if (!ok) showToast('Ô tạm đã có bài hoặc chỉ nhận 1 lá', 'warning', { silent: true }); }
+      else if (st.cells[i]) { this.sel = { k: 'cell', i }; this.render(); }
+      return;
+    }
+    // chồng bỏ Klondike
+    if (slot && slot.dataset.zone === 'waste') {
+      if (this.sel && this.sel.k === 'waste') { this.sel = null; this.render(); return; }
+      if (st.waste.length) { const now = Date.now(); if (now - this.lastTap < 350 && this.autoFound({ k: 'waste' })) { this.lastTap = 0; return; } this.lastTap = now; this.sel = { k: 'waste' }; this.render(); }
+      return;
+    }
+    // cột
+    if (colEl) {
+      const col = +colEl.dataset.col, idx = cardEl && cardEl.dataset.idx != null ? +cardEl.dataset.idx : null;
+      if (this.sel) {
+        const sameSource = this.sel.k === 'tab' && this.sel.col === col;
+        if (!sameSource) { const ok = this.tryMove(this.sel, { k: 'tab', col }); if (ok) return; }
+        if (idx != null && R.cardsOf(st, { k: 'tab', col, idx }).length) { // đổi lựa chọn
+          if (sameSource && this.sel.idx === idx) { this.sel = null; this.render(); return; }
+          this.sel = { k: 'tab', col, idx }; this.render(); return;
+        }
+        if (!sameSource) showToast('Không đặt được ở đây', 'warning', { silent: true }); else { this.sel = null; this.render(); }
+        return;
+      }
+      if (idx != null) {
+        const cs = R.cardsOf(st, { k: 'tab', col, idx });
+        if (!cs.length) { showToast('Lá này chưa di chuyển được', 'info', { silent: true }); return; }
+        const now = Date.now(); if (idx === st.tab[col].length - 1 && now - this.lastTap < 350 && g !== 'spider' && this.autoFound({ k: 'tab', col, idx })) { this.lastTap = 0; return; } this.lastTap = now;
+        this.sel = { k: 'tab', col, idx }; this.render();
+      }
+    }
+  },
+  win() {
+    if (this.won) return; this.won = true; clearInterval(this.ticker);
+    const secs = this.seconds(), gid = this.gameId, cfg = this.cfg;
+    recordMatch(gid, 'win', secs);
+    let xp = 90 + (gid === 'spider' ? ({ 1: 0, 2: 40, 4: 90 }[cfg.suits || 1]) : gid === 'solitaire' ? (cfg.draw === 3 ? 30 : 0) : 20);
+    const specials = ['solo:' + gid]; const before = Data.level; const add = addXP(xp);
+    pushHistory({ t: Date.now(), g: gid, o: 'win', xp: add.amount, opp: [], tour: false, room: false, sec: Math.round(secs) });
+    Missions.onMatch(gid, 'win', {}); const ach = checkAchievements(specials);
+    Data.currentMatch = null; Data.currentGame = null; saveData();
+    SFX.play('win'); confetti(); vibrate([60, 40, 60]);
+    const body = h('div', 'result'); body.appendChild(h('div', 'res-headline', '🏆 HOÀN THÀNH!'));
+    body.appendChild(h('p', 'center', 'Thời gian ' + fmtTime(secs) + ' · ' + this.moves + ' nước đi'));
+    body.appendChild(h('div', 'res-xp', '+' + add.amount + ' XP' + (Data.level > before ? '  ·  🎉 Lên Level ' + Data.level + '!' : '')));
+    ach.forEach(a => body.appendChild(h('div', 'res-ach', '🏅 Thành tích mới: ' + a.name)));
+    this.running = false;
+    Timers.set(() => Modal.open({ title: 'Chiến thắng!', closable: false, body, buttons: [{ text: 'VÁN MỚI', cls: 'primary', fn: () => Solo.start(gid, cfg) }, { text: 'VỀ MENU', fn: () => navigateTo('home', { force: true }) }] }), 600);
+  }
+};
+
 /* ============================ 13. SỰ KIỆN & KHỞI TẠO ============================ */
 function onHandClick(e) {
   const c = e.target.closest('.hand-card'); if (!c || UI.lock) return;
-  const id = c.dataset.id;
+  const id = c.dataset.id; if (!id) return;
   if (UI.selected.has(id)) UI.selected.delete(id); else UI.selected.add(id);
   c.classList.toggle('selected', UI.selected.has(id)); SFX.play('select');
 }
@@ -3320,6 +4711,11 @@ function doAction(act, t) {
       if (!Match.humanTurn()) return; const mv = Match.engine.hint(0);
       UI.selected.clear();
       if (mv.type === 'pass') showToast('💡 Gợi ý: bỏ lượt', 'info', { silent: true });
+      else if (!mv.cards) {
+        if (mv.card) { UI.selected.add(mv.card); renderHand(); }
+        const HT = { draw: mv.src === 'pile' ? 'lấy bài bỏ' : 'bốc nọc', eat: 'ăn bài', discard: 'đánh lá đã chọn', knock: 'gõ (đánh lá đã chọn)', fold: 'Fold', check: 'Check', call: 'Call', raise: 'Raise lên ' + mv.to, allin: 'All-in', auto: 'bấm TỰ XẾP', reveal: 'lật bài', next: 'ván tiếp' };
+        showToast('💡 Gợi ý: ' + (HT[mv.type] || mv.type), 'info', { silent: true });
+      }
       else { mv.cards.forEach(id => UI.selected.add(id)); renderHand(); showToast('💡 Đã chọn nước gợi ý', 'info', { silent: true }); }
       break;
     }
@@ -3329,13 +4725,36 @@ function doAction(act, t) {
     case 'bj-stand': Match.humanMove({ type: 'stand' }); break;
     case 'bj-double': Match.humanMove({ type: 'double' }); break;
     case 'bj-split': Match.humanMove({ type: 'split' }); break;
-    default: break;
+    case 'solo-exit': if (Solo.running) confirmExitSolo('home'); else navigateTo('home', { force: true }); break;
+    case 'solo-undo': Solo.undo(); break;
+    case 'solo-hint': Solo.hint(); break;
+    case 'solo-auto': Solo.autoFinish(); break;
+    case 'solo-restart': Solo.restart(); showToast('Đã chơi lại ván này từ đầu', 'info', { silent: true }); break;
+    case 'solo-rules': showRules(Solo.gameId); break;
+    case 'solo-new':
+      Modal.open({ title: 'Ván mới?', body: 'Ván hiện tại sẽ bị bỏ (tính thua nếu đã đi từ 8 nước).', buttons: [{ text: 'Huỷ' }, { text: 'VÁN MỚI', cls: 'primary', fn: () => { const g = Solo.gameId, c = Solo.cfg; Solo.abort(true); Solo.start(g, c); } }] });
+      break;
+    case 'raise-menu': {
+      const tr = $('#raise-tray'); if (!tr || !Match.humanTurn()) break;
+      if (!tr.hidden) { tr.hidden = true; break; }
+      tr.textContent = '';
+      POKER_ENGINE.raiseOptions().forEach(o => { const b = h('button', 'raise-btn', o.label + ' · ' + o.to); b.type = 'button'; b.dataset.action = 'g:raise'; b.dataset.to = o.to; tr.appendChild(b); });
+      tr.hidden = false; break;
+    }
+    default:
+      if (act.indexOf('g:') === 0) {
+        const sel = [...UI.selected], mv = { type: act.slice(2), cards: sel, card: sel[0] };
+        if (t.dataset.src) mv.src = t.dataset.src; if (t.dataset.to) mv.to = parseInt(t.dataset.to, 10);
+        const rt = $('#raise-tray'); if (rt) rt.hidden = true;
+        Match.humanMove(mv);
+      }
+      break;
   }
 }
 let _layoutQueued = false;
 function onResize() {
   if (_layoutQueued) return; _layoutQueued = true;
-  requestAnimationFrame(() => { _layoutQueued = false; setAppHeight(); layoutPlay(); });
+  requestAnimationFrame(() => { _layoutQueued = false; setAppHeight(); layoutPlay(); if (UI.screen === 'solo' && Solo.st && Solo.running) Solo.render(); });
 }
 function setIcons() {
   try {
@@ -3363,6 +4782,12 @@ function init() {
   });
   document.addEventListener('pointerdown', () => SFX.unlock(), { once: true });
   $('#hand').addEventListener('click', onHandClick);
+  $('#solo-board').addEventListener('click', e => Solo.tap(e));
+  $('#table-cards').addEventListener('click', e => {
+    const eng = Match.engine; if (!Match.running || !eng || !eng.tapTable || UI.lock) return;
+    const row = e.target.closest('.t-row'); if (!row || row.dataset.key == null) return;
+    const card = e.target.closest('.card'); const mv = eng.tapTable(row.dataset.key, card ? card.dataset.id : null); if (mv) Match.humanMove(mv);
+  });
   $('#hand').addEventListener('keydown', e => {
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
     const cs = $$('.hand-card'), i = cs.indexOf(document.activeElement); if (i < 0) return;
@@ -3375,17 +4800,17 @@ function init() {
   window.addEventListener('resize', onResize); window.addEventListener('orientationchange', onResize);
   if (window.visualViewport) window.visualViewport.addEventListener('resize', onResize);
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { if (Match.running) { TurnTimer.pauseTimer(); Match.persist(); } }
+    if (document.hidden) { if (Solo.running) Solo.persist(); if (Match.running) { TurnTimer.pauseTimer(); Match.persist(); } }
     else if (Match.running && !Modal.stack.length) TurnTimer.resumeTimer();
   });
-  window.addEventListener('pagehide', () => { if (Match.running) Match.persist(); });
+  window.addEventListener('pagehide', () => { if (Solo.running) Solo.persist(); if (Match.running) Match.persist(); });
   window.addEventListener('error', e => handleError(e.error || e.message));
   window.addEventListener('unhandledrejection', e => handleError(e.reason));
   try { const mq = window.matchMedia('(prefers-color-scheme: dark)'); (mq.addEventListener ? mq.addEventListener('change', applySettings) : mq.addListener && mq.addListener(applySettings)); } catch (e) { }
   navigateTo('home', { noStack: true });
   requestAnimationFrame(() => requestAnimationFrame(() => {
     $('#loading').classList.add('hide'); $('#app').hidden = false; setTimeout(() => { $('#loading').hidden = true; }, 250);
-    if (Data.currentMatch && GAME_ENGINES[Data.currentMatch.gameId]) {
+    if (Data.currentMatch && (GAME_ENGINES[Data.currentMatch.gameId] || Data.currentMatch.solo)) {
       Modal.open({
         title: 'Ván chưa hoàn thành', closable: false, body: 'Bạn có ván chơi chưa hoàn thành (' + GAME_META[Data.currentMatch.gameId].name + ').',
         buttons: [{ text: 'TIẾP TỤC', cls: 'primary', fn: () => Match.resume() }, { text: 'BỎ VÁN', cls: 'danger', fn: () => { Match.abort(true); RENDERERS.home(); } }]
