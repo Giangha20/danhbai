@@ -576,6 +576,114 @@ const Store = {
 let Data = defaultData();
 function saveData() { return Store.save(Data); }
 
+/* ============================ 4b. VECTOR SVG ICONS & REAL GRAPHICS ============================ */
+const SVG_DEFS = {
+  gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  swords: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="9.5 17.5 21 6 21 3 18 3 6.5 14.5"/><line x1="11" y1="19" x2="5" y2="13"/><line x1="8" y1="16" x2="4" y2="20"/><line x1="5" y1="21" x2="3" y2="19"/></svg>',
+  shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 22V2"/></svg>',
+  crown: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14v2H5z"/><circle cx="5" cy="4" r="1.5" fill="currentColor"/><circle cx="12" cy="4" r="1.5" fill="currentColor"/><circle cx="19" cy="4" r="1.5" fill="currentColor"/></svg>',
+  cards: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M10 2h8a2 2 0 0 1 2 2v14"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>',
+  moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+  sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
+  device: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="14" height="11" rx="2"/><path d="M6 18h6"/><path d="M9 14v4"/><rect x="14" y="8" width="8" height="13" rx="2"/><path d="M18 18h.01"/></svg>',
+  sound_on: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>',
+  sound_off: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>',
+  bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+  vibrate: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="10" height="18" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/><path d="M3 8a8 8 0 0 0 0 8M21 8a8 8 0 0 1 0 8M1 10a12 12 0 0 0 0 4M23 10a12 12 0 0 1 0 4"/></svg>',
+  sparkle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 6.8L21 11.2l-6.6 2.4L12 20.4l-2.4-6.8L3 11.2l6.6-2.4z"/><circle cx="19" cy="5" r="1.5" fill="currentColor"/><circle cx="5" cy="19" r="1.5" fill="currentColor"/></svg>',
+  film: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/><line x1="17" y1="17" x2="22" y2="17"/></svg>',
+  speedometer: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14v-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/><circle cx="12" cy="14" r="2" fill="currentColor"/></svg>',
+  fullscreen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>',
+  bot: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><path d="M12 2v4"/><path d="M8 6h8"/><line x1="2" y1="15" x2="3" y2="15"/><line x1="21" y1="15" x2="22" y2="15"/></svg>',
+  lightning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+  stopwatch: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="14" r="8"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="14" x2="15.5" y2="10.5"/><path d="M19.5 5.5l1.5 1.5"/><path d="M10 2h4"/></svg>',
+  floppy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>',
+  backpack: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v9a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-9z"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M8 21v-5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v5"/><line x1="9" y1="10" x2="15" y2="10"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  star: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+  export: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
+  import: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  die: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/></svg>',
+  turtle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10a6 6 0 0 0-6 6h12a6 6 0 0 0-6-6z"/><path d="M18 13l2-1a2 2 0 0 1 2 3l-2 1"/><path d="M6 13l-2-1a2 2 0 0 0-2 3l2 1"/><path d="M8 16l-1 3"/><path d="M16 16l1 3"/></svg>',
+  walk: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="M7 21l3-4 2-2 2 2 3 4"/><path d="M10 12l2-3 3 2 3 2"/></svg>',
+  trophy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.45 1-1 1H8v2h8v-2h-1c-.55 0-1-.45-1-1v-2.34"/><path d="M18 4H6v7a6 6 0 0 0 12 0V4z"/></svg>',
+  fire: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>',
+  users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+  chevron_left: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>',
+  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+  play: '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
+  award: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>',
+  calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  smile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+  edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+  globe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+  cake: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s2-1 4-1 4 1 4 1 2-1 4-1 4 1 4 1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><circle cx="7" cy="4" r="1"/><circle cx="12" cy="4" r="1"/><circle cx="17" cy="4" r="1"/></svg>',
+  stadium: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6"/><path d="M4 12V7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v5"/></svg>',
+  lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+  arrow_right: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>'
+};
+
+function appSvg(name, size, cls) {
+  size = size || 24;
+  const d = document.createElement('span');
+  d.className = 'app-svg-wrap' + (cls ? ' ' + cls : '');
+  d.style.display = 'inline-flex';
+  d.style.alignItems = 'center';
+  d.style.justifyContent = 'center';
+  d.style.width = size + 'px';
+  d.style.height = size + 'px';
+  d.style.flexShrink = '0';
+  d.style.lineHeight = '1';
+  d.innerHTML = SVG_DEFS[name] || SVG_DEFS.star;
+  return d;
+}
+
+function rankTierBadgeSvg(tierId, size) {
+  size = size || 64;
+  const d = document.createElement('span');
+  d.className = 'rank-tier-svg-wrap tier-' + tierId;
+  d.style.display = 'inline-flex';
+  d.style.alignItems = 'center';
+  d.style.justifyContent = 'center';
+  d.style.width = size + 'px';
+  d.style.height = size + 'px';
+  d.style.flexShrink = '0';
+
+  const BADGES = {
+    iron: '<svg viewBox="0 0 64 64" width="100%" height="100%"><defs><linearGradient id="ir-g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#b0b7c0"/><stop offset="50%" stop-color="#646b73"/><stop offset="100%" stop-color="#3a4047"/></linearGradient><linearGradient id="ir-g2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#7a828a"/><stop offset="100%" stop-color="#4a5056"/></linearGradient></defs><path d="M32 4 L52 14 L52 38 C52 50 32 60 32 60 C32 60 12 50 12 38 L12 14 Z" fill="url(#ir-g1)" stroke="#d2d8e0" stroke-width="2"/><path d="M32 10 L46 18 L46 36 C46 45 32 53 32 53 C32 53 18 45 18 36 L18 18 Z" fill="url(#ir-g2)" stroke="#2b3035" stroke-width="1.5"/><circle cx="32" cy="30" r="10" fill="#2d3238" stroke="#8a929a" stroke-width="2"/><path d="M26 30 L38 30 M32 24 L32 36" stroke="#c0c7cf" stroke-width="3" stroke-linecap="round"/><circle cx="20" cy="18" r="1.5" fill="#d2d8e0"/><circle cx="44" cy="18" r="1.5" fill="#d2d8e0"/></svg>',
+    bronze: '<svg viewBox="0 0 64 64" width="100%" height="100%"><defs><linearGradient id="br-g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f5a65b"/><stop offset="50%" stop-color="#b45309"/><stop offset="100%" stop-color="#78350f"/></linearGradient><linearGradient id="br-g2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#d97706"/><stop offset="100%" stop-color="#92400e"/></linearGradient></defs><path d="M32 3 L54 13 L54 39 C54 51 32 61 32 61 C32 61 10 51 10 39 L10 13 Z" fill="url(#br-g1)" stroke="#fcd34d" stroke-width="2"/><path d="M32 9 L48 17 L48 37 C48 46 32 54 32 54 C32 54 16 46 16 37 L16 17 Z" fill="url(#br-g2)" stroke="#552204" stroke-width="1.5"/><polygon points="32 20 35 27 43 28 37 33 39 40 32 36 25 40 27 33 21 28 29 27" fill="#fef3c7" stroke="#b45309" stroke-width="1.5"/></svg>',
+    silver: '<svg viewBox="0 0 64 64" width="100%" height="100%"><defs><linearGradient id="si-g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffffff"/><stop offset="50%" stop-color="#cbd5e1"/><stop offset="100%" stop-color="#64748b"/></linearGradient><linearGradient id="si-g2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#94a3b8"/><stop offset="100%" stop-color="#475569"/></linearGradient></defs><path d="M8 22 C2 32 6 46 16 52 C12 44 14 32 20 26 Z" fill="#94a3b8" stroke="#f1f5f9" stroke-width="1.5"/><path d="M56 22 C62 32 58 46 48 52 C52 44 50 32 44 26 Z" fill="#94a3b8" stroke="#f1f5f9" stroke-width="1.5"/><path d="M32 3 L52 13 L52 39 C52 51 32 61 32 61 C32 61 12 51 12 39 L12 13 Z" fill="url(#si-g1)" stroke="#f8fafc" stroke-width="2"/><path d="M32 9 L46 17 L46 37 C46 46 32 54 32 54 C32 54 18 46 18 37 L18 17 Z" fill="url(#si-g2)" stroke="#334155" stroke-width="1.5"/><polygon points="32 18 35 26 44 27 37 33 39 41 32 37 25 41 27 33 20 27 29 26" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/></svg>',
+    gold: '<svg viewBox="0 0 64 64" width="100%" height="100%"><defs><linearGradient id="go-g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fffbeb"/><stop offset="30%" stop-color="#fbbf24"/><stop offset="70%" stop-color="#d97706"/><stop offset="100%" stop-color="#78350f"/></linearGradient><linearGradient id="go-g2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#b45309"/><stop offset="100%" stop-color="#451a03"/></linearGradient></defs><path d="M6 34 C4 20 16 10 24 8 C22 14 20 24 24 34 C20 30 14 30 6 34 Z" fill="#f59e0b"/><path d="M58 34 C60 20 48 10 40 8 C42 14 44 24 40 34 C44 30 50 30 58 34 Z" fill="#f59e0b"/><path d="M32 3 L53 13 L53 39 C53 51 32 61 32 61 C32 61 11 51 11 39 L11 13 Z" fill="url(#go-g1)" stroke="#fef08a" stroke-width="2.5"/><path d="M32 9 L47 17 L47 37 C47 46 32 54 32 54 C32 54 17 46 17 37 L17 17 Z" fill="url(#go-g2)" stroke="#b45309" stroke-width="1.5"/><polygon points="32 17 36 26 46 27 38 34 41 43 32 38 23 43 26 34 18 27 28 26" fill="#fef08a" stroke="#d97706" stroke-width="1.5"/><circle cx="32" cy="30" r="4" fill="#ef4444" stroke="#fef08a" stroke-width="1"/></svg>',
+    plat: '<svg viewBox="0 0 64 64" width="100%" height="100%"><defs><linearGradient id="pl-g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ccfbf1"/><stop offset="40%" stop-color="#2dd4bf"/><stop offset="100%" stop-color="#0f766e"/></linearGradient><linearGradient id="pl-g2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#115e59"/><stop offset="100%" stop-color="#042f2e"/></linearGradient></defs><polygon points="32 1 38 12 32 8 26 12" fill="#5eead4"/><polygon points="10 16 22 20 18 14" fill="#2dd4bf"/><polygon points="54 16 42 20 46 14" fill="#2dd4bf"/><path d="M32 5 L53 14 L53 39 C53 51 32 61 32 61 C32 61 11 51 11 39 L11 14 Z" fill="url(#pl-g1)" stroke="#99f6e4" stroke-width="2.5"/><path d="M32 11 L47 18 L47 37 C47 46 32 54 32 54 C32 54 17 46 17 37 L17 18 Z" fill="url(#pl-g2)" stroke="#14b8a6" stroke-width="1.5"/><polygon points="32 18 42 30 32 44 22 30" fill="#ccfbf1" stroke="#0d9488" stroke-width="2"/><polygon points="32 23 37 30 32 38 27 30" fill="#ffffff"/></svg>',
+    diamond: '<svg viewBox="0 0 64 64" width="100%" height="100%"><defs><linearGradient id="di-g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e0f2fe"/><stop offset="50%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#0369a1"/></linearGradient></defs><circle cx="32" cy="32" r="28" fill="none" stroke="#7dd3fc" stroke-width="1.5" stroke-dasharray="4 3"/><polygon points="32 4 56 22 46 56 18 56 8 22" fill="url(#di-g1)" stroke="#f0f9ff" stroke-width="2.5"/><polygon points="32 4 44 22 32 32 20 22" fill="#bae6fd" stroke="#0284c7" stroke-width="1"/><polygon points="32 4 20 22 8 22" fill="#7dd3fc" stroke="#0284c7" stroke-width="1"/><polygon points="32 4 56 22 44 22" fill="#38bdf8" stroke="#0284c7" stroke-width="1"/><polygon points="20 22 32 32 32 56 18 56" fill="#0284c7" stroke="#38bdf8" stroke-width="1"/><polygon points="44 22 46 56 32 56 32 32" fill="#0369a1" stroke="#38bdf8" stroke-width="1"/><circle cx="32" cy="32" r="5" fill="#ffffff"/></svg>',
+    elite: '<svg viewBox="0 0 64 64" width="100%" height="100%"><defs><linearGradient id="el-g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f5d0fe"/><stop offset="50%" stop-color="#c084fc"/><stop offset="100%" stop-color="#6b21a8"/></linearGradient><linearGradient id="el-g2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#581c87"/><stop offset="100%" stop-color="#2e1065"/></linearGradient></defs><path d="M4 18 C-2 32 8 48 18 54 C12 44 12 32 20 24 Z" fill="#a855f7" stroke="#f3e8ff" stroke-width="1.5"/><path d="M60 18 C66 32 56 48 46 54 C52 44 52 32 44 24 Z" fill="#a855f7" stroke="#f3e8ff" stroke-width="1.5"/><path d="M32 3 L53 13 L53 39 C53 51 32 61 32 61 C32 61 11 51 11 39 L11 13 Z" fill="url(#el-g1)" stroke="#f5d0fe" stroke-width="2.5"/><path d="M32 9 L47 17 L47 37 C47 46 32 54 32 54 C32 54 17 46 17 37 L17 17 Z" fill="url(#el-g2)" stroke="#9333ea" stroke-width="1.5"/><polygon points="32 17 44 28 32 45 20 28" fill="#e879f9" stroke="#fae8ff" stroke-width="2"/><polygon points="32 22 38 28 32 38 26 28" fill="#ffffff"/></svg>',
+    master: '<svg viewBox="0 0 64 64" width="100%" height="100%"><defs><linearGradient id="ma-g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fce7f3"/><stop offset="40%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#881337"/></linearGradient><linearGradient id="ma-g2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#4c0519"/><stop offset="100%" stop-color="#1f020a"/></linearGradient></defs><path d="M16 12 L22 4 L32 12 L42 4 L48 12 Z" fill="#f43f5e" stroke="#ffe4e6" stroke-width="2"/><path d="M32 6 L54 15 L54 41 C54 53 32 62 32 62 C32 62 10 53 10 41 L10 15 Z" fill="url(#ma-g1)" stroke="#fecdd3" stroke-width="2.5"/><path d="M32 12 L48 19 L48 39 C48 48 32 55 32 55 C32 55 16 48 16 39 L16 19 Z" fill="url(#ma-g2)" stroke="#e11d48" stroke-width="1.5"/><polygon points="32 20 43 31 32 47 21 31" fill="#fb7185" stroke="#fff1f2" stroke-width="2"/><circle cx="32" cy="31" r="5" fill="#ffffff"/></svg>',
+    grand: '<svg viewBox="0 0 64 64" width="100%" height="100%"><defs><linearGradient id="gr-g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffedd5"/><stop offset="40%" stop-color="#f97316"/><stop offset="100%" stop-color="#7c2d12"/></linearGradient><linearGradient id="gr-flame" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="#ea580c"/><stop offset="70%" stop-color="#facc15"/><stop offset="100%" stop-color="#ffffff"/></linearGradient></defs><path d="M4 14 C-2 28 4 48 16 56 C8 44 8 28 20 20 Z" fill="#ea580c" stroke="#fed7aa" stroke-width="2"/><path d="M60 14 C66 28 60 48 48 56 C56 44 56 28 44 20 Z" fill="#ea580c" stroke="#fed7aa" stroke-width="2"/><path d="M32 4 L53 14 L53 40 C53 52 32 62 32 62 C32 62 11 52 11 40 L11 14 Z" fill="url(#gr-g1)" stroke="#ffedd5" stroke-width="2.5"/><path d="M32 16 C38 24 44 28 38 38 C34 44 32 48 32 48 C32 48 30 44 26 38 C20 28 26 24 32 16 Z" fill="url(#gr-flame)" stroke="#fff7ed" stroke-width="1.5"/><circle cx="32" cy="32" r="3.5" fill="#ffffff"/></svg>',
+    legend: '<svg viewBox="0 0 64 64" width="100%" height="100%"><defs><linearGradient id="le-gold" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffffff"/><stop offset="25%" stop-color="#fef08a"/><stop offset="60%" stop-color="#eab308"/><stop offset="100%" stop-color="#854d0e"/></linearGradient><radialGradient id="le-glow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fef08a" stop-opacity="1"/><stop offset="100%" stop-color="#ca8a04" stop-opacity="0"/></radialGradient></defs><circle cx="32" cy="32" r="30" fill="url(#le-glow)" opacity="0.4"/><text x="32" y="10" font-size="9" text-anchor="middle" fill="#fef08a">♠</text><text x="56" y="35" font-size="9" text-anchor="middle" fill="#ef4444">♥</text><text x="32" y="60" font-size="9" text-anchor="middle" fill="#ef4444">♦</text><text x="8" y="35" font-size="9" text-anchor="middle" fill="#fef08a">♣</text><path d="M32 8 L54 17 L54 41 C54 53 32 62 32 62 C32 62 10 53 10 41 L10 17 Z" fill="url(#le-gold)" stroke="#ffffff" stroke-width="2.5"/><path d="M32 14 L48 21 L48 39 C48 48 32 55 32 55 C32 55 16 48 16 39 L16 21 Z" fill="#2d1c03" stroke="#fef08a" stroke-width="2"/><path d="M22 28 L26 20 L32 25 L38 20 L42 28 Z" fill="#fde047" stroke="#ffffff" stroke-width="1.5"/><polygon points="32 26 36 34 44 35 38 41 40 49 32 45 24 49 26 41 20 35 28 34" fill="#ffffff" stroke="#eab308" stroke-width="1.5"/><circle cx="32" cy="37" r="3.5" fill="#ef4444" stroke="#ffffff" stroke-width="1"/></svg>'
+  };
+
+  d.innerHTML = BADGES[tierId] || BADGES.iron;
+  return d;
+}
+
+function gameRankSvg(gameId) {
+  if (gameId === 'tienLenMienNam') {
+    return '<svg viewBox="0 0 120 90" width="100%" height="100%"><defs><linearGradient id="tl-bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1e3a8a"/><stop offset="100%" stop-color="#0f172a"/></linearGradient></defs><rect width="120" height="90" rx="14" fill="url(#tl-bg)"/><g transform="translate(18, 20) rotate(-16)"><rect width="36" height="52" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/><text x="6" y="14" font-size="10" font-weight="900" fill="#dc2626">10</text><text x="6" y="24" font-size="9" fill="#dc2626">♦</text><text x="18" y="34" font-size="16" text-anchor="middle" fill="#dc2626">♦</text></g><g transform="translate(42, 14) rotate(0)"><rect width="36" height="52" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/><text x="6" y="14" font-size="11" font-weight="900" fill="#1e293b">A</text><text x="6" y="24" font-size="9" fill="#1e293b">♠</text><text x="18" y="34" font-size="18" text-anchor="middle" fill="#1e293b">♠</text></g><g transform="translate(66, 18) rotate(16)"><rect width="36" height="52" rx="4" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/><text x="6" y="14" font-size="12" font-weight="900" fill="#dc2626">2</text><text x="6" y="24" font-size="10" fill="#dc2626">♥</text><text x="18" y="34" font-size="18" text-anchor="middle" fill="#dc2626">♥</text><path d="M10 8 L14 4 L18 8 L22 4 L26 8 Z" fill="#f59e0b"/></g></svg>';
+  }
+  if (gameId === 'samLoc') {
+    return '<svg viewBox="0 0 120 90" width="100%" height="100%"><defs><linearGradient id="sl-bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c2d12"/><stop offset="100%" stop-color="#180703"/></linearGradient><linearGradient id="sl-storm" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#facc15"/><stop offset="100%" stop-color="#ea580c"/></linearGradient></defs><rect width="120" height="90" rx="14" fill="url(#sl-bg)"/><path d="M10 45 Q30 15 60 45 T110 45" fill="none" stroke="rgba(250, 204, 21, 0.25)" stroke-width="12" stroke-linecap="round"/><polygon points="68 6 48 42 62 42 54 84 78 38 64 38" fill="url(#sl-storm)" filter="drop-shadow(0 0 8px rgba(250, 204, 21, 0.8))"/><g transform="translate(25, 24) rotate(-22)"><rect width="32" height="48" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/><text x="5" y="14" font-size="10" font-weight="900" fill="#1e293b">K</text><text x="16" y="32" font-size="16" text-anchor="middle" fill="#1e293b">♣</text></g><g transform="translate(62, 24) rotate(18)"><rect width="32" height="48" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/><text x="5" y="14" font-size="10" font-weight="900" fill="#dc2626">A</text><text x="16" y="32" font-size="16" text-anchor="middle" fill="#dc2626">♥</text></g></svg>';
+  }
+  if (gameId === 'baCay') {
+    return '<svg viewBox="0 0 120 90" width="100%" height="100%"><defs><linearGradient id="bc-bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#064e3b"/><stop offset="100%" stop-color="#021f17"/></linearGradient></defs><rect width="120" height="90" rx="14" fill="url(#bc-bg)"/><g transform="translate(18, 22) rotate(-14)"><rect width="34" height="50" rx="4" fill="#ffffff" stroke="#fcd34d" stroke-width="2"/><text x="5" y="14" font-size="11" font-weight="900" fill="#dc2626">9</text><text x="5" y="24" font-size="9" fill="#dc2626">♦</text><text x="17" y="34" font-size="16" text-anchor="middle" fill="#dc2626">♦</text></g><g transform="translate(43, 16) rotate(0)"><rect width="34" height="50" rx="4" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/><text x="5" y="14" font-size="11" font-weight="900" fill="#dc2626">A</text><text x="5" y="24" font-size="9" fill="#dc2626">♦</text><text x="17" y="34" font-size="16" text-anchor="middle" fill="#dc2626">♦</text></g><g transform="translate(68, 22) rotate(14)"><rect width="34" height="50" rx="4" fill="#ffffff" stroke="#fcd34d" stroke-width="2"/><text x="5" y="14" font-size="10" font-weight="900" fill="#dc2626">10</text><text x="5" y="24" font-size="9" fill="#dc2626">♥</text><text x="17" y="34" font-size="16" text-anchor="middle" fill="#dc2626">♥</text></g><circle cx="96" cy="22" r="14" fill="#f59e0b" stroke="#fef08a" stroke-width="2"/><text x="96" y="26" font-size="10" font-weight="900" text-anchor="middle" fill="#1b1405">10Đ</text></svg>';
+  }
+  return '';
+}
+
 /* ============================ 5. ÂM THANH (Web Audio) ============================ */
 const SFX = (function () {
   let ctx = null;
@@ -644,7 +752,19 @@ const SFX = (function () {
       if (NOTIFY[name] && Data.settings.notify === false) return;
       try { if (SOUNDS[name]) SOUNDS[name](); } catch (e) { /* bỏ qua lỗi âm thanh */ }
     },
-    unlock() { try { ensure(); } catch (e) { } }
+    unlock() {
+      try {
+        const c = ensure();
+        if (c) {
+          if (c.state === 'suspended') c.resume();
+          const buf = c.createBuffer(1, 1, 22050);
+          const src = c.createBufferSource();
+          src.buffer = buf;
+          src.connect(c.destination);
+          src.start(0);
+        }
+      } catch (e) { }
+    }
   };
 })();
 
@@ -2616,24 +2736,70 @@ function titleFor(level) { let t = TITLES[0][1]; TITLES.forEach(x => { if (level
 
 /* ---------- Giao diện mở khoá theo level (mặt sau lá bài, màu bàn) ---------- */
 const CARD_BACKS = [
-  { id: 'classic', name: 'Cổ điển', lv: 1, r: 'common', c: ['#1b3a8a', '#7fb0ff', '#142a66'], p: 'dia' },
-  { id: 'ruby', name: 'Hồng ngọc', lv: 3, r: 'common', c: ['#8a1b2b', '#ff9aa8', '#5c0f1b'], p: 'dots' },
-  { id: 'emerald', name: 'Lục bảo', lv: 6, r: 'rare', c: ['#0f6b4a', '#7dffc0', '#07402c'], p: 'stripe' },
-  { id: 'gold', name: 'Hoàng kim', lv: 10, r: 'epic', c: ['#a8802a', '#ffe28a', '#6b4e12'], p: 'dia' },
-  { id: 'night', name: 'Dạ quang', lv: 15, r: 'epic', c: ['#1a1a2e', '#a78bfa', '#0b0b18'], p: 'star' },
-  { id: 'royal', name: 'Hoàng gia', lv: 25, r: 'legendary', c: ['#4c1d95', '#f5c542', '#2e1065'], p: 'dots' },
-  { id: 'ice', name: 'Băng giá', lv: 1, rank: 4, r: 'epic', c: ['#0f3d52', '#8ff0ff', '#072431'], p: 'star' },
-  { id: 'prism', name: 'Lăng kính', lv: 1, rank: 6, r: 'epic', c: ['#3b1d6e', '#d8b4ff', '#1d0b3a'], p: 'dia' },
-  { id: 'godcard', name: 'Thần bài', lv: 1, rank: 9, r: 'legendary', c: ['#7a5a08', '#fff1a8', '#3f2c02'], p: 'star' }
+  // --- Cổ điển & Tinh thể ---
+  { id: 'classic', name: 'Cổ điển Xanh', lv: 1, r: 'common', c: ['#1b3a8a', '#7fb0ff', '#142a66', '#ffffff'], p: 'dia', sym: '♠' },
+  { id: 'ruby', name: 'Hồng ngọc Đỏ', lv: 3, r: 'common', c: ['#8a1b2b', '#ff9aa8', '#5c0f1b', '#ffffff'], p: 'dots', sym: '♦' },
+  { id: 'emerald', name: 'Lục bảo May mắn', lv: 5, r: 'rare', c: ['#0f6b4a', '#7dffc0', '#07402c', '#ffffff'], p: 'stripe', sym: '♣' },
+  { id: 'scarlet', name: 'Trái tim Chu tước', lv: 7, r: 'rare', c: ['#991b1b', '#fca5a5', '#7f1d1d', '#fee2e2'], p: 'flame', sym: '♥' },
+  { id: 'amber', name: 'Hổ phách Cổ', lv: 9, r: 'rare', c: ['#92400e', '#fcd34d', '#713f12', '#fef3c7'], p: 'cross', sym: '⚜' },
+  { id: 'gold', name: 'Hoàng kim Monaco', lv: 12, r: 'epic', c: ['#a8802a', '#ffe28a', '#6b4e12', '#fffbeb'], p: 'dia', sym: '👑', border: '#ffd76a' },
+
+  // --- Nguyên tố & Thần thoại ---
+  { id: 'sakura', name: 'Hoa anh đào', lv: 14, r: 'rare', c: ['#831843', '#fbcfe8', '#500724', '#fdf2f8'], p: 'blossom', sym: '🌸' },
+  { id: 'night', name: 'Dạ quang Huyền ảo', lv: 15, r: 'epic', c: ['#1a1a2e', '#a78bfa', '#0b0b18', '#ede9fe'], p: 'star', sym: '✨' },
+  { id: 'flame', name: 'Hỏa ngục Bất diệt', lv: 16, r: 'epic', c: ['#831843', '#fb7185', '#4c0519', '#ffe4e6'], p: 'flame', sym: '🔥' },
+  { id: 'carbon', name: 'Sợi Carbon Thể thao', lv: 18, r: 'epic', c: ['#27272a', '#a1a1aa', '#18181b', '#e4e4e7'], p: 'weave', sym: '🛡️' },
+  { id: 'thunder', name: 'Lôi thần Điện quang', lv: 20, r: 'epic', c: ['#1e1b4b', '#a5b4fc', '#0f172a', '#fde047'], p: 'grid', sym: '⚡' },
+  { id: 'royal', name: 'Hoàng gia Victoria', lv: 22, r: 'legendary', c: ['#4c1d95', '#f5c542', '#2e1065', '#fef08a'], p: 'circ', sym: '👑', border: '#eab308' },
+  { id: 'dragon', name: 'Hắc long Thần uy', lv: 24, r: 'epic', c: ['#18181b', '#fbbf24', '#09090b', '#fbbf24'], p: 'scales', sym: '🐉', border: '#f59e0b' },
+  { id: 'oriental', name: 'Thủy triều Sóng thần', lv: 25, r: 'rare', c: ['#155e75', '#a5f3fc', '#0e3a48', '#cffafe'], p: 'waves', sym: '🌊' },
+  { id: 'cyber', name: 'Cyberpunk Neon', lv: 26, r: 'epic', c: ['#083344', '#22d3ee', '#041d27', '#67e8f9'], p: 'grid', sym: '🎯', border: '#06b6d4' },
+  { id: 'phoenix', name: 'Phượng hoàng Lửa', lv: 28, r: 'legendary', c: ['#7c2d12', '#fed7aa', '#431407', '#ffedd5'], p: 'flame', sym: '🦅', border: '#ea580c' },
+  { id: 'matrix', name: 'Mã Ma trận Số', lv: 30, r: 'epic', c: ['#052e16', '#4ade80', '#021f0e', '#86efac'], p: 'hex', sym: '⌨' },
+
+  // --- Thành tích & Giải đấu ---
+  { id: 'pirate', name: 'Hải tặc Biển sâu', lv: 1, cond: () => (Data.statistics?.championships || 0) >= 1, reqText: 'Vô địch 1 giải đấu', r: 'epic', c: ['#1c1917', '#e7e5e4', '#0c0a09', '#fafaf9'], p: 'cross', sym: '☠' },
+  { id: 'fortune', name: 'Thần tài Chi bảo', lv: 1, cond: () => (Data.daily?.best || 0) >= 7, reqText: 'Đăng nhập 7 ngày liên tiếp', r: 'epic', c: ['#991b1b', '#fde047', '#7f1d1d', '#fef08a'], p: 'hex', sym: '🪙', border: '#eab308' },
+  { id: 'swordsman', name: 'Song kiếm Vô song', lv: 1, cond: () => (Data.statistics?.bestStreak || 0) >= 5, reqText: 'Chuỗi thắng 5 ván', r: 'rare', c: ['#1e293b', '#94a3b8', '#0f172a', '#f1f5f9'], p: 'cross', sym: '⚔' },
+
+  // --- Đấu trường Rank ---
+  { id: 'bronze_crest', name: 'Chiến binh Đồng', lv: 1, rank: 1, r: 'common', c: ['#543015', '#e2a36e', '#361d0a', '#ffedd5'], p: 'scales', sym: '🛡️' },
+  { id: 'silver_crest', name: 'Kỵ sĩ Bạch ngân', lv: 1, rank: 2, r: 'rare', c: ['#334155', '#cbd5e1', '#1e293b', '#f8fafc'], p: 'cross', sym: '⚔' },
+  { id: 'ice', name: 'Băng giá Vĩnh cửu', lv: 1, rank: 4, r: 'epic', c: ['#0f3d52', '#8ff0ff', '#072431', '#e0f2fe'], p: 'star', sym: '❄' },
+  { id: 'prism', name: 'Lăng kính Khúc xạ', lv: 1, rank: 5, r: 'epic', c: ['#3b1d6e', '#d8b4ff', '#1d0b3a', '#f3e8ff'], p: 'dia', sym: '💎' },
+  { id: 'elite_crest', name: 'Chi giáp Tinh anh', lv: 1, rank: 6, r: 'epic', c: ['#4a044e', '#f0abfc', '#2e0231', '#fae8ff'], p: 'star', sym: '⚜' },
+  { id: 'master_flame', name: 'Bậc thầy Tối cao', lv: 1, rank: 7, r: 'legendary', c: ['#701a75', '#f472b6', '#4a044e', '#fdf2f8'], p: 'circ', sym: '🌟', border: '#ec4899' },
+  { id: 'grand_galaxy', name: 'Đại cao thủ Ngân hà', lv: 1, rank: 8, r: 'legendary', c: ['#2e1065', '#c084fc', '#170536', '#faf5ff'], p: 'waves', sym: '🪐', border: '#a855f7' },
+  { id: 'godcard', name: 'Thần bài Vô địch', lv: 1, rank: 9, r: 'legendary', c: ['#7a5a08', '#fff1a8', '#3f2c02', '#fffbeb'], p: 'star', sym: '👑', border: '#facc15' }
 ];
 const TABLES = [
-  { id: 'green', name: 'Nỉ xanh lá', lv: 1, r: 'common', c: ['#0d5a40', '#083b2a'] },
-  { id: 'blue', name: 'Nỉ xanh dương', lv: 2, r: 'common', c: ['#1b4f8f', '#0c2b52'] },
-  { id: 'red', name: 'Nỉ đỏ rượu', lv: 5, r: 'rare', c: ['#8f1d2c', '#4f0d17'] },
-  { id: 'purple', name: 'Nỉ tím', lv: 8, r: 'rare', c: ['#5b2a91', '#2f1450'] },
-  { id: 'black', name: 'Nỉ đen', lv: 12, r: 'epic', c: ['#2b2f36', '#0f1114'] },
-  { id: 'gold', name: 'Nỉ vàng đồng', lv: 20, r: 'legendary', c: ['#8a6a1d', '#4a360c'] },
-  { id: 'void', name: 'Nỉ hư không', lv: 1, rank: 8, r: 'legendary', c: ['#1a0f3a', '#05030f'] }
+  // --- Sòng bài Cổ điển & Sang trọng ---
+  { id: 'green', name: 'Nỉ Xanh Casino', lv: 1, r: 'common', c: ['#0d5a40', '#083b2a', '#4ade80'] },
+  { id: 'blue', name: 'Nỉ Xanh Đại dương', lv: 2, r: 'common', c: ['#1b4f8f', '#0c2b52', '#60a5fa'] },
+  { id: 'teal', name: 'Nỉ Xanh Monaco', lv: 4, r: 'common', c: ['#0f6868', '#073939', '#2dd4bf'] },
+  { id: 'red', name: 'Nỉ Đỏ Rượu Velvet', lv: 5, r: 'rare', c: ['#8f1d2c', '#4f0d17', '#f87171'] },
+  { id: 'crimson', name: 'Nỉ Đỏ Las Vegas', lv: 7, r: 'rare', c: ['#9c1122', '#540812', '#fb7185'] },
+  { id: 'purple', name: 'Nỉ Tím Thạch anh', lv: 8, r: 'rare', c: ['#5b2a91', '#2f1450', '#c084fc'] },
+  { id: 'amber', name: 'Nỉ Hổ phách Cung đình', lv: 10, r: 'rare', c: ['#8a5818', '#4a2e0a', '#fbbf24'] },
+  { id: 'gold', name: 'Nỉ Hoàng kim Monte Carlo', lv: 12, r: 'epic', c: ['#8a6a1d', '#4a360c', '#facc15'] },
+
+  // --- VIP & Hiện đại ---
+  { id: 'black', name: 'Nỉ Đen Obsidian VIP', lv: 15, r: 'epic', c: ['#2b2f36', '#0f1114', '#94a3b8'] },
+  { id: 'navy', name: 'Nỉ Midnight Navy', lv: 18, r: 'epic', c: ['#132448', '#081124', '#38bdf8'] },
+  { id: 'rose', name: 'Nỉ Hồng Sakura Lounge', lv: 20, r: 'epic', c: ['#7a2245', '#451025', '#f472b6'] },
+  { id: 'emerald', name: 'Nỉ Lục bảo Dubai', lv: 22, r: 'epic', c: ['#065f46', '#022c22', '#34d399'] },
+  { id: 'magma', name: 'Nỉ Dung nham Hỏa sơn', lv: 25, r: 'epic', c: ['#7c1d0c', '#3d0a03', '#f97316'] },
+  { id: 'cyber', name: 'Nỉ Cyber Neon Cyan', lv: 28, r: 'epic', c: ['#0e4b63', '#052330', '#22d3ee'] },
+  { id: 'matrix', name: 'Nỉ Ma trận Terminal', lv: 32, r: 'epic', c: ['#073b1d', '#021f0e', '#4ade80'] },
+
+  // --- Đấu trường & Vinh quang ---
+  { id: 'silver', name: 'Nỉ Bạch ngân Kỵ sĩ', lv: 1, rank: 2, r: 'rare', c: ['#334155', '#1e293b', '#cbd5e1'] },
+  { id: 'platinum', name: 'Nỉ Bạch kim Hoàng gia', lv: 1, rank: 4, r: 'epic', c: ['#1e3a5f', '#0f1e33', '#93c5fd'] },
+  { id: 'ice', name: 'Nỉ Băng tuyết Bắc cực', lv: 1, rank: 5, r: 'epic', c: ['#154d68', '#092534', '#67e8f9'] },
+  { id: 'galaxy', name: 'Nỉ Tinh vân Vũ trụ', lv: 1, rank: 7, r: 'legendary', c: ['#3b1864', '#1b0730', '#e879f9'] },
+  { id: 'void', name: 'Nỉ Vực thẳm Hư không', lv: 1, rank: 8, r: 'legendary', c: ['#1a0f3a', '#05030f', '#a855f7'] },
+  { id: 'legend', name: 'Nỉ Thần bài Tối cao', lv: 1, rank: 9, r: 'legendary', c: ['#664606', '#332202', '#fde047'] },
+  { id: 'champ', name: 'Nỉ Vô địch Giải đấu', lv: 1, cond: () => (Data.statistics?.championships || 0) >= 1, reqText: 'Vô địch 1 giải đấu', r: 'legendary', c: ['#422006', '#1c0d02', '#f59e0b'] }
 ];
 function itemUnlocked(it) {
   if (it.lv && Data.level < it.lv) return false;
@@ -2646,16 +2812,79 @@ function currentTable() { const it = TABLES.find(x => x.id === Data.settings.tab
 const CARD_BACK_CACHE = {};
 function cardBackUri(it) {
   if (!CARD_BACK_CACHE[it.id]) {
-    const a = it.c[0], b = it.c[1], c = it.c[2];
-    const pat = it.p === 'stripe' ? '<path d="M-1 11L11 -1" stroke="' + b + '" stroke-width="1.2" opacity=".55"/>'
-      : it.p === 'dots' ? '<circle cx="5" cy="5" r="1.7" fill="' + b + '" opacity=".6"/>'
-      : it.p === 'star' ? '<path d="M5 1V9M1 5H9" stroke="' + b + '" stroke-width="1" opacity=".6"/>'
-      : '<path d="M0 5L5 0L10 5L5 10Z" fill="none" stroke="' + b + '" stroke-width=".8" opacity=".55"/>';
-    const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 140"><defs><pattern id="p" width="10" height="10" patternUnits="userSpaceOnUse">' + pat + '</pattern></defs>' +
-      '<rect x="1" y="1" width="98" height="138" rx="9" fill="' + a + '" stroke="#fffdf8" stroke-width="3"/>' +
-      '<rect x="8" y="8" width="84" height="124" rx="5" fill="url(#p)" stroke="' + b + '" stroke-width="1.5"/>' +
-      '<circle cx="50" cy="70" r="17" fill="' + c + '" stroke="' + b + '" stroke-width="1.5"/>' +
-      '<text x="50" y="79" font-size="24" text-anchor="middle" fill="#fffdf8" font-family="Georgia,serif">♠</text></svg>';
+    const a = it.c[0], b = it.c[1], c = it.c[2], d = it.c[3] || '#ffffff';
+    const border = it.border || (it.r === 'legendary' ? '#ffd76a' : (it.r === 'epic' ? '#e2d5ff' : '#fffdf8'));
+    const sym = it.sym || '♠';
+    let pw = 10, ph = 10, pat = '';
+    switch (it.p) {
+      case 'dots':
+        pw = 10; ph = 10;
+        pat = '<circle cx="5" cy="5" r="1.6" fill="' + b + '" opacity=".6"/><circle cx="0" cy="0" r="1" fill="' + b + '" opacity=".35"/><circle cx="10" cy="0" r="1" fill="' + b + '" opacity=".35"/><circle cx="0" cy="10" r="1" fill="' + b + '" opacity=".35"/><circle cx="10" cy="10" r="1" fill="' + b + '" opacity=".35"/>';
+        break;
+      case 'stripe':
+        pw = 8; ph = 8;
+        pat = '<path d="M-1 9L9 -1M3 11L11 3" stroke="' + b + '" stroke-width="1.2" opacity=".5"/>';
+        break;
+      case 'star':
+        pw = 12; ph = 12;
+        pat = '<path d="M6 1Q6 6 1 6Q6 6 6 11Q6 6 11 6Q6 6 6 1Z" fill="' + b + '" opacity=".6"/>';
+        break;
+      case 'cross':
+        pw = 12; ph = 12;
+        pat = '<path d="M6 1V11M1 6H11M3 3L9 9M9 3L3 9" stroke="' + b + '" stroke-width=".8" opacity=".45"/>';
+        break;
+      case 'scales':
+        pw = 12; ph = 8;
+        pat = '<path d="M0 8A6 6 0 0 1 12 8M-6 4A6 6 0 0 1 6 4M6 4A6 6 0 0 1 18 4" fill="none" stroke="' + b + '" stroke-width=".8" opacity=".55"/>';
+        break;
+      case 'hex':
+        pw = 12; ph = 12;
+        pat = '<path d="M6 0L12 3.5V8.5L6 12L0 8.5V3.5Z" fill="none" stroke="' + b + '" stroke-width=".8" opacity=".5"/>';
+        break;
+      case 'waves':
+        pw = 16; ph = 8;
+        pat = '<path d="M0 8A8 8 0 0 1 16 8M2 8A6 6 0 0 1 14 8M4 8A4 4 0 0 1 12 8" fill="none" stroke="' + b + '" stroke-width=".75" opacity=".55"/>';
+        break;
+      case 'flame':
+        pw = 12; ph = 14;
+        pat = '<path d="M6 1C8 5 11 8 11 11A5 5 0 0 1 1 11C1 8 4 5 6 1Z" fill="none" stroke="' + b + '" stroke-width=".85" opacity=".5"/>';
+        break;
+      case 'circ':
+        pw = 12; ph = 12;
+        pat = '<circle cx="6" cy="6" r="5" fill="none" stroke="' + b + '" stroke-width=".7" opacity=".35"/><circle cx="6" cy="6" r="2.5" fill="none" stroke="' + b + '" stroke-width=".85" opacity=".55"/>';
+        break;
+      case 'weave':
+        pw = 8; ph = 8;
+        pat = '<rect x="0" y="0" width="4" height="4" fill="' + b + '" opacity=".4"/><rect x="4" y="4" width="4" height="4" fill="' + b + '" opacity=".4"/>';
+        break;
+      case 'grid':
+        pw = 8; ph = 8;
+        pat = '<path d="M8 0H0V8" fill="none" stroke="' + b + '" stroke-width=".75" opacity=".45"/>';
+        break;
+      case 'blossom':
+        pw = 14; ph = 14;
+        pat = '<circle cx="7" cy="4" r="2" fill="' + b + '" opacity=".5"/><circle cx="7" cy="10" r="2" fill="' + b + '" opacity=".5"/><circle cx="4" cy="7" r="2" fill="' + b + '" opacity=".5"/><circle cx="10" cy="7" r="2" fill="' + b + '" opacity=".5"/><circle cx="7" cy="7" r="1.3" fill="' + b + '" opacity=".8"/>';
+        break;
+      case 'dia':
+      default:
+        pw = 10; ph = 10;
+        pat = '<path d="M0 5L5 0L10 5L5 10Z" fill="none" stroke="' + b + '" stroke-width=".8" opacity=".6"/><circle cx="5" cy="5" r=".9" fill="' + b + '" opacity=".4"/>';
+        break;
+    }
+    const pid = 'p_' + it.id;
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 140">' +
+      '<defs>' +
+        '<pattern id="' + pid + '" width="' + pw + '" height="' + ph + '" patternUnits="userSpaceOnUse">' + pat + '</pattern>' +
+      '</defs>' +
+      '<rect x="1.5" y="1.5" width="97" height="137" rx="8" fill="' + a + '" stroke="' + border + '" stroke-width="2.5"/>' +
+      '<rect x="7" y="7" width="86" height="126" rx="5" fill="url(#' + pid + ')" stroke="' + b + '" stroke-width="1.2"/>' +
+      '<rect x="10" y="10" width="80" height="120" rx="3.5" fill="none" stroke="' + b + '" stroke-width=".6" opacity=".5"/>' +
+      '<path d="M12 14L14 12L16 14L14 16ZM84 14L86 12L88 14L86 16ZM12 126L14 124L16 126L14 128ZM84 126L86 124L88 126L86 128Z" fill="' + b + '" opacity=".75"/>' +
+      '<circle cx="50" cy="70" r="20" fill="' + a + '" stroke="' + b + '" stroke-width="1" opacity=".9"/>' +
+      '<circle cx="50" cy="70" r="17" fill="' + c + '" stroke="' + b + '" stroke-width="1.4"/>' +
+      '<circle cx="50" cy="70" r="14.5" fill="none" stroke="' + b + '" stroke-width=".6" stroke-dasharray="1.5 1.5" opacity=".7"/>' +
+      '<text x="50" y="71" font-size="18" text-anchor="middle" dominant-baseline="central" fill="' + d + '" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-weight="bold">' + sym + '</text>' +
+      '</svg>';
     CARD_BACK_CACHE[it.id] = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
   }
   return CARD_BACK_CACHE[it.id];
@@ -3032,18 +3261,19 @@ function handleError(err) {
 
 function canAnimate() {
   if (!Data.settings.animation || Data.settings.reducedMotion) return false;
-  try { if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false; } catch (e) { }
   return true;
 }
 function rectCenter(el) { const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width, h: r.height }; }
 function flyEl(el, from, opts) {
-  if (!canAnimate() || !el || !el.animate || !from) return;
+  if (!canAnimate() || !el || !from) return;
+  if (!el.animate) return;
+  opts = opts || {};
   const to = rectCenter(el);
   const dx = from.x - to.x, dy = from.y - to.y;
   try {
     el.animate([
-      { transform: 'translate(' + dx + 'px,' + dy + 'px) rotate(' + (opts.rot || -18) + 'deg) scale(' + (opts.scale || 0.5) + ')', opacity: 0 },
-      { transform: 'none', opacity: 1 }
+      { transform: 'translate3d(' + dx + 'px,' + dy + 'px,0) rotate(' + (opts.rot || -18) + 'deg) scale(' + (opts.scale || 0.5) + ')', opacity: 0 },
+      { transform: 'translate3d(0,0,0) rotate(0deg) scale(1)', opacity: 1 }
     ], { duration: opts.dur || 360, delay: opts.delay || 0, easing: 'cubic-bezier(.2,.8,.25,1)', fill: 'backwards' });
   } catch (e) { }
 }
@@ -3051,28 +3281,34 @@ function flipEl(el, newSrc) {
   const img = $('img', el);
   if (!canAnimate() || !el.animate) { if (img) img.src = newSrc; el.classList.remove('back'); return; }
   try {
-    const a = el.animate([{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }], { duration: 160, easing: 'ease-in' });
+    const a = el.animate([{ transform: 'scale3d(1,1,1)' }, { transform: 'scale3d(0,1,1)' }], { duration: 160, easing: 'ease-in' });
     a.onfinish = () => {
       if (img) img.src = newSrc; el.classList.remove('back');
-      el.animate([{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 160, easing: 'ease-out' });
+      el.animate([{ transform: 'scale3d(0,1,1)' }, { transform: 'scale3d(1,1,1)' }], { duration: 160, easing: 'ease-out' });
     };
   } catch (e) { if (img) img.src = newSrc; }
 }
 function confetti() {
   if (!Data.settings.effects || !canAnimate()) return;
   const root = $('#fx-root'); if (!root) return;
-  const colors = ['#f5c542', '#ff5a6e', '#4ade80', '#60a5fa', '#e879f9', '#fff'];
-  for (let i = 0; i < 36; i++) {
+  const colors = ['#f5c542', '#ff5a6e', '#4ade80', '#60a5fa', '#e879f9', '#fff', '#38bdf8', '#f97316'];
+  const count = 42;
+  const winH = window.innerHeight || 800;
+  for (let i = 0; i < count; i++) {
     const p = h('i', 'confetti'); p.style.left = (Math.random() * 100) + '%'; p.style.background = colors[i % colors.length];
+    if (i % 3 === 0) { p.style.borderRadius = '50%'; p.style.width = '8px'; p.style.height = '8px'; }
     root.appendChild(p);
-    const dx = (Math.random() - 0.5) * 220, dur = 1500 + Math.random() * 1400;
+    const dx = (Math.random() - 0.5) * 260, dur = 1400 + Math.random() * 1300;
+    const rot = (Math.random() - 0.5) * 800;
     try {
-      const a = p.animate([{ transform: 'translate(0,-20px) rotate(0)', opacity: 1 }, { transform: 'translate(' + dx + 'px,' + (window.innerHeight + 40) + 'px) rotate(' + (Math.random() * 720) + 'deg)', opacity: 0.9 }],
-        { duration: dur, delay: Math.random() * 300, easing: 'cubic-bezier(.3,.6,.4,1)', fill: 'forwards' });
+      const a = p.animate([
+        { transform: 'translate3d(0,-20px,0) rotate(0deg)', opacity: 1 },
+        { transform: 'translate3d(' + dx + 'px,' + (winH + 40) + 'px,0) rotate(' + rot + 'deg)', opacity: 0.9 }
+      ], { duration: dur, delay: Math.random() * 320, easing: 'cubic-bezier(.25,.6,.35,1)', fill: 'forwards' });
       a.onfinish = () => p.remove();
     } catch (e) { p.remove(); }
   }
-  setTimeout(() => { $$('.confetti', root).forEach(e => e.remove()); }, 3600);
+  setTimeout(() => { $$('.confetti', root).forEach(e => e.remove()); }, 3800);
 }
 
 
@@ -3227,7 +3463,7 @@ function createCardElement(card, opts) {
 
 /* ---------- Điều hướng ---------- */
 const SCREENS = ['home', 'games', 'play', 'solo', 'rank', 'tournament', 'rooms', 'missions', 'leaderboard', 'themes', 'history', 'profile', 'stats', 'achievements', 'settings', 'guide'];
-const SCREEN_TITLES = { home: 'CARD MASTER', games: 'Chơi game', play: '', solo: '', tournament: 'Giải đấu', rooms: 'Phòng chơi', missions: 'Nhiệm vụ', leaderboard: 'Xếp hạng', rank: 'Rank', themes: 'Kho vật phẩm', history: 'Lịch sử ván', profile: 'Hồ sơ', stats: 'Thống kê', achievements: 'Thành tích', settings: 'Cài đặt', guide: 'Hướng dẫn' };
+const SCREEN_TITLES = { home: 'CARD MASTER', games: 'Chơi game', play: '', solo: '', tournament: 'Giải đấu', rooms: 'Phòng chơi', missions: 'Nhiệm vụ', leaderboard: 'Xếp hạng', rank: 'ĐẤU TRƯỜNG RANK', themes: 'Kho vật phẩm', history: 'Lịch sử ván', profile: 'Hồ sơ', stats: 'Thống kê', achievements: 'Thành tích', settings: 'Cài đặt', guide: 'Hướng dẫn' };
 const UI = {
   screen: 'home', stack: [], selected: new Set(), lock: false, seats: {}, lastTableKey: '', handKey: '',
   updateTimer(secs, frac) {
@@ -3290,11 +3526,11 @@ RENDERERS.home = function () {
   $('#home-country').textContent = c.flag + ' ' + c.name;
   $('#home-level').textContent = 'Lv.' + Data.level;
   $('#home-xp-fill').style.width = xpBarHtml() + '%';
-  $('#home-xp-text').textContent = fmt(Data.xp) + ' / ' + fmt(xpNeed(Data.level)) + ' XP';
-  $('#btn-play-now').textContent = Data.currentMatch ? '▶ TIẾP TỤC VÁN' : '🎴 CHƠI NGAY';
+  const btnPn = $('#btn-play-now');
+  if (btnPn) btnPn.innerHTML = (Data.currentMatch ? SVG_DEFS.play + ' TIẾP TỤC VÁN' : SVG_DEFS.cards + ' CHƠI NGAY');
   const ht = $('#home-title'); if (ht) ht.textContent = '🎖️ ' + currentTitle();
   const rr = Rank.ensure(); if (rr) { saveData(); showRankReset(rr); }
-  const hr = $('#home-rank'); if (hr) hr.textContent = RANK_TIERS[Data.rank.t].icon + ' ' + Rank.curLabel();
+  const hr = $('#home-rank'); if (hr) { hr.innerHTML = rankTierBadgeSvg(RANK_TIERS[Data.rank.t].id, 16).outerHTML + ' ' + Rank.curLabel(); }
   paintAvatars();
   buildHomeExtra();
 };
@@ -3400,7 +3636,7 @@ RENDERERS.profile = function () {
   $('#pf-age').textContent = 'Tuổi: ' + Data.profile.age;
   $('#pf-level').textContent = 'Lv.' + Data.level;
   const pt = $('#pf-title'); if (pt) pt.textContent = '🎖️ ' + currentTitle();
-  const pr = $('#pf-rank'); if (pr) pr.textContent = RANK_TIERS[Data.rank.t].icon + ' ' + Rank.curLabel() + ' · cao nhất: ' + Rank.label(Data.rank.best.t, Data.rank.best.d, Data.rank.best.s);
+  const pr = $('#pf-rank'); if (pr) pr.innerHTML = rankTierBadgeSvg(RANK_TIERS[Data.rank.t].id, 18).outerHTML + ' ' + Rank.curLabel() + ' · cao nhất: ' + Rank.label(Data.rank.best.t, Data.rank.best.d, Data.rank.best.s);
   paintAvatars();
   $('#pf-xp-fill').style.width = xpBarHtml() + '%';
   $('#pf-xp-text').textContent = 'XP ' + fmt(Data.xp) + ' / ' + fmt(xpNeed(Data.level));
@@ -3496,45 +3732,467 @@ RENDERERS.achievements = function () {
 };
 
 /* ---------- Màn: Cài đặt ---------- */
-function toggleRow(label, key) {
-  const row = h('div', 'setting'); row.appendChild(h('span', '', label));
-  const b = h('button', 'switch' + (Data.settings[key] ? ' on' : ''), Data.settings[key] ? 'ON' : 'OFF'); b.type = 'button';
-  b.setAttribute('role', 'switch'); b.setAttribute('aria-checked', Data.settings[key] ? 'true' : 'false'); b.setAttribute('aria-label', label);
-  b.addEventListener('click', () => {
-    Data.settings[key] = !Data.settings[key]; saveData(); applySettings(); SFX.play('click'); RENDERERS.settings();
-  });
-  row.appendChild(b); return row;
+function downloadJson(txt, filename) {
+  try {
+    const blob = new Blob([txt], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename || 'card_master_backup.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Đã tải xuống file sao lưu', 'success');
+  } catch (e) {
+    copyText(txt);
+  }
 }
+
+function makeToggleItem(svgName, iconClass, title, subtitle, key) {
+  const item = h('div', 'setting-item');
+  const left = h('div', 'setting-item-left');
+  const box = h('div', 'item-icon-box ' + iconClass);
+  box.appendChild(appSvg(svgName, 22));
+  left.appendChild(box);
+  const text = h('div', 'item-text');
+  text.appendChild(h('b', '', title));
+  text.appendChild(h('small', '', subtitle));
+  left.appendChild(text);
+  item.appendChild(left);
+
+  const sw = h('button', 'cm-switch' + (Data.settings[key] ? ' on' : ''));
+  sw.type = 'button';
+  sw.setAttribute('role', 'switch');
+  sw.setAttribute('aria-checked', Data.settings[key] ? 'true' : 'false');
+  sw.setAttribute('aria-label', title);
+  sw.appendChild(h('span', 'cm-knob'));
+
+  sw.addEventListener('click', () => {
+    Data.settings[key] = !Data.settings[key];
+    const val = Data.settings[key];
+    sw.className = 'cm-switch' + (val ? ' on' : '');
+    sw.setAttribute('aria-checked', val ? 'true' : 'false');
+    saveData();
+    applySettings();
+    if (key === 'sound' && val) {
+      SFX.play('deal');
+    } else {
+      SFX.play('click');
+    }
+    if (key === 'vibrate' && val) {
+      if (navigator.vibrate) try { navigator.vibrate([30, 20, 30]); } catch (e) {}
+    }
+  });
+
+  item.appendChild(sw);
+  return item;
+}
+
+function makeThemeSection() {
+  const item = h('div', 'setting-item setting-item-block');
+  const header = h('div', 'setting-item-header');
+  const box = h('div', 'item-icon-box ic-theme');
+  box.appendChild(appSvg('moon', 22));
+  header.appendChild(box);
+  const text = h('div', 'item-text');
+  text.appendChild(h('b', '', 'Chế độ giao diện'));
+  text.appendChild(h('small', '', 'Tông màu hiển thị và phong cách chủ đạo'));
+  header.appendChild(text);
+  item.appendChild(header);
+
+  const opts = [
+    { id: 'dark', svg: 'moon', name: 'Tối', desc: 'Sang trọng • Dịu mắt' },
+    { id: 'light', svg: 'sun', name: 'Sáng', desc: 'Rõ nét ban ngày' },
+    { id: 'system', svg: 'device', name: 'Tự động', desc: 'Theo thiết bị' }
+  ];
+
+  const grid = h('div', 'theme-options');
+  opts.forEach(opt => {
+    const isCur = Data.settings.theme === opt.id;
+    const card = h('button', 'theme-option' + (isCur ? ' active' : ''));
+    card.type = 'button';
+    card.setAttribute('role', 'radio');
+    card.setAttribute('aria-checked', isCur ? 'true' : 'false');
+
+    const top = h('div', 'theme-opt-top');
+    top.appendChild(appSvg(opt.svg, 28, 'theme-opt-svg'));
+    const ch = h('span', 'theme-opt-check');
+    if (isCur) ch.appendChild(appSvg('check', 14));
+    top.appendChild(ch);
+    card.appendChild(top);
+
+    card.appendChild(h('b', 'theme-opt-title', opt.name));
+    card.appendChild(h('small', 'theme-opt-desc', opt.desc));
+
+    card.addEventListener('click', () => {
+      Data.settings.theme = opt.id;
+      saveData();
+      applySettings();
+      SFX.play('click');
+      $$('.theme-option', grid).forEach(c => {
+        c.classList.remove('active');
+        c.setAttribute('aria-checked', 'false');
+        const checkEl = $('.theme-opt-check', c);
+        if (checkEl) checkEl.textContent = '';
+      });
+      card.classList.add('active');
+      card.setAttribute('aria-checked', 'true');
+      ch.textContent = '';
+      ch.appendChild(appSvg('check', 14));
+    });
+
+    grid.appendChild(card);
+  });
+
+  item.appendChild(grid);
+  return item;
+}
+
+function makeAiLevelSection() {
+  const item = h('div', 'setting-item setting-item-block');
+  const header = h('div', 'setting-item-header');
+  const box = h('div', 'item-icon-box ic-ai');
+  box.appendChild(appSvg('bot', 22));
+  header.appendChild(box);
+  const text = h('div', 'item-text');
+  text.appendChild(h('b', '', 'Độ khó đối thủ AI'));
+  text.appendChild(h('small', '', 'Mức độ chiến thuật và tính toán nước đi của máy'));
+  header.appendChild(text);
+  item.appendChild(header);
+
+  const levels = [
+    { id: 0, svg: 'shield', name: 'Dễ', badge: 'Tập chơi', col: '#22c55e' },
+    { id: 1, svg: 'shield', name: 'Vừa', badge: 'Cân bằng', col: '#f59e0b' },
+    { id: 2, svg: 'crown', name: 'Khó', badge: 'Thử thách', col: '#ea580c' },
+    { id: 3, svg: 'crown', name: 'Siêu khó', badge: 'Cao thủ', col: '#ef4444' },
+    { id: 4, svg: 'die', name: 'Ngẫu nhiên', badge: 'Bất ngờ', col: '#8b5cf6' }
+  ];
+
+  const grid = h('div', 'ai-level-grid');
+  levels.forEach(lv => {
+    const isCur = Data.settings.aiLevel === lv.id;
+    const btn = h('button', 'ai-level-card' + (isCur ? ' active' : ''));
+    btn.type = 'button';
+    btn.setAttribute('role', 'radio');
+    btn.setAttribute('aria-checked', isCur ? 'true' : 'false');
+
+    const ic = appSvg(lv.svg, 22, 'ai-card-svg');
+    ic.style.color = lv.col;
+    btn.appendChild(ic);
+    btn.appendChild(h('span', 'ai-card-name', lv.name));
+    btn.appendChild(h('span', 'ai-card-badge', lv.badge));
+
+    btn.addEventListener('click', () => {
+      Data.settings.aiLevel = lv.id;
+      saveData();
+      SFX.play('click');
+      $$('.ai-level-card', grid).forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-checked', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-checked', 'true');
+    });
+
+    grid.appendChild(btn);
+  });
+
+  item.appendChild(grid);
+  return item;
+}
+
+function makeAiSpeedSection() {
+  const item = h('div', 'setting-item setting-item-block');
+  const header = h('div', 'setting-item-header');
+  const box = h('div', 'item-icon-box ic-speed');
+  box.appendChild(appSvg('lightning', 22));
+  header.appendChild(box);
+  const text = h('div', 'item-text');
+  text.appendChild(h('b', '', 'Tốc độ đánh của AI'));
+  text.appendChild(h('small', '', 'Thời gian AI suy nghĩ và xuất bài trên bàn'));
+  header.appendChild(text);
+  item.appendChild(header);
+
+  const speeds = [
+    { id: 0, svg: 'turtle', name: 'Chậm', desc: 'Dễ quan sát' },
+    { id: 1, svg: 'walk', name: 'Vừa', desc: 'Tự nhiên' },
+    { id: 2, svg: 'lightning', name: 'Nhanh', desc: 'Tiết kiệm thời gian' }
+  ];
+
+  const grid = h('div', 'speed-grid');
+  speeds.forEach(sp => {
+    const isCur = Data.settings.aiSpeed === sp.id;
+    const btn = h('button', 'speed-card' + (isCur ? ' active' : ''));
+    btn.type = 'button';
+    btn.appendChild(appSvg(sp.svg, 24, 'speed-card-svg'));
+    btn.appendChild(h('b', 'speed-card-title', sp.name));
+    btn.appendChild(h('small', 'speed-card-desc', sp.desc));
+
+    btn.addEventListener('click', () => {
+      Data.settings.aiSpeed = sp.id;
+      saveData();
+      SFX.play('click');
+      $$('.speed-card', grid).forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+
+    grid.appendChild(btn);
+  });
+
+  item.appendChild(grid);
+  return item;
+}
+
+function makeTurnTimeSection() {
+  const item = h('div', 'setting-item setting-item-block');
+  const header = h('div', 'setting-item-header');
+  const box = h('div', 'item-icon-box ic-timer');
+  box.appendChild(appSvg('stopwatch', 22));
+  header.appendChild(box);
+  const text = h('div', 'item-text');
+  text.appendChild(h('b', '', 'Thời gian suy nghĩ mỗi lượt'));
+  text.appendChild(h('small', '', 'Đồng hồ đếm ngược trước khi hệ thống tự động đi bài'));
+  header.appendChild(text);
+  item.appendChild(header);
+
+  const times = [10, 15, 20, 30, 60];
+  const wrap = h('div', 'timer-pills');
+  times.forEach(t => {
+    const isCur = Data.settings.turnTime === t;
+    const pill = h('button', 'timer-pill-btn' + (isCur ? ' active' : ''), t + ' giây');
+    pill.type = 'button';
+    pill.addEventListener('click', () => {
+      Data.settings.turnTime = t;
+      saveData();
+      SFX.play('click');
+      $$('.timer-pill-btn', wrap).forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+    });
+    wrap.appendChild(pill);
+  });
+
+  item.appendChild(wrap);
+  return item;
+}
+
+function makeFullscreenItem() {
+  const item = h('div', 'setting-item');
+  const left = h('div', 'setting-item-left');
+  const box = h('div', 'item-icon-box ic-fullscreen');
+  box.appendChild(appSvg('fullscreen', 22));
+  left.appendChild(box);
+  const text = h('div', 'item-text');
+  text.appendChild(h('b', '', 'Chế độ toàn màn hình'));
+  text.appendChild(h('small', '', 'Mở rộng bàn đấu tràn viền không thanh công cụ'));
+  left.appendChild(text);
+  item.appendChild(left);
+
+  const isFull = !!(document.fullscreenElement || document.webkitFullscreenElement);
+  const btn = h('button', 'btn-action-pill' + (isFull ? ' active' : ''), isFull ? 'Thoát' : 'Bật');
+  btn.type = 'button';
+  btn.dataset.action = 'fullscreen';
+  btn.addEventListener('click', () => {
+    toggleFullscreen();
+    setTimeout(() => {
+      const nowFull = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      btn.textContent = nowFull ? 'Thoát' : 'Bật';
+      btn.classList.toggle('active', nowFull);
+    }, 250);
+  });
+  item.appendChild(btn);
+  return item;
+}
+
+function toggleRow(label, key) {
+  return makeToggleItem('gear', 'ic-anim', label, '', key);
+}
+
 RENDERERS.settings = function () {
-  const root = $('#settings-body'); root.textContent = '';
-  root.appendChild(toggleRow('🔊 Âm thanh', 'sound'));
-  root.appendChild(toggleRow('🔔 Âm thông báo', 'notify'));
-  root.appendChild(toggleRow('✨ Hiệu ứng (chặt 2, tới lượt, lên level…)', 'effects'));
-  root.appendChild(toggleRow('🎬 Animation bài', 'animation'));
-  root.appendChild(toggleRow('♿ Reduced Motion', 'reducedMotion'));
-  const th = h('div', 'setting col'); th.appendChild(h('span', '', '🌙 Giao diện'));
-  th.appendChild(segmented(['light', 'dark', 'system'], Data.settings.theme, v => { Data.settings.theme = v; saveData(); applySettings(); }, v => ({ light: 'Sáng', dark: 'Tối', system: 'Hệ thống' }[v])));
-  root.appendChild(th);
-  const fs = h('div', 'setting'); fs.appendChild(h('span', '', '⛶ Toàn màn hình'));
-  const fb = h('button', 'btn small', document.fullscreenElement ? 'Thoát' : 'Bật'); fb.type = 'button'; fb.dataset.action = 'fullscreen'; fs.appendChild(fb); root.appendChild(fs);
-  const ai = h('div', 'setting col'); ai.appendChild(h('span', '', '🤖 Độ khó AI'));
-  ai.appendChild(segmented([0, 1, 2, 3, 4], Data.settings.aiLevel, v => { Data.settings.aiLevel = v; saveData(); }, v => v === 4 ? '🎲 Ngẫu nhiên' : LEVEL_ICONS[v] + ' ' + LEVEL_NAMES[v]));
-  root.appendChild(ai);
-  const tm = h('div', 'setting col'); tm.appendChild(h('span', '', '⏱️ Thời gian lượt'));
-  tm.appendChild(segmented(TIME_OPTIONS, Data.settings.turnTime, v => { Data.settings.turnTime = v; saveData(); }, v => v + 's'));
-  root.appendChild(tm);
-  const sp = h('div', 'setting col'); sp.appendChild(h('span', '', '🤖 Tốc độ AI'));
-  sp.appendChild(segmented([0, 1, 2], Data.settings.aiSpeed, v => { Data.settings.aiSpeed = v; saveData(); }, v => ['🐢 Chậm', '🚶 Vừa', '⚡ Nhanh'][v]));
-  root.appendChild(sp);
-  root.appendChild(toggleRow('📳 Rung (điện thoại)', 'vibrate'));
-  const thr = h('div', 'setting'); thr.appendChild(h('span', '', '🎒 Kho vật phẩm (mặt bài, bàn, khung)'));
-  const thb = h('button', 'btn small', 'Mở'); thb.type = 'button'; thb.dataset.action = 'goto'; thb.dataset.target = 'themes'; thr.appendChild(thb); root.appendChild(thr);
-  const bk = h('div', 'setting'); bk.appendChild(h('span', '', '💾 Sao lưu dữ liệu'));
-  const bkw = h('div', 'btn-pair'); const ex = h('button', 'btn small', 'Xuất'); ex.type = 'button'; ex.addEventListener('click', exportDataModal);
-  const im = h('button', 'btn small', 'Nhập'); im.type = 'button'; im.addEventListener('click', importDataModal); bkw.appendChild(ex); bkw.appendChild(im); bk.appendChild(bkw); root.appendChild(bk);
-  const rs = h('div', 'setting'); rs.appendChild(h('span', '', '🗑️ Xoá toàn bộ dữ liệu'));
-  const rb = h('button', 'btn small danger', 'Xoá'); rb.type = 'button'; rb.dataset.action = 'reset-data'; rs.appendChild(rb); root.appendChild(rs);
-  if (!Store.ok) root.appendChild(h('p', 'err', '⚠️ Trình duyệt không cho lưu dữ liệu — tiến trình chỉ giữ trong phiên này.'));
+  const root = $('#settings-body');
+  root.textContent = '';
+
+  const wrap = h('div', 'settings-wrap');
+
+  // Hero Card
+  const hero = h('div', 'settings-hero');
+  const heroIcon = h('div', 'settings-hero-icon');
+  heroIcon.appendChild(appSvg('gear', 32));
+  hero.appendChild(heroIcon);
+
+  const heroContent = h('div', 'settings-hero-content');
+  heroContent.appendChild(h('h2', '', 'CÀI ĐẶT HỆ THỐNG'));
+  heroContent.appendChild(h('p', '', 'Tùy chỉnh trải nghiệm âm thanh, giao diện & độ khó'));
+  hero.appendChild(heroContent);
+
+  const heroBadge = h('div', 'settings-hero-badge');
+  heroBadge.appendChild(h('span', 'status-dot'));
+  heroBadge.appendChild(document.createTextNode('Đã lưu'));
+  hero.appendChild(heroBadge);
+  wrap.appendChild(hero);
+
+  // Kho đồ Hero Card
+  const inv = h('div', 'settings-inventory-card');
+  inv.dataset.action = 'goto';
+  inv.dataset.target = 'themes';
+  const invLeft = h('div', 'inv-card-left');
+  const invIcon = h('div', 'inv-card-icon');
+  invIcon.appendChild(appSvg('backpack', 24));
+  invLeft.appendChild(invIcon);
+  const invText = h('div', 'inv-card-text');
+  invText.appendChild(h('b', '', 'Kho Vật Phẩm & Trang Bị'));
+  invText.appendChild(h('small', '', 'Thay đổi mặt lưng bài, bàn nỉ & khung avatar'));
+  invLeft.appendChild(invText);
+  inv.appendChild(invLeft);
+  const invBtn = h('button', 'inv-card-btn', 'Mở Kho ➔');
+  invBtn.type = 'button';
+  invBtn.dataset.action = 'goto';
+  invBtn.dataset.target = 'themes';
+  inv.appendChild(invBtn);
+  wrap.appendChild(inv);
+
+  // Section 1: Giao diện & Hiệu ứng
+  const secVfx = h('div', 'settings-section');
+  const headVfx = h('div', 'settings-section-head');
+  headVfx.appendChild(appSvg('sparkle', 20, 'sec-icon-gold'));
+  headVfx.appendChild(h('h3', '', 'GIAO DIỆN & HIỆU ỨNG THỊ GIÁC'));
+  secVfx.appendChild(headVfx);
+
+  const cardVfx = h('div', 'settings-card');
+  cardVfx.appendChild(makeThemeSection());
+  cardVfx.appendChild(h('div', 'setting-divider'));
+  cardVfx.appendChild(makeToggleItem('sparkle', 'ic-fx', 'Hiệu ứng đặc biệt', 'Chặt 2, tới trắng, pháo hoa mừng thắng, lên cấp', 'effects'));
+  cardVfx.appendChild(h('div', 'setting-divider'));
+  cardVfx.appendChild(makeToggleItem('film', 'ic-anim', 'Chuyển động lá bài', 'Hoạt họa chia bài, bay bài và lướt bài 60 FPS', 'animation'));
+  cardVfx.appendChild(h('div', 'setting-divider'));
+  cardVfx.appendChild(makeToggleItem('speedometer', 'ic-motion', 'Giảm chuyển động (Tiết kiệm pin)', 'Tắt hoạt họa phức tạp, phù hợp máy yếu hoặc pin yếu', 'reducedMotion'));
+  cardVfx.appendChild(h('div', 'setting-divider'));
+  cardVfx.appendChild(makeFullscreenItem());
+  secVfx.appendChild(cardVfx);
+  wrap.appendChild(secVfx);
+
+  // Section 2: Âm thanh & Rung
+  const secAudio = h('div', 'settings-section');
+  const headAudio = h('div', 'settings-section-head');
+  headAudio.appendChild(appSvg('sound_on', 20, 'sec-icon-gold'));
+  headAudio.appendChild(h('h3', '', 'ÂM THANH & RUNG PHẢN HỒI'));
+  secAudio.appendChild(headAudio);
+
+  const cardAudio = h('div', 'settings-card');
+  cardAudio.appendChild(makeToggleItem('sound_on', 'ic-sound', 'Âm thanh trò chơi', 'Tiếng chia bài, đánh bài, ăn bài, chặt heo, thắng cuộc', 'sound'));
+  cardAudio.appendChild(h('div', 'setting-divider'));
+  cardAudio.appendChild(makeToggleItem('bell', 'ic-notify', 'Chuông thông báo lượt', 'Báo hiệu khi tới lượt đánh của bạn & 5 giây cuối', 'notify'));
+  cardAudio.appendChild(h('div', 'setting-divider'));
+  cardAudio.appendChild(makeToggleItem('vibrate', 'ic-vibrate', 'Rung phản hồi (Haptic)', 'Rung nhẹ trên điện thoại khi tới lượt hoặc đánh bài', 'vibrate'));
+  secAudio.appendChild(cardAudio);
+  wrap.appendChild(secAudio);
+
+  // Section 3: Trải nghiệm chơi & AI
+  const secAi = h('div', 'settings-section');
+  const headAi = h('div', 'settings-section-head');
+  headAi.appendChild(appSvg('bot', 20, 'sec-icon-gold'));
+  headAi.appendChild(h('h3', '', 'TRẢI NGHIỆM CHƠI & ĐỐI THỦ AI'));
+  secAi.appendChild(headAi);
+
+  const cardAi = h('div', 'settings-card');
+  cardAi.appendChild(makeAiLevelSection());
+  cardAi.appendChild(h('div', 'setting-divider'));
+  cardAi.appendChild(makeAiSpeedSection());
+  cardAi.appendChild(h('div', 'setting-divider'));
+  cardAi.appendChild(makeTurnTimeSection());
+  secAi.appendChild(cardAi);
+  wrap.appendChild(secAi);
+
+  // Section 4: Dữ liệu & Bộ nhớ
+  const secData = h('div', 'settings-section');
+  const headData = h('div', 'settings-section-head');
+  headData.appendChild(appSvg('floppy', 20, 'sec-icon-gold'));
+  headData.appendChild(h('h3', '', 'QUẢN LÝ DỮ LIỆU & BỘ NHỚ'));
+  secData.appendChild(headData);
+
+  const cardData = h('div', 'settings-card');
+
+  // Storage info row
+  const stRow = h('div', 'storage-info-row');
+  stRow.appendChild(h('div', 'storage-dot ' + (Store.ok ? 'ok' : 'err')));
+  let sizeEstimate = 0;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY) || '';
+    sizeEstimate = Math.round((raw.length * 2) / 1024) || 1;
+  } catch (e) {}
+  const stText = h('div', 'storage-text-wrap');
+  stText.appendChild(h('b', '', Store.ok ? 'Bộ nhớ trình duyệt sẵn sàng' : 'Không thể lưu trên trình duyệt'));
+  stText.appendChild(h('small', 'muted', Store.ok ? ('Đã dùng ~' + sizeEstimate + ' KB trong LocalStorage') : 'Dữ liệu chỉ lưu trong phiên chơi'));
+  stRow.appendChild(stText);
+  cardData.appendChild(stRow);
+
+  cardData.appendChild(h('div', 'setting-divider'));
+
+  // Backup & Import
+  const bkItem = h('div', 'setting-item');
+  const bkLeft = h('div', 'setting-item-left');
+  const bkBox = h('div', 'item-icon-box ic-backup');
+  bkBox.appendChild(appSvg('floppy', 22));
+  bkLeft.appendChild(bkBox);
+  const bkText = h('div', 'item-text');
+  bkText.appendChild(h('b', '', 'Sao lưu & Khôi phục dữ liệu'));
+  bkText.appendChild(h('small', '', 'Xuất file mã lưu hoặc nhập dữ liệu từ máy khác'));
+  bkLeft.appendChild(bkText);
+  bkItem.appendChild(bkLeft);
+
+  const bkW = h('div', 'backup-btn-group');
+  const ex = h('button', 'btn-backup export');
+  ex.type = 'button';
+  ex.appendChild(appSvg('export', 15));
+  ex.appendChild(document.createTextNode(' Xuất'));
+  ex.addEventListener('click', exportDataModal);
+
+  const im = h('button', 'btn-backup import');
+  im.type = 'button';
+  im.appendChild(appSvg('import', 15));
+  im.appendChild(document.createTextNode(' Nhập'));
+  im.addEventListener('click', importDataModal);
+
+  bkW.appendChild(ex);
+  bkW.appendChild(im);
+  bkItem.appendChild(bkW);
+  cardData.appendChild(bkItem);
+
+  cardData.appendChild(h('div', 'setting-divider'));
+
+  // Danger: Reset Data
+  const rsItem = h('div', 'setting-item');
+  const rsLeft = h('div', 'setting-item-left');
+  const rsBox = h('div', 'item-icon-box ic-danger');
+  rsBox.appendChild(appSvg('trash', 22));
+  rsLeft.appendChild(rsBox);
+  const rsText = h('div', 'item-text');
+  rsText.appendChild(h('b', '', 'Xóa toàn bộ dữ liệu'));
+  rsText.appendChild(h('small', '', 'Đặt lại hồ sơ, thống kê, rank và kho đồ về mặc định'));
+  rsLeft.appendChild(rsText);
+  rsItem.appendChild(rsLeft);
+
+  const rb = h('button', 'btn-danger-pill', 'Xóa hết');
+  rb.type = 'button';
+  rb.dataset.action = 'reset-data';
+  rsItem.appendChild(rb);
+  cardData.appendChild(rsItem);
+
+  if (!Store.ok) {
+    cardData.appendChild(h('p', 'err', '⚠️ Trình duyệt không cho lưu dữ liệu — tiến trình chỉ giữ trong phiên này.'));
+  }
+
+  secData.appendChild(cardData);
+  wrap.appendChild(secData);
+
+  // Footer branding
+  const foot = h('div', 'settings-footer');
+  foot.appendChild(h('div', 'settings-footer-logo', '♠ CARD MASTER PRO ♥'));
+  foot.appendChild(h('p', '', 'Phiên bản 1.5.0 Pro Edition • 100% Offline Game'));
+  foot.appendChild(h('small', '', 'Thiết kế tinh xảo • Trải nghiệm mượt mà 60 FPS'));
+  wrap.appendChild(foot);
+
+  root.appendChild(wrap);
 };
 function applySettings() {
   const s = Data.settings;
@@ -3544,7 +4202,7 @@ function applySettings() {
   document.documentElement.dataset.theme = theme;
   document.documentElement.classList.toggle('reduce-motion', !!s.reducedMotion);
   const meta = $('meta[name="theme-color"]'); if (meta) meta.content = theme === 'dark' ? '#062a1e' : '#e9efe8';
-  const sb = $('#btn-sound'); if (sb) { sb.textContent = s.sound ? '🔊' : '🔇'; sb.setAttribute('aria-pressed', s.sound ? 'true' : 'false'); }
+  const sb = $('#btn-sound'); if (sb) { sb.innerHTML = s.sound ? SVG_DEFS.sound_on : SVG_DEFS.sound_off; sb.setAttribute('aria-pressed', s.sound ? 'true' : 'false'); }
 }
 function toggleFullscreen() {
   try {
@@ -3735,6 +4393,8 @@ function vibrate(p) { if (!Data.settings.vibrate) return; try { if (navigator.vi
 function applyTheme() {
   const t = currentTable(), r = document.documentElement.style;
   r.setProperty('--felt', t.c[0]); r.setProperty('--felt2', t.c[1]);
+  if (t.c[2]) r.setProperty('--felt-accent', t.c[2]);
+  else r.removeProperty('--felt-accent');
   const dp = $('#deck-pile img'); if (dp) dp.src = getCardBack();
 }
 function fmtDate(t) { try { return new Date(t).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } }
@@ -3743,7 +4403,8 @@ function fmtDate(t) { try { return new Date(t).toLocaleString('vi-VN', { day: '2
 function buildHomeExtra() {
   const root = $('#home-extra'); if (!root) return; root.textContent = '';
   { const T = RANK_TIERS[Data.rank.t], rk = h('button', 'mini-card link rank-card'); rk.type = 'button'; rk.dataset.action = 'goto'; rk.dataset.target = 'rank'; rk.style.setProperty('--tc', T.col);
-    rk.appendChild(h('span', 'mc-ic', T.icon)); const t0 = h('div', 'mc-t'); t0.appendChild(h('b', '', 'Rank: ' + Rank.curLabel() + '  ' + rankStars(Data.rank.t, Data.rank.s)));
+    const mcIc = h('span', 'mc-ic'); mcIc.appendChild(rankTierBadgeSvg(T.id, 38)); rk.appendChild(mcIc);
+    const t0 = h('div', 'mc-t'); t0.appendChild(h('b', '', 'Đấu Rank: ' + Rank.curLabel() + '  ' + rankStars(Data.rank.t, Data.rank.s)));
     t0.appendChild(h('small', 'muted', 'Mùa ' + Data.rank.season + ' · còn ' + Rank.daysLeft() + ' ngày · bậc tiếp: ' + rankNextLabel())); rk.appendChild(t0); root.appendChild(rk); }
   const unclaimed = Daily.check();
   if (unclaimed) {
@@ -3854,9 +4515,15 @@ function copyText(txt) {
 function exportDataModal() {
   const copy = JSON.parse(JSON.stringify(Data, cardReplacer)); copy.currentMatch = null;
   const txt = JSON.stringify(copy);
-  const body = h('div', 'setup'); body.appendChild(h('p', 'muted', 'Sao chép đoạn mã dưới đây và cất giữ. Dùng "Nhập dữ liệu" trên máy khác để khôi phục.'));
+  const body = h('div', 'setup'); body.appendChild(h('p', 'muted', 'Sao chép đoạn mã dưới đây hoặc tải file về máy để cất giữ. Dùng "Nhập dữ liệu" trên máy khác để khôi phục.'));
   const ta = h('textarea', 'input ta'); ta.readOnly = true; ta.value = txt; ta.rows = 6; ta.setAttribute('aria-label', 'Dữ liệu sao lưu'); body.appendChild(ta);
-  Modal.open({ title: '💾 Sao lưu dữ liệu', body, buttons: [{ text: 'Sao chép', cls: 'primary', keep: true, fn: () => { ta.select(); copyText(txt); } }, { text: 'Đóng' }] });
+  Modal.open({
+    title: '💾 Sao lưu dữ liệu', body, buttons: [
+      { text: '📥 Tải file .json', cls: 'btn small', keep: true, fn: () => downloadJson(txt, 'card_master_backup.json') },
+      { text: '📋 Sao chép', cls: 'primary', keep: true, fn: () => { ta.select(); copyText(txt); } },
+      { text: 'Đóng' }
+    ]
+  });
 }
 function importDataModal() {
   const body = h('div', 'setup'); body.appendChild(h('p', 'muted', 'Dán đoạn mã sao lưu vào đây. Dữ liệu hiện tại sẽ bị thay thế.'));
@@ -4085,66 +4752,402 @@ function showRankReset(rr) {
   body.appendChild(h('p', 'muted', 'Hạng cao nhất từng đạt vẫn được giữ để mở vật phẩm và khung avatar.'));
   Modal.open({ title: '🔄 Mùa rank mới', body, buttons: [{ text: 'Xem Rank', fn: () => navigateTo('rank') }, { text: 'OK', cls: 'primary' }] });
 }
+function startRankedMatch(gameId) {
+  if (!['tienLenMienNam', 'samLoc', 'baCay'].includes(gameId)) {
+    showToast('Vui lòng chọn 1 trong 3 game Đấu Rank chính thức', 'warning');
+    return;
+  }
+  const doLaunch = () => {
+    const tier = Data.rank.t;
+    // Tự động scale độ khó AI theo bậc rank:
+    // Sắt (0) -> Dễ (0)
+    // Đồng (1), Bạc (2) -> Vừa (1)
+    // Vàng (3), Bạch Kim (4), Kim Cương (5) -> Khó (2)
+    // Tinh Anh (6), Bậc Thầy (7), Đại Cao Thủ (8), Thần Bài (9) -> Siêu khó (3)
+    const aiLevel = tier <= 0 ? 0 : tier <= 2 ? 1 : tier <= 5 ? 2 : 3;
+    Match.start(gameId, {
+      ranked: true,
+      players: 4,
+      aiLevel: aiLevel
+    });
+    SFX.play('start');
+  };
+
+  if (Match.running) {
+    Modal.open({
+      title: 'Ván chơi dở dang',
+      body: 'Bạn đang có một ván chơi chưa kết thúc. Thoát ván hiện tại để tham gia Đấu Rank?',
+      buttons: [
+        { text: 'Ở lại' },
+        { text: 'VÀO BÀN RANK', cls: 'primary', fn: () => { Match.abort(true); doLaunch(); } }
+      ]
+    });
+    return;
+  }
+  doLaunch();
+}
+
 RENDERERS.rank = function () {
   const rr = Rank.ensure(); if (rr) saveData();
   const root = $('#rank-body'); root.textContent = '';
   const r = Data.rank, T = RANK_TIERS[r.t];
-  const hero = h('div', 'rank-hero'); hero.style.setProperty('--tc', T.col);
-  hero.appendChild(h('div', 'rank-badge', T.icon));
-  hero.appendChild(h('div', 'rank-name', T.divs ? T.name + ' ' + r.d : T.name));
+
+  const wrap = h('div', 'rank-screen-wrap');
+
+  // ================= 1. HERO ARENA BANNER =================
+  const hero = h('div', 'rank-arena-hero');
+  hero.style.setProperty('--tier-glow', T.col);
+
+  // Left crest
+  const crestBox = h('div', 'rank-hero-crest-box');
+  crestBox.appendChild(rankTierBadgeSvg(T.id, 96));
+  const tierNameLabel = h('span', 'hero-crest-name', T.name);
+  tierNameLabel.style.color = T.col;
+  crestBox.appendChild(tierNameLabel);
+  hero.appendChild(crestBox);
+
+  // Right details
+  const details = h('div', 'rank-hero-details');
+  const titleRow = h('div', 'rank-hero-title-row');
+  const rankTitle = h('h2', 'rank-hero-title', T.divs ? T.name.toUpperCase() + ' ' + r.d : T.name.toUpperCase());
+  rankTitle.style.color = T.col;
+  titleRow.appendChild(rankTitle);
+  details.appendChild(titleRow);
+
+  // Stars display
+  const starsContainer = h('div', 'rank-stars-container');
   if (T.divs) {
-    const st = h('div', 'stars'); for (let i = 0; i < T.need; i++) st.appendChild(h('span', 'st' + (i < r.s ? ' on' : ''), '★')); hero.appendChild(st);
-    hero.appendChild(h('div', 'muted', r.s + '/' + T.need + ' sao · bậc tiếp theo: ' + rankNextLabel()));
+    const starsRow = h('div', 'stars-row');
+    for (let i = 0; i < T.need; i++) {
+      const star = h('span', 'rank-star-pip' + (i < r.s ? ' filled' : ' empty'));
+      star.appendChild(appSvg('star', 22));
+      starsRow.appendChild(star);
+    }
+    starsContainer.appendChild(starsRow);
+    const starText = h('div', 'stars-text-info', r.s + '/' + T.need + ' Sao · Bậc tiếp theo: ' + rankNextLabel());
+    starsContainer.appendChild(starText);
   } else {
-    hero.appendChild(h('div', 'legend-stars', '★ ' + fmt(r.s) + ' / ' + fmt(RANK_MAX_STARS)));
-    const bar = h('div', 'xp-bar'); const f = h('i', ''); f.style.width = Math.round(r.s / RANK_MAX_STARS * 100) + '%'; bar.appendChild(f); hero.appendChild(bar);
-    hero.appendChild(h('div', 'muted', 'Không còn giới hạn bậc — tích sao đến tối đa ' + fmt(RANK_MAX_STARS)));
+    const legendText = h('div', 'legend-stars-info', '★ ' + fmt(r.s) + ' / ' + fmt(RANK_MAX_STARS) + ' Sao tối đa');
+    starsContainer.appendChild(legendText);
+    const bar = h('div', 'xp-bar legend-bar');
+    const fill = h('i', '');
+    fill.style.width = Math.min(100, Math.round(r.s / RANK_MAX_STARS * 100)) + '%';
+    bar.appendChild(fill);
+    starsContainer.appendChild(bar);
   }
-  hero.appendChild(h('div', 'muted small', 'Mùa ' + r.season + ' · còn ' + Rank.daysLeft() + ' ngày · ' + r.w + ' thắng / ' + r.l + ' thua'));
-  hero.appendChild(h('div', 'small', '🏅 Hạng cao nhất: ' + RANK_TIERS[r.best.t].icon + ' ' + Rank.label(r.best.t, r.best.d, r.best.s)));
-  root.appendChild(hero);
+  details.appendChild(starsContainer);
 
-  root.appendChild(h('h3', 'sub', 'Thang hạng'));
-  const curV = Rank.value(r.t, r.d);
-  RANK_TIERS.forEach((Tt, ti) => {
-    const row = h('div', 'tier-row' + (ti === r.t ? ' cur' : '') + (ti <= r.best.t ? ' reached' : '')); row.style.setProperty('--tc', Tt.col);
-    row.appendChild(h('span', 'tier-ic', Tt.icon)); row.appendChild(h('span', 'tier-name', Tt.name));
-    const chips = h('span', 'tier-divs');
-    if (Tt.divs) for (let d = Tt.divs; d >= 1; d--) { const v = Rank.value(ti, d); chips.appendChild(h('i', 'div-chip' + (ti === r.t && d === r.d ? ' on' : v < curV ? ' done' : ''), String(d))); }
-    else chips.appendChild(h('i', 'div-chip wide' + (ti === r.t ? ' on' : ''), ti === r.t ? '★ ' + fmt(r.s) : '★ tối đa ' + fmt(RANK_MAX_STARS)));
-    row.appendChild(chips); row.appendChild(h('small', 'tier-need', Tt.divs ? Tt.need + ' sao/bậc' : 'không chia bậc')); root.appendChild(row);
+  // Stats pills
+  const pillsRow = h('div', 'rank-hero-pills');
+  const seasonPill = h('span', 'hero-pill season-pill');
+  seasonPill.appendChild(appSvg('calendar', 14));
+  seasonPill.appendChild(document.createTextNode(' Mùa ' + r.season + ' (' + Rank.daysLeft() + ' ngày)'));
+  pillsRow.appendChild(seasonPill);
+
+  const totalMatches = (r.w || 0) + (r.l || 0);
+  const winRate = totalMatches > 0 ? Math.round((r.w / totalMatches) * 100) : 0;
+  const statPill = h('span', 'hero-pill stat-pill');
+  statPill.appendChild(appSvg('trophy', 14));
+  statPill.appendChild(document.createTextNode(' ' + r.w + ' Thắng - ' + r.l + ' Thua (' + winRate + '%)'));
+  pillsRow.appendChild(statPill);
+
+  const bestTier = RANK_TIERS[r.best.t];
+  const bestPill = h('span', 'hero-pill best-pill');
+  bestPill.appendChild(appSvg('crown', 14));
+  bestPill.appendChild(document.createTextNode(' Cao nhất: ' + bestTier.name + (bestTier.divs ? ' ' + r.best.d : '')));
+  pillsRow.appendChild(bestPill);
+
+  details.appendChild(pillsRow);
+  hero.appendChild(details);
+  wrap.appendChild(hero);
+
+  // ================= 2. 3 GAME ĐẤU RANK CHÍNH THỨC =================
+  const arenaSec = h('div', 'rank-section arena-games-section');
+  const secHdr = h('div', 'rank-sec-header');
+  secHdr.appendChild(appSvg('swords', 28, 'sec-hdr-svg'));
+  const secTxt = h('div', 'sec-hdr-text');
+  secTxt.appendChild(h('h3', 'sec-hdr-title', 'CHẾ ĐỘ ĐẤU RANK (3 GAME CHÍNH THỨC)'));
+  secTxt.appendChild(h('p', 'sec-hdr-desc', 'Thi đấu tính sao thăng hạng trực tiếp · Bàn 4 người · AI tự động cân bằng theo bậc rank'));
+  secHdr.appendChild(secTxt);
+  arenaSec.appendChild(secHdr);
+
+  const RANK_GAMES = [
+    {
+      id: 'tienLenMienNam',
+      title: 'Tiến Lên Miền Nam',
+      badge: 'Đua Bài Tốc Độ',
+      sub: 'Chặt 2, 3-4 đôi thông, tới trắng. Thắng +1★ (+2★ nếu chuỗi thắng)',
+      rules: 'Bàn 4 người đấu trí giải phóng bài. Chặt bài cộng dồn sát thương kịch tính.'
+    },
+    {
+      id: 'samLoc',
+      title: 'Sâm Lốc',
+      badge: 'Báo Sâm Đỉnh Cao',
+      sub: '10 lá - Báo Sâm, chặn sâm, đền làng. Thắng +1★ (+2★ nếu chuỗi thắng)',
+      rules: 'Báo Sâm thắng ngay nhân đôi, hoặc bị đền làng khi bị chặn. Cực kỳ kịch tính!'
+    },
+    {
+      id: 'baCay',
+      title: 'Ba Cây',
+      badge: 'So Điểm Tốc Độ',
+      sub: '3 lá so điểm 0-9 & Ba cây ảnh. Thắng +1★ (+2★ nếu chuỗi thắng)',
+      rules: 'Nhanh gọn, chuẩn xác. So điểm tối đa 9, ba cây ảnh thượng thừa và so chất.'
+    }
+  ];
+
+  const gamesGrid = h('div', 'rank-games-grid');
+  RANK_GAMES.forEach(g => {
+    const card = h('div', 'rank-game-card game-' + g.id);
+
+    // Artwork banner
+    const banner = h('div', 'rg-banner');
+    banner.innerHTML = gameRankSvg(g.id);
+    const badge = h('span', 'rg-badge', g.badge);
+    banner.appendChild(badge);
+    card.appendChild(banner);
+
+    // Card body
+    const cBody = h('div', 'rg-body');
+    cBody.appendChild(h('h4', 'rg-title', g.title));
+
+    const metaRow = h('div', 'rg-meta');
+    const pCount = h('span', 'rg-meta-chip');
+    pCount.appendChild(appSvg('users', 14));
+    pCount.appendChild(document.createTextNode(' 4 Người chơi'));
+    metaRow.appendChild(pCount);
+
+    const rkBadge = h('span', 'rg-meta-chip ranked-chip');
+    rkBadge.appendChild(appSvg('shield', 14));
+    rkBadge.appendChild(document.createTextNode(' Chuẩn Rank'));
+    metaRow.appendChild(rkBadge);
+    cBody.appendChild(metaRow);
+
+    cBody.appendChild(h('p', 'rg-sub', g.sub));
+
+    const playBtn = h('button', 'btn btn-rank-play', '');
+    playBtn.type = 'button';
+    playBtn.appendChild(appSvg('swords', 18));
+    playBtn.appendChild(document.createTextNode(' VÀO BÀN RANK'));
+    playBtn.addEventListener('click', () => {
+      SFX.play('click');
+      startRankedMatch(g.id);
+    });
+    cBody.appendChild(playBtn);
+
+    card.appendChild(cBody);
+    gamesGrid.appendChild(card);
   });
+  arenaSec.appendChild(gamesGrid);
+  wrap.appendChild(arenaSec);
 
-  root.appendChild(h('h3', 'sub', 'Cách tính sao'));
-  ['Mọi ván đấu với AI đều tính hạng (kể cả trong Phòng và Giải đấu). Tài Xỉu và các game xếp bài một người không tính hạng.',
-    'Thắng +1 sao; +1 nếu có AI Khó/Siêu khó; +1 nếu đang thắng liên tiếp từ 3 ván (tối đa +3). Hòa không đổi.',
-    'Thua −1 sao (−2 nếu thua AI Dễ từ hạng Bạc trở lên). Từ Bạch kim trở lên, thắng AI Dễ không được sao.',
-    'Đủ sao thì lên bậc (bậc đi từ lớn xuống 1, hết bậc 1 thì sang hạng mới). Hết sao thì tụt bậc. Sắt 3 là đáy.'
-  ].forEach(t => root.appendChild(h('p', 'muted small', '• ' + t)));
+  // ================= 3. THANG BẬC DANH VỌNG =================
+  const ladderSec = h('div', 'rank-section rank-ladder-section');
+  const lHdr = h('div', 'rank-sec-header');
+  lHdr.appendChild(appSvg('trophy', 28, 'sec-hdr-svg'));
+  const lTxt = h('div', 'sec-hdr-text');
+  lTxt.appendChild(h('h3', 'sec-hdr-title', 'THANG BẬC DANH VỌNG'));
+  lTxt.appendChild(h('p', 'sec-hdr-desc', '10 bậc vinh quang từ Sắt Vụn đến Thần Bài Vô Địch'));
+  lHdr.appendChild(lTxt);
+  ladderSec.appendChild(lHdr);
 
-  root.appendChild(h('h3', 'sub', 'Reset đầu mùa (mỗi ' + RANK_SEASON_DAYS + ' ngày)'));
-  const rt = h('div', 'reset-table');
-  for (let i = 0; i < 7; i++) { const m = RANK_RESET[RANK_TIERS[i].id], mt = RANK_TIERS[Rank.tierIndex(m[0])]; const x = h('div', 'trow reset'); x.appendChild(h('span', '', RANK_TIERS[i].icon + ' ' + RANK_TIERS[i].name)); x.appendChild(h('span', 'arrow', '→')); x.appendChild(h('span', 'to', mt.icon + ' ' + mt.name + ' ' + m[1])); rt.appendChild(x); }
-  { const m = RANK_RESET.master, mt = RANK_TIERS[Rank.tierIndex(m[0])]; const x = h('div', 'trow reset'); x.appendChild(h('span', '', '🔮 Bậc thầy trở lên')); x.appendChild(h('span', 'arrow', '→')); x.appendChild(h('span', 'to', mt.icon + ' ' + mt.name + ' ' + m[1])); rt.appendChild(x); }
-  root.appendChild(rt);
-  if (r.hist.length) {
-    root.appendChild(h('h3', 'sub', 'Các mùa trước'));
-    r.hist.slice(0, 6).forEach(e => { if (RANK_TIERS[e.t]) root.appendChild(h('div', 'trow hist', 'Mùa ' + e.season + ': ' + RANK_TIERS[e.t].icon + ' ' + Rank.label(e.t, e.d, e.s))); });
+  const ladderWrap = h('div', 'rank-ladder-wrap');
+  const curV = Rank.value(r.t, r.d);
+
+  RANK_TIERS.forEach((Tt, ti) => {
+    const isCurTier = ti === r.t;
+    const isReached = ti <= r.best.t;
+    const row = h('div', 'ladder-tier-row' + (isCurTier ? ' is-cur-tier' : '') + (isReached ? ' is-reached' : ''));
+    row.style.setProperty('--tier-col', Tt.col);
+
+    // Badge crest
+    const crest = h('div', 'ltr-crest');
+    crest.appendChild(rankTierBadgeSvg(Tt.id, 44));
+    row.appendChild(crest);
+
+    // Tier info
+    const infoCol = h('div', 'ltr-info-col');
+    const nameRow = h('div', 'ltr-name-row');
+    const tierName = h('span', 'ltr-name', Tt.name);
+    tierName.style.color = Tt.col;
+    nameRow.appendChild(tierName);
+    if (isCurTier) {
+      const curPill = h('span', 'ltr-cur-pill', 'HIỆN TẠI');
+      nameRow.appendChild(curPill);
+    }
+    infoCol.appendChild(nameRow);
+
+    // Division chips
+    const divRow = h('div', 'ltr-divs-row');
+    if (Tt.divs) {
+      for (let d = Tt.divs; d >= 1; d--) {
+        const v = Rank.value(ti, d);
+        const isCurrentDiv = isCurTier && d === r.d;
+        const isPassed = v < curV;
+        const chip = h('span', 'ltr-div-chip' + (isCurrentDiv ? ' active' : isPassed ? ' done' : ' locked'), String(d));
+        divRow.appendChild(chip);
+      }
+    } else {
+      const chip = h('span', 'ltr-div-chip wide' + (isCurTier ? ' active' : ''), isCurTier ? '★ ' + fmt(r.s) + ' Sao' : 'Tối đa ' + fmt(RANK_MAX_STARS) + ' Sao');
+      divRow.appendChild(chip);
+    }
+    infoCol.appendChild(divRow);
+    row.appendChild(infoCol);
+
+    // Requirement tag
+    const needCol = h('div', 'ltr-need-col');
+    needCol.appendChild(h('span', 'ltr-need-text', Tt.divs ? Tt.need + ' sao / bậc' : 'Vô địch'));
+    row.appendChild(needCol);
+
+    ladderWrap.appendChild(row);
+  });
+  ladderSec.appendChild(ladderWrap);
+  wrap.appendChild(ladderSec);
+
+  // ================= 4. QUY TẮC CỘNG & TRỪ SAO =================
+  const rulesSec = h('div', 'rank-section rank-rules-section');
+  const rHdr = h('div', 'rank-sec-header');
+  rHdr.appendChild(appSvg('sparkle', 28, 'sec-hdr-svg'));
+  const rTxt = h('div', 'sec-hdr-text');
+  rTxt.appendChild(h('h3', 'sec-hdr-title', 'QUY TẮC CỘNG & TRỪ SAO'));
+  rTxt.appendChild(h('p', 'sec-hdr-desc', 'Hệ thống đánh giá công bằng dựa trên kết quả trận đấu và chuỗi thắng'));
+  rHdr.appendChild(rTxt);
+  rulesSec.appendChild(rHdr);
+
+  const rulesGrid = h('div', 'rank-rules-grid');
+  const RULE_CARDS = [
+    {
+      iconName: 'star',
+      iconCol: '#fbbf24',
+      title: 'Thắng Trận Cơ Bản (+1★)',
+      desc: 'Giành chiến thắng trước các đối thủ AI trong bàn 4 người sẽ được cộng ngay 1 sao vào bậc rank.'
+    },
+    {
+      iconName: 'fire',
+      iconCol: '#f97316',
+      title: 'Chuỗi Thắng & AI Khó (+1★ ~ +2★)',
+      desc: 'Thắng khi có AI Khó/Siêu khó (+1★) hoặc duy trì chuỗi thắng từ 3 ván (+1★), tối đa nhận tới +3★ mỗi ván.'
+    },
+    {
+      iconName: 'shield',
+      iconCol: '#ef4444',
+      title: 'Thua Trận & Bảo Vệ Rank (−1★)',
+      desc: 'Thua trận trừ 1 sao (−2 sao nếu thua AI Dễ từ rank Bạc trở lên). Sắt 3 là đáy an toàn không bao giờ rớt thêm.'
+    },
+    {
+      iconName: 'bot',
+      iconCol: '#38bdf8',
+      title: 'Tự Động Cân Bằng Đối Thủ',
+      desc: 'Hệ thống tự động nâng trình độ AI tương ứng với thứ hạng của bạn (Vàng/Bạch kim: AI Khó; Tinh Anh+: AI Siêu khó).'
+    }
+  ];
+
+  RULE_CARDS.forEach(rc => {
+    const rCard = h('div', 'rank-rule-card');
+    const rIcon = h('div', 'rrc-icon');
+    rIcon.style.color = rc.iconCol;
+    rIcon.appendChild(appSvg(rc.iconName, 26));
+    rCard.appendChild(rIcon);
+
+    const rBody = h('div', 'rrc-body');
+    rBody.appendChild(h('h4', 'rrc-title', rc.title));
+    rBody.appendChild(h('p', 'rrc-desc', rc.desc));
+    rCard.appendChild(rBody);
+
+    rulesGrid.appendChild(rCard);
+  });
+  rulesSec.appendChild(rulesGrid);
+  wrap.appendChild(rulesSec);
+
+  // ================= 5. RESET MÙA GIẢI & LỊCH SỬ =================
+  const resetSec = h('div', 'rank-section rank-reset-section');
+  const rstHdr = h('div', 'rank-sec-header');
+  rstHdr.appendChild(appSvg('clock', 28, 'sec-hdr-svg'));
+  const rstTxt = h('div', 'sec-hdr-text');
+  rstTxt.appendChild(h('h3', 'sec-hdr-title', 'RESET MÙA GIẢI (MỖI ' + RANK_SEASON_DAYS + ' NGÀY)'));
+  rstTxt.appendChild(h('p', 'sec-hdr-desc', 'Bảng quy đổi bậc rank khi bắt đầu mùa giải mới'));
+  rstHdr.appendChild(rstTxt);
+  resetSec.appendChild(rstHdr);
+
+  const rt = h('div', 'reset-table-box');
+  for (let i = 0; i < 7; i++) {
+    const m = RANK_RESET[RANK_TIERS[i].id], mt = RANK_TIERS[Rank.tierIndex(m[0])];
+    const x = h('div', 'trow-reset');
+    const fromCol = h('span', 'col-from');
+    fromCol.appendChild(rankTierBadgeSvg(RANK_TIERS[i].id, 24));
+    fromCol.appendChild(document.createTextNode(' ' + RANK_TIERS[i].name));
+    x.appendChild(fromCol);
+    x.appendChild(h('span', 'col-arrow', '→'));
+    const toCol = h('span', 'col-to');
+    toCol.appendChild(rankTierBadgeSvg(mt.id, 24));
+    toCol.appendChild(document.createTextNode(' ' + mt.name + ' ' + m[1]));
+    x.appendChild(toCol);
+    rt.appendChild(x);
   }
-  const inv = h('button', 'btn small', '🎒 Xem khung & vật phẩm theo hạng'); inv.type = 'button'; inv.dataset.action = 'goto'; inv.dataset.target = 'themes'; root.appendChild(inv);
+  {
+    const m = RANK_RESET.master, mt = RANK_TIERS[Rank.tierIndex(m[0])];
+    const x = h('div', 'trow-reset highlight');
+    const fromCol = h('span', 'col-from');
+    fromCol.appendChild(rankTierBadgeSvg('master', 24));
+    fromCol.appendChild(document.createTextNode(' Bậc Thầy trở lên'));
+    x.appendChild(fromCol);
+    x.appendChild(h('span', 'col-arrow', '→'));
+    const toCol = h('span', 'col-to');
+    toCol.appendChild(rankTierBadgeSvg(mt.id, 24));
+    toCol.appendChild(document.createTextNode(' ' + mt.name + ' ' + m[1]));
+    x.appendChild(toCol);
+    rt.appendChild(x);
+  }
+  resetSec.appendChild(rt);
+
+  if (r.hist && r.hist.length) {
+    const histBox = h('div', 'rank-hist-box');
+    histBox.appendChild(h('h4', 'hist-box-title', 'Lịch Sử Các Mùa Trước'));
+    r.hist.slice(0, 6).forEach(e => {
+      if (RANK_TIERS[e.t]) {
+        const hRow = h('div', 'hist-row');
+        hRow.appendChild(h('span', 'hist-season', 'Mùa ' + e.season));
+        const tierBadge = h('span', 'hist-tier');
+        tierBadge.appendChild(rankTierBadgeSvg(RANK_TIERS[e.t].id, 20));
+        tierBadge.appendChild(document.createTextNode(' ' + Rank.label(e.t, e.d, e.s)));
+        hRow.appendChild(tierBadge);
+        histBox.appendChild(hRow);
+      }
+    });
+    resetSec.appendChild(histBox);
+  }
+
+  // Footer reward link
+  const rewardBtn = h('button', 'btn btn-rank-themes', '');
+  rewardBtn.type = 'button';
+  rewardBtn.appendChild(appSvg('backpack', 18));
+  rewardBtn.appendChild(document.createTextNode(' XEM KHUNG & PHẦN THƯỞNG RANK'));
+  rewardBtn.dataset.action = 'goto';
+  rewardBtn.dataset.target = 'themes';
+  resetSec.appendChild(rewardBtn);
+
+  wrap.appendChild(resetSec);
+  root.appendChild(wrap);
 };
 
 /* ---------- Kho vật phẩm: khung vật phẩm có độ hiếm ---------- */
 const INV = { tab: 'back' };
 const INV_CATS = [
-  { id: 'back', name: '🂠 Mặt bài', items: () => CARD_BACKS, key: 'cardBack', cur: () => currentCardBack().id },
-  { id: 'table', name: '🟩 Bàn chơi', items: () => TABLES, key: 'table', cur: () => currentTable().id },
-  { id: 'frame', name: '🖼️ Khung avatar', items: () => FRAMES, key: 'frame', cur: () => currentFrame().id },
-  { id: 'title', name: '🎖️ Danh hiệu', items: () => TITLE_ITEMS, key: 'title', cur: () => { const t = TITLE_ITEMS.find(x => x.id === Data.settings.title); return t && itemUnlocked(t) ? t.id : 'auto'; } }
+  { id: 'back', name: 'Mặt bài', items: () => CARD_BACKS, key: 'cardBack', cur: () => currentCardBack().id },
+  { id: 'table', name: 'Bàn chơi', items: () => TABLES, key: 'table', cur: () => currentTable().id },
+  { id: 'frame', name: 'Khung Avatar', items: () => FRAMES, key: 'frame', cur: () => currentFrame().id },
+  { id: 'title', name: 'Danh hiệu', items: () => TITLE_ITEMS, key: 'title', cur: () => { const t = TITLE_ITEMS.find(x => x.id === Data.settings.title); return t && itemUnlocked(t) ? t.id : 'auto'; } }
 ];
 function itemPreview(cat, it) {
-  if (cat.id === 'back') { const i = h('img', 'theme-card'); i.alt = ''; i.src = cardBackUri(it); return i; }
-  if (cat.id === 'table') { const d = h('div', 'theme-felt'); d.style.background = 'radial-gradient(circle at 50% 40%,' + it.c[0] + ',' + it.c[1] + ')'; return d; }
+  if (cat.id === 'back') { const i = h('img', 'theme-card'); i.alt = it.name; i.src = cardBackUri(it); return i; }
+  if (cat.id === 'table') {
+    const d = h('div', 'theme-felt');
+    d.style.background = 'radial-gradient(ellipse at 50% 42%,' + it.c[0] + ' 0%,' + it.c[1] + ' 100%)';
+    if (it.c[2]) {
+      d.style.borderColor = it.c[2];
+      d.style.boxShadow = 'inset 0 0 12px rgba(0,0,0,0.5), 0 0 8px ' + it.c[2] + '33';
+    }
+    return d;
+  }
   if (cat.id === 'frame') return h('div', 'fprev' + (it.id === 'none' ? '' : ' frame-' + it.id), Data.profile.avatar);
   return h('div', 'tprev', it.dyn ? it.dyn() : it.name);
 }
@@ -4157,7 +5160,10 @@ function openItem(cat, it) {
   const body = h('div', 'item-detail'); body.style.setProperty('--rc', R.col);
   const pv = h('div', 'item-big r-' + (it.r || 'common')); pv.appendChild(itemPreview(cat, it)); body.appendChild(pv);
   body.appendChild(h('div', 'item-rar', R.name));
-  body.appendChild(h('p', ok ? 'ok' : 'muted', ok ? '✓ Đã mở khoá' : '🔒 Chưa mở khoá'));
+  const st = h('p', ok ? 'ok' : 'muted');
+  st.appendChild(appSvg(ok ? 'check' : 'lock', 15));
+  st.appendChild(document.createTextNode(ok ? ' Đã mở khoá' : ' Chưa mở khoá'));
+  body.appendChild(st);
   body.appendChild(h('p', 'muted small', 'Cách có: ' + itemReq(it)));
   const btns = [{ text: 'Đóng' }];
   if (ok && !on) btns.push({ text: 'TRANG BỊ', cls: 'primary', fn: () => equipItem(cat, it) });
@@ -4170,14 +5176,22 @@ function itemSlot(cat, it) {
   b.setAttribute('aria-label', it.name + ' — ' + R.name + (ok ? (on ? ', đang dùng' : '') : ', chưa mở khoá'));
   const pv = h('div', 'item-prev'); pv.appendChild(itemPreview(cat, it)); b.appendChild(pv);
   b.appendChild(h('b', 'item-name', it.name)); b.appendChild(h('small', 'item-rar', R.name));
-  if (on) b.appendChild(h('span', 'item-badge on', '✓')); else if (!ok) b.appendChild(h('span', 'item-badge', '🔒'));
+  if (on) {
+    const bd = h('span', 'item-badge on'); bd.appendChild(appSvg('check', 11)); b.appendChild(bd);
+  } else if (!ok) {
+    const bd = h('span', 'item-badge'); bd.appendChild(appSvg('lock', 11)); b.appendChild(bd);
+  }
   b.addEventListener('click', () => { SFX.play('click'); openItem(cat, it); });
   return b;
 }
 RENDERERS.themes = function () {
   const root = $('#themes-body'); root.textContent = '';
   let tot = 0, own = 0; INV_CATS.forEach(c => c.items().forEach(it => { tot++; if (itemUnlocked(it)) own++; }));
-  const head = h('div', 'inv-head'); head.appendChild(h('b', '', '🎒 Đã sưu tầm ' + own + '/' + tot + ' vật phẩm'));
+  const head = h('div', 'inv-head');
+  const tit = h('b', 'inv-title');
+  tit.appendChild(appSvg('backpack', 18));
+  tit.appendChild(document.createTextNode(' Đã sưu tầm ' + own + '/' + tot + ' vật phẩm'));
+  head.appendChild(tit);
   const lg = h('div', 'rar-legend'); Object.keys(RARITY).forEach(k => { const s = h('span', 'rar-chip', RARITY[k].name); s.style.setProperty('--rc', RARITY[k].col); lg.appendChild(s); }); head.appendChild(lg); root.appendChild(head);
   root.appendChild(segmented(INV_CATS.map(c => c.id), INV.tab, v => { INV.tab = v; RENDERERS.themes(); }, v => INV_CATS.find(c => c.id === v).name));
   const cat = INV_CATS.find(c => c.id === INV.tab) || INV_CATS[0], items = cat.items();
@@ -4195,7 +5209,14 @@ function safeInsets() {
 }
 function buildPlayScreen() {
   const gs = gameState, eng = Match.engine;
-  $('#play-title').textContent = GAME_META[gs.currentGame].name;
+  const pt = $('#play-title');
+  if (pt) {
+    if (Match.extra && Match.extra.ranked) {
+      pt.innerHTML = '<span class="play-ranked-tag">' + SVG_DEFS.swords + ' ĐẤU RANK</span> ' + GAME_META[gs.currentGame].name;
+    } else {
+      pt.textContent = GAME_META[gs.currentGame].name;
+    }
+  }
   const seats = $('#seats'); seats.textContent = ''; UI.seats = {};
   gs.players.forEach((p, i) => {
     if (i === 0) return;
@@ -4433,8 +5454,16 @@ function collectTable(done) {
   const box = $('#table-cards'), deck = $('#deck-pile'); const els = $$('.card', box);
   if (!els.length || !canAnimate() || !deck) { done(); return; }
   const to = rectCenter(deck);
-  els.forEach(e => { const c = rectCenter(e); try { e.animate([{ transform: 'none', opacity: 1 }, { transform: 'translate(' + (to.x - c.x) + 'px,' + (to.y - c.y) + 'px) scale(.4)', opacity: 0 }], { duration: 260, fill: 'forwards' }); } catch (er) { } });
-  setTimeout(done, 270);
+  els.forEach(e => {
+    const c = rectCenter(e);
+    try {
+      e.animate([
+        { transform: 'translate3d(0,0,0) scale(1)', opacity: 1 },
+        { transform: 'translate3d(' + (to.x - c.x) + 'px,' + (to.y - c.y) + 'px,0) scale(.35)', opacity: 0 }
+      ], { duration: 280, easing: 'cubic-bezier(.25,.8,.25,1)', fill: 'forwards' });
+    } catch (er) { }
+  });
+  setTimeout(done, 290);
 }
 
 /* ============================ 12. ĐIỀU KHIỂN VÁN CHƠI ============================ */
@@ -5117,23 +6146,68 @@ const Solo = {
 /* ============================ 13. SỰ KIỆN & KHỞI TẠO ============================ */
 /* Lá bài chạm trúng tính theo vị trí ngang của ngón tay: lá nào đang lộ ở điểm đó thì chọn lá đó,
    không bị ảnh hưởng bởi lá khác đang nhấc lên (tránh ấn nhầm khi các lá chồng nhẹ lên nhau) */
+let _pointerHandledTime = 0;
+let _handSwiping = false;
+let _handSwipeState = null;
+let _lastHandHit = null;
+
 function handCardAt(clientX) {
   let hit = null;
   $$('#hand .hand-card').forEach(c => { const r = c.getBoundingClientRect(); if (clientX >= r.left && clientX <= r.right) hit = c; });
   return hit;
 }
-function onHandClick(e) {
-  let c = e.target.closest('.hand-card'); if (!c || UI.lock) return;
-  if (e.clientX) { const byX = handCardAt(e.clientX); if (byX) c = byX; } // bàn phím (Enter/Space) có clientX = 0 nên giữ nguyên lá đang focus
+function toggleCardSelect(c, forceState) {
+  if (!c) return;
   const id = c.dataset.id; if (!id) return;
-  if (UI.selected.has(id)) UI.selected.delete(id); else UI.selected.add(id);
-  c.classList.toggle('selected', UI.selected.has(id)); SFX.play('select');
+  const newState = forceState != null ? forceState : !UI.selected.has(id);
+  if (newState) UI.selected.add(id); else UI.selected.delete(id);
+  c.classList.toggle('selected', newState);
+  SFX.play('select');
+  vibrate(12);
+  return newState;
+}
+function onHandClick(e) {
+  if (Date.now() - _pointerHandledTime < 450) return; // Đã xử lý bởi pointerdown/swipe trên điện thoại, bỏ qua click trùng
+  let c = e.target.closest('.hand-card'); if (!c || UI.lock) return;
+  if (e.clientX) { const byX = handCardAt(e.clientX); if (byX) c = byX; }
+  toggleCardSelect(c);
+}
+function setupHandSwipe() {
+  const hand = $('#hand'); if (!hand) return;
+  hand.addEventListener('pointerdown', e => {
+    if (UI.lock) return;
+    const c = e.clientX ? handCardAt(e.clientX) : e.target.closest('.hand-card');
+    if (!c) return;
+    _pointerHandledTime = Date.now();
+    _handSwiping = true;
+    _lastHandHit = c;
+    _handSwipeState = toggleCardSelect(c);
+    try { hand.setPointerCapture(e.pointerId); } catch (err) { }
+  });
+  hand.addEventListener('pointermove', e => {
+    if (!_handSwiping || UI.lock) return;
+    const c = handCardAt(e.clientX);
+    if (!c || c === _lastHandHit) return;
+    _lastHandHit = c;
+    toggleCardSelect(c, _handSwipeState);
+  });
+  const onPointerEnd = e => {
+    if (_handSwiping) {
+      _handSwiping = false;
+      _lastHandHit = null;
+      _handSwipeState = null;
+      try { if (e && e.pointerId) hand.releasePointerCapture(e.pointerId); } catch (err) { }
+    }
+  };
+  hand.addEventListener('pointerup', onPointerEnd);
+  hand.addEventListener('pointercancel', onPointerEnd);
 }
 function doAction(act, t) {
   switch (act) {
     case 'goto': navigateTo(t.dataset.target); break;
     case 'back': goBack(); break;
     case 'play-now': if (Data.currentMatch) Match.resume(); else navigateTo('games'); break;
+    case 'start-ranked': startRankedMatch(t.dataset.game); break;
     case 'soon': showToast('🔒 ' + (t.dataset.what || 'Tính năng') + ' sẽ có ở đợt sau', 'info'); break;
     case 'toggle-sound': Data.settings.sound = !Data.settings.sound; saveData(); applySettings(); if (UI.screen === 'settings') RENDERERS.settings(); break;
     case 'rules': showRules(t.dataset.game); break;
@@ -5225,7 +6299,10 @@ function init() {
     SFX.unlock(); if (t.dataset.action !== 'play') SFX.play('click');
     try { doAction(t.dataset.action, t); } catch (err) { handleError(err); }
   });
-  document.addEventListener('pointerdown', () => SFX.unlock(), { once: true });
+  ['pointerdown', 'touchstart', 'touchend', 'click'].forEach(evt => {
+    document.addEventListener(evt, () => SFX.unlock(), { once: true, passive: true });
+  });
+  setupHandSwipe();
   $('#hand').addEventListener('click', onHandClick);
   $('#solo-board').addEventListener('click', e => Solo.tap(e));
   $('#table-cards').addEventListener('click', e => {
