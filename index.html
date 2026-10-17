@@ -50,6 +50,7 @@ document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}
           <div class="pc-info">
             <b id="home-name">Minh</b>
             <small id="home-title" class="title-tag"></small>
+            <span id="home-rank" class="rank-tag"></span>
             <span id="home-country">🇻🇳 Việt Nam</span>
             <div class="xp-row"><span id="home-level" class="lv">Lv.1</span>
               <div class="xp-bar"><i id="home-xp-fill"></i></div></div>
@@ -69,7 +70,8 @@ document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}
         <button class="menu-item" type="button" data-action="goto" data-target="settings"><span>⚙️</span>CÀI ĐẶT</button>
         <button class="menu-item" type="button" data-action="goto" data-target="missions"><span>📅</span>NHIỆM VỤ</button>
         <button class="menu-item" type="button" data-action="goto" data-target="leaderboard"><span>🥇</span>XẾP HẠNG</button>
-        <button class="menu-item" type="button" data-action="goto" data-target="themes"><span>🎨</span>GIAO DIỆN</button>
+        <button class="menu-item" type="button" data-action="goto" data-target="rank"><span>🏅</span>RANK</button>
+        <button class="menu-item" type="button" data-action="goto" data-target="themes"><span>🎒</span>KHO ĐỒ</button>
         <button class="menu-item" type="button" data-action="goto" data-target="history"><span>🕑</span>LỊCH SỬ</button>
         <button class="menu-item" type="button" data-action="goto" data-target="guide"><span>📖</span>HƯỚNG DẪN</button>
       </nav>
@@ -96,6 +98,9 @@ document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}
 
     <!-- GIAO DIỆN -->
     <section class="screen" id="screen-themes" aria-label="Giao diện"><div id="themes-body"></div></section>
+
+    <!-- RANK -->
+    <section class="screen" id="screen-rank" aria-label="Rank"><div id="rank-body"></div></section>
 
     <!-- LỊCH SỬ -->
     <section class="screen" id="screen-history" aria-label="Lịch sử ván"><div id="history-body"></div></section>
@@ -145,7 +150,7 @@ document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}
       <div class="pf-top">
         <div id="pf-avatar" class="avatar-xl">👨</div>
         <h2 id="pf-name">Minh</h2>
-        <p id="pf-country"></p><p id="pf-title" class="title-tag"></p><p id="pf-age" class="muted"></p>
+        <p id="pf-country"></p><p id="pf-title" class="title-tag"></p><p id="pf-rank" class="rank-tag"></p><p id="pf-age" class="muted"></p>
         <div class="xp-row wide"><span id="pf-level" class="lv">Lv.1</span><div class="xp-bar"><i id="pf-xp-fill"></i></div></div>
         <small id="pf-xp-text"></small>
       </div>

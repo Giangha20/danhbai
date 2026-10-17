@@ -109,6 +109,7 @@ const GAME_META = {
   rummy: { name: 'Rummy', desc: 'Bốc, đánh, hạ bộ, gõ khi rác ≤ 10', minP: 2, maxP: 4, defP: 2, icon: 'rummy', kind: 'draw', ready: true },
   solitaire: { name: 'Solitaire', desc: 'Klondike một người · rút 1 hoặc 3 lá', minP: 1, maxP: 1, defP: 1, icon: 'sol', kind: 'solo', ready: true },
   freeCell: { name: 'FreeCell', desc: '8 cột, 4 ô trống, 4 nền', minP: 1, maxP: 1, defP: 1, icon: 'fc', kind: 'solo', ready: true },
+  taiXiu: { name: 'Tài Xỉu', desc: '3 xúc xắc · đặt XP · giải trí, không tính hạng', minP: 4, maxP: 4, defP: 4, icon: 'dice', kind: 'dice', ready: true, casual: true },
   spider: { name: 'Spider Solitaire', desc: '104 lá · 1/2/4 chất', minP: 1, maxP: 1, defP: 1, icon: 'spider', kind: 'solo', ready: true },
 };
 const READY_GAMES = Object.keys(GAME_META).filter(k => GAME_META[k].ready);
@@ -140,6 +141,11 @@ const ACHIEVEMENTS = [
   { id: 'rumGin', icon: '♻️', name: 'Gin Rummy', desc: 'Gõ với 0 điểm rác và thắng', test: (d, s) => s.includes('rumGin') },
   { id: 'lienSap', icon: '🎰', name: 'Liêng Sáp', desc: 'Thắng ván Liêng bằng bộ Sáp', test: (d, s) => s.includes('lienSap') },
   { id: 'pkStrong', icon: '🃏', name: 'Poker mạnh', desc: 'Thắng ván Poker bằng Flush trở lên', test: (d, s) => s.includes('pkStrong') },
+  { id: 'rankGold', icon: '🥇', name: 'Hạng Vàng', desc: 'Đạt hạng Vàng', test: () => Rank.bestTier() >= 3 },
+  { id: 'rankPlat', icon: '💠', name: 'Hạng Bạch kim', desc: 'Đạt hạng Bạch kim', test: () => Rank.bestTier() >= 4 },
+  { id: 'rankDiamond', icon: '💎', name: 'Hạng Kim cương', desc: 'Đạt hạng Kim cương', test: () => Rank.bestTier() >= 5 },
+  { id: 'rankElite', icon: '🔷', name: 'Hạng Tinh anh', desc: 'Đạt hạng Tinh anh', test: () => Rank.bestTier() >= 6 },
+  { id: 'rankLegend', icon: '🃏', name: 'Thần bài vô địch', desc: 'Đạt hạng Thần bài vô địch', test: () => Rank.bestTier() >= 9 },
   { id: 'legendChampion', icon: '👑', name: 'Huyền thoại', desc: 'Vô địch Giải Huyền thoại (AI Siêu khó)', test: (d, s) => s.includes('legendChampion') },
   { id: 'level20', icon: '⭐', name: 'Lên cấp 20', desc: 'Đạt Level 20', test: (d) => d.level >= 20 }
 ];
@@ -252,6 +258,13 @@ const RULES = {
     'Số lá di chuyển cùng lúc tối đa = (số ô trống + 1) × 2^(số cột trống) (không tính cột đích nếu nó đang trống).',
     'Chạm lá để chọn, chạm đích để chuyển; chạm đúp để lên nền. Có Hoàn tác, Gợi ý. Thắng khi cả 52 lá lên 4 nền.'
   ]],
+  taiXiu: ['Tài Xỉu', [
+    'Chỉ để giải trí — KHÔNG tính đấu hạng và không vào thống kê thắng/thua chính. Không có tiền thật: bạn chỉ đặt XP của chính mình.',
+    'Bàn 4 người (bạn + 3 người chơi AI). Lắc 3 xúc xắc: tổng 4–10 là XỈU, tổng 11–17 là TÀI. Ba xúc xắc giống nhau (bão) là nhà cái ăn tất — mọi cửa đều thua.',
+    'Chọn TÀI hoặc XỈU, chọn mức cược theo tỷ lệ XP đang có (5% / 10% / 25% / 50% / ALL-IN, tối thiểu 10 XP) rồi bấm LẮC. Dưới 10 XP bạn chỉ chơi luyện tập, không được/mất XP.',
+    'Thắng: cộng XP ngẫu nhiên khoảng 0,7–1,3 lần mức cược. Thua: trừ đúng mức cược. XP không xuống dưới 0 và level không bị tụt.',
+    'Mỗi ván là một lần lắc. Hãy chơi có chừng mực nhé!'
+  ]],
   spider: ['Spider Solitaire', [
     'Dùng 104 lá với 1, 2 hoặc 4 chất. 10 cột (4 cột 6 lá, 6 cột 5 lá, chỉ lá cuối ngửa) và kho 50 lá.',
     'Xếp lá giảm dần (không cần xen màu): được đặt lá lên lá lớn hơn 1 bậc bất kể chất. Chỉ di chuyển được cả chuỗi khi các lá cùng chất và liên tiếp.',
@@ -272,6 +285,18 @@ const RULES_EXTRA = [
     'Có 32 phòng, mỗi phòng 64 bàn (tổng 2.048 bàn). Phòng 1–8 AI Dễ, 9–16 Bình thường, 17–24 Khó, 25–32 Siêu khó.',
     'Mỗi bàn có game, số người, trạng thái: Đang chờ, Đang chơi, Đầy, Kết thúc. Chỉ bàn "Đang chờ" mới vào được; các ghế còn trống được AI lấp đầy.',
     'Dùng ô tìm phòng, tìm bàn, lọc game, lọc trạng thái và phân trang. Nút 🔄 làm mới danh sách bàn, ⚡ Vào nhanh chọn ngẫu nhiên một bàn đang chờ.'
+  ]],
+  ['🏅 Rank (đấu hạng)', [
+    'Mọi ván đấu với AI đều tính hạng (kể cả trong Phòng và Giải đấu). Tài Xỉu và các game xếp bài một người (Solitaire, FreeCell, Spider) không tính hạng.',
+    'Thang hạng từ thấp đến cao: Sắt, Đồng, Bạc, Vàng (mỗi hạng 3 bậc: 3 → 2 → 1), Bạch kim, Kim cương, Tinh anh, Bậc thầy, Đại cao thủ (mỗi hạng 5 bậc: 5 → 4 → 3 → 2 → 1), cuối cùng là Thần bài vô địch — không chia bậc, chỉ tích sao, tối đa 9999 sao.',
+    'Sao mỗi bậc: Sắt và Đồng 3 sao, Bạc và Vàng 4 sao, từ Bạch kim trở lên 5 sao. Thắng +1 sao (+1 nếu có AI Khó/Siêu khó, +1 nếu thắng liên tiếp từ 3 ván, tối đa +3); hòa không đổi; thua −1 sao (−2 nếu thua AI Dễ từ hạng Bạc). Từ Bạch kim trở lên, thắng AI Dễ không được sao.',
+    'Đủ sao thì lên bậc, hết sao thì tụt bậc. Sắt 3 là đáy. Rớt khỏi Thần bài vô địch sẽ về Đại cao thủ 1.',
+    'Reset mùa (mỗi 30 ngày): Sắt → Sắt 3, Đồng → Đồng 3, Bạc → Bạc 3, Vàng → Vàng 3, Bạch kim → Vàng 1, Kim cương → Bạch kim 5, Tinh anh → Bạch kim 1, Bậc thầy trở lên → Tinh anh 5. Sao về 0; hạng cao nhất từng đạt vẫn mở khoá vật phẩm.'
+  ]],
+  ['🎒 Kho vật phẩm', [
+    'Kho có 4 nhóm: Mặt bài, Bàn chơi, Khung avatar, Danh hiệu. Mỗi vật phẩm có độ hiếm (Thường, Hiếm, Sử thi, Huyền thoại) thể hiện bằng viền màu.',
+    'Vật phẩm mở khoá theo level, hạng cao nhất từng đạt (mỗi hạng một khung avatar riêng), vô địch giải đấu hoặc chuỗi đăng nhập 7 ngày. Chạm vào vật phẩm để xem điều kiện và trang bị.',
+    'Khung avatar và danh hiệu đang trang bị hiển thị ở Trang chủ, Hồ sơ và Bảng xếp hạng.'
   ]],
   ['📅 Nhiệm vụ & quà đăng nhập', [
     'Mỗi ngày có 3 nhiệm vụ mới (chơi, thắng, chặt bài, thắng trong giải đấu...). Hoàn thành rồi bấm NHẬN để lấy XP; nhận đủ cả 3 được thêm 100 XP.',
@@ -458,8 +483,8 @@ function defaultData() {
   return {
     v: 2,
     profile: { name: 'Minh', avatar: '👨', country: 'VN', age: 25 },
-    settings: { gameCfg: {}, sound: true, notify: true, vibrate: true, aiSpeed: 1, cardBack: 'classic', table: 'green', effects: true, animation: true, reducedMotion: false, theme: 'dark', aiLevel: 1, turnTime: 15, players: {} },
-    statistics: { total: 0, wins: 0, losses: 0, draws: 0, streak: 0, bestStreak: 0, playTime: 0, tournaments: 0, championships: 0, games: {} },
+    settings: { frame: 'none', title: 'auto', gameCfg: {}, sound: true, notify: true, vibrate: true, aiSpeed: 1, cardBack: 'classic', table: 'green', effects: true, animation: true, reducedMotion: false, theme: 'dark', aiLevel: 1, turnTime: 15, players: {} },
+    statistics: { total: 0, wins: 0, losses: 0, draws: 0, streak: 0, bestStreak: 0, playTime: 0, tournaments: 0, championships: 0, games: {}, fun: { played: 0, won: 0, lost: 0, net: 0 } },
     achievements: {},
     xp: 0,
     level: 1,
@@ -469,7 +494,8 @@ function defaultData() {
     rooms: { room: 1, epoch: (Date.now() % 100000) + 1 },
     tourMeta: { daily: '', weekly: '', game: 'tienLen', history: [], trophies: [] },
     missions: { date: '', list: [], bonus: false },
-    daily: { last: '', streak: 0, claimed: '' },
+    daily: { last: '', streak: 0, claimed: '', best: 0 },
+    rank: { season: 0, t: 0, d: 3, s: 0, best: { t: 0, d: 3, s: 0 }, w: 0, l: 0, hist: [] },
     history: []
   };
 }
@@ -503,6 +529,18 @@ function sanitizeData(d) {
   if (!Array.isArray(x.tourMeta.trophies)) x.tourMeta.trophies = [];
   x.tourMeta.trophies = x.tourMeta.trophies.filter(e => e && typeof e.name === 'string').slice(0, 40);
   if (!Array.isArray(x.missions.list)) x.missions.list = [];
+  { // rank
+    const rk = x.rank, nT = RANK_TIERS.length;
+    const fixPos = (o) => { o.t = clamp(Math.round(Number(o.t)) || 0, 0, nT - 1); const T = RANK_TIERS[o.t]; o.d = T.divs ? clamp(Math.round(Number(o.d)) || T.divs, 1, T.divs) : 0; o.s = clamp(Math.round(Number(o.s)) || 0, 0, T.divs ? T.need - 1 : RANK_MAX_STARS); };
+    fixPos(rk); if (!rk.best || typeof rk.best !== 'object') rk.best = { t: rk.t, d: rk.d, s: rk.s }; fixPos(rk.best);
+    if (Rank.isBetter({ t: rk.t, d: rk.d, s: rk.s }, rk.best)) rk.best = { t: rk.t, d: rk.d, s: rk.s };
+    rk.season = Math.max(0, Math.round(Number(rk.season)) || 0); rk.w = Math.max(0, Math.round(Number(rk.w)) || 0); rk.l = Math.max(0, Math.round(Number(rk.l)) || 0);
+    if (!Array.isArray(rk.hist)) rk.hist = []; rk.hist = rk.hist.filter(e => e && typeof e === 'object').slice(0, 12);
+  }
+  if (typeof x.settings.frame !== 'string') x.settings.frame = 'none';
+  if (typeof x.settings.title !== 'string') x.settings.title = 'auto';
+  x.daily.best = Math.max(Number(x.daily.best) || 0, Number(x.daily.streak) || 0);
+  ['played', 'won', 'lost'].forEach(k => { x.statistics.fun[k] = Math.max(0, Math.round(Number(x.statistics.fun[k])) || 0); }); x.statistics.fun.net = Math.round(Number(x.statistics.fun.net)) || 0;
   if (!Array.isArray(x.history)) x.history = [];
   x.history = x.history.filter(e => e && typeof e.g === 'string').slice(0, 30);
   x.settings.aiSpeed = clamp(Math.round(Number(x.settings.aiSpeed)) || 0, 0, 2);
@@ -621,6 +659,8 @@ function addXP(amount, cap) {
   if (leveled > 0 && IN_BROWSER && typeof levelUpFx === 'function') { const lv = Data.level; setTimeout(() => levelUpFx(lv), 900); }
   return { amount, leveled };
 }
+/* Trừ XP (Tài Xỉu): không bao giờ làm tụt level, XP không xuống dưới 0 của level hiện tại */
+function subXP(amount) { const a = Math.min(Data.xp, Math.max(0, Math.round(amount))); Data.xp -= a; return { amount: -a, leveled: 0 }; }
 function calcXP(outcome, diff, streak, specialCount) {
   let xp;
   if (outcome === 'win') xp = 80 + diff * 20 + Math.min(streak, 10) * 5 + specialCount * 30;
@@ -2576,22 +2616,31 @@ function titleFor(level) { let t = TITLES[0][1]; TITLES.forEach(x => { if (level
 
 /* ---------- Giao diện mở khoá theo level (mặt sau lá bài, màu bàn) ---------- */
 const CARD_BACKS = [
-  { id: 'classic', name: 'Cổ điển', lv: 1, c: ['#1b3a8a', '#7fb0ff', '#142a66'], p: 'dia' },
-  { id: 'ruby', name: 'Hồng ngọc', lv: 3, c: ['#8a1b2b', '#ff9aa8', '#5c0f1b'], p: 'dots' },
-  { id: 'emerald', name: 'Lục bảo', lv: 6, c: ['#0f6b4a', '#7dffc0', '#07402c'], p: 'stripe' },
-  { id: 'gold', name: 'Hoàng kim', lv: 10, c: ['#a8802a', '#ffe28a', '#6b4e12'], p: 'dia' },
-  { id: 'night', name: 'Dạ quang', lv: 15, c: ['#1a1a2e', '#a78bfa', '#0b0b18'], p: 'star' },
-  { id: 'royal', name: 'Hoàng gia', lv: 25, c: ['#4c1d95', '#f5c542', '#2e1065'], p: 'dots' }
+  { id: 'classic', name: 'Cổ điển', lv: 1, r: 'common', c: ['#1b3a8a', '#7fb0ff', '#142a66'], p: 'dia' },
+  { id: 'ruby', name: 'Hồng ngọc', lv: 3, r: 'common', c: ['#8a1b2b', '#ff9aa8', '#5c0f1b'], p: 'dots' },
+  { id: 'emerald', name: 'Lục bảo', lv: 6, r: 'rare', c: ['#0f6b4a', '#7dffc0', '#07402c'], p: 'stripe' },
+  { id: 'gold', name: 'Hoàng kim', lv: 10, r: 'epic', c: ['#a8802a', '#ffe28a', '#6b4e12'], p: 'dia' },
+  { id: 'night', name: 'Dạ quang', lv: 15, r: 'epic', c: ['#1a1a2e', '#a78bfa', '#0b0b18'], p: 'star' },
+  { id: 'royal', name: 'Hoàng gia', lv: 25, r: 'legendary', c: ['#4c1d95', '#f5c542', '#2e1065'], p: 'dots' },
+  { id: 'ice', name: 'Băng giá', lv: 1, rank: 4, r: 'epic', c: ['#0f3d52', '#8ff0ff', '#072431'], p: 'star' },
+  { id: 'prism', name: 'Lăng kính', lv: 1, rank: 6, r: 'epic', c: ['#3b1d6e', '#d8b4ff', '#1d0b3a'], p: 'dia' },
+  { id: 'godcard', name: 'Thần bài', lv: 1, rank: 9, r: 'legendary', c: ['#7a5a08', '#fff1a8', '#3f2c02'], p: 'star' }
 ];
 const TABLES = [
-  { id: 'green', name: 'Nỉ xanh lá', lv: 1, c: ['#0d5a40', '#083b2a'] },
-  { id: 'blue', name: 'Nỉ xanh dương', lv: 2, c: ['#1b4f8f', '#0c2b52'] },
-  { id: 'red', name: 'Nỉ đỏ rượu', lv: 5, c: ['#8f1d2c', '#4f0d17'] },
-  { id: 'purple', name: 'Nỉ tím', lv: 8, c: ['#5b2a91', '#2f1450'] },
-  { id: 'black', name: 'Nỉ đen', lv: 12, c: ['#2b2f36', '#0f1114'] },
-  { id: 'gold', name: 'Nỉ vàng đồng', lv: 20, c: ['#8a6a1d', '#4a360c'] }
+  { id: 'green', name: 'Nỉ xanh lá', lv: 1, r: 'common', c: ['#0d5a40', '#083b2a'] },
+  { id: 'blue', name: 'Nỉ xanh dương', lv: 2, r: 'common', c: ['#1b4f8f', '#0c2b52'] },
+  { id: 'red', name: 'Nỉ đỏ rượu', lv: 5, r: 'rare', c: ['#8f1d2c', '#4f0d17'] },
+  { id: 'purple', name: 'Nỉ tím', lv: 8, r: 'rare', c: ['#5b2a91', '#2f1450'] },
+  { id: 'black', name: 'Nỉ đen', lv: 12, r: 'epic', c: ['#2b2f36', '#0f1114'] },
+  { id: 'gold', name: 'Nỉ vàng đồng', lv: 20, r: 'legendary', c: ['#8a6a1d', '#4a360c'] },
+  { id: 'void', name: 'Nỉ hư không', lv: 1, rank: 8, r: 'legendary', c: ['#1a0f3a', '#05030f'] }
 ];
-function itemUnlocked(it) { return Data.level >= it.lv; }
+function itemUnlocked(it) {
+  if (it.lv && Data.level < it.lv) return false;
+  if (it.rank != null && Rank.bestTier() < it.rank) return false;
+  if (it.cond && !it.cond()) return false;
+  return true;
+}
 function currentCardBack() { const it = CARD_BACKS.find(x => x.id === Data.settings.cardBack); return it && itemUnlocked(it) ? it : CARD_BACKS[0]; }
 function currentTable() { const it = TABLES.find(x => x.id === Data.settings.table); return it && itemUnlocked(it) ? it : TABLES[0]; }
 const CARD_BACK_CACHE = {};
@@ -2673,7 +2722,7 @@ const Daily = {
   /* cập nhật chuỗi ngày; trả về true nếu hôm nay chưa nhận quà */
   check() {
     const t = Tour.dateKey(), d = Data.daily;
-    if (d.last !== t) { d.streak = d.last === this.yesterday() ? d.streak + 1 : 1; d.last = t; saveData(); }
+    if (d.last !== t) { d.streak = d.last === this.yesterday() ? d.streak + 1 : 1; d.last = t; d.best = Math.max(d.best || 0, d.streak); saveData(); }
     return d.claimed !== t;
   },
   reward() { return 40 + 20 * Math.min(Math.max(Data.daily.streak, 1), 7); },
@@ -2757,6 +2806,210 @@ const Rooms = {
     return out;
   }
 };
+
+
+/* ============================ 9e. HỆ THỐNG RANK (đấu hạng) ============================ */
+/* Bậc đi từ số lớn xuống số nhỏ: Sắt 3 → Sắt 2 → Sắt 1 → Đồng 3 … Riêng Thần bài vô địch không có bậc, chỉ tích sao (tối đa 9999). */
+const RANK_TIERS = [
+  { id: 'iron', name: 'Sắt', icon: '⚙️', col: '#9aa0a8', divs: 3, need: 3 },
+  { id: 'bronze', name: 'Đồng', icon: '🥉', col: '#c9833f', divs: 3, need: 3 },
+  { id: 'silver', name: 'Bạc', icon: '🥈', col: '#d3d9e2', divs: 3, need: 4 },
+  { id: 'gold', name: 'Vàng', icon: '🥇', col: '#f0c24a', divs: 3, need: 4 },
+  { id: 'plat', name: 'Bạch kim', icon: '💠', col: '#6fe0d4', divs: 5, need: 5 },
+  { id: 'diamond', name: 'Kim cương', icon: '💎', col: '#78b4ff', divs: 5, need: 5 },
+  { id: 'elite', name: 'Tinh anh', icon: '🔷', col: '#b58cff', divs: 5, need: 5 },
+  { id: 'master', name: 'Bậc thầy', icon: '🔮', col: '#ff7fbf', divs: 5, need: 5 },
+  { id: 'grand', name: 'Đại cao thủ', icon: '🏆', col: '#ff9f43', divs: 5, need: 5 },
+  { id: 'legend', name: 'Thần bài vô địch', icon: '🃏', col: '#ffd76a', divs: 0, need: 0, max: 9999 }
+];
+/* Reset đầu mùa: hạng cũ → [hạng mới, bậc mới] (sao về 0) */
+const RANK_RESET = {
+  iron: ['iron', 3], bronze: ['bronze', 3], silver: ['silver', 3], gold: ['gold', 3],
+  plat: ['gold', 1], diamond: ['plat', 5], elite: ['plat', 1],
+  master: ['elite', 5], grand: ['elite', 5], legend: ['elite', 5]
+};
+const RANK_SEASON_DAYS = 30, RANK_EPOCH = Date.UTC(2026, 0, 1), RANK_MAX_STARS = 9999;
+const Rank = {
+  tierIndex(id) { return RANK_TIERS.findIndex(t => t.id === id); },
+  seasonId(now) { return Math.floor(((now == null ? Date.now() : now) - RANK_EPOCH) / (RANK_SEASON_DAYS * 86400000)) + 1; },
+  daysLeft(now) { now = now == null ? Date.now() : now; const end = RANK_EPOCH + this.seasonId(now) * RANK_SEASON_DAYS * 86400000; return Math.max(0, Math.ceil((end - now) / 86400000)); },
+  fresh() { return { season: this.seasonId(), t: 0, d: 3, s: 0, best: { t: 0, d: 3, s: 0 }, w: 0, l: 0, hist: [] }; },
+  need(t) { return RANK_TIERS[t].need; },
+  value(t, d) { let v = 0; for (let i = 0; i < t; i++) v += RANK_TIERS[i].divs; return v + (RANK_TIERS[t].divs ? RANK_TIERS[t].divs - d : 0); }, // thứ tự tuyệt đối
+  label(t, d, s) {
+    const T = RANK_TIERS[t]; if (!T.divs) return T.name + ' ★' + s;
+    return T.name + ' ' + d;
+  },
+  cur() { const r = Data.rank; return { t: r.t, d: r.d, s: r.s }; },
+  curLabel() { const r = Data.rank; return this.label(r.t, r.d, r.s); },
+  bestTier() { return Data.rank.best.t; },
+  isBetter(a, b) { const va = this.value(a.t, a.d), vb = this.value(b.t, b.d); return va > vb || (va === vb && a.s > b.s); },
+  /* cộng/trừ sao, trả về {from,to,promoted,demoted} */
+  addStars(n) {
+    const r = Data.rank, from = this.cur();
+    for (let k = 0; k < Math.abs(n); k++) {
+      const T = RANK_TIERS[r.t];
+      if (n > 0) {
+        if (!T.divs) { r.s = Math.min(RANK_MAX_STARS, r.s + 1); continue; }
+        r.s++;
+        if (r.s >= T.need) {
+          r.s = 0;
+          if (r.d > 1) r.d--; else { r.t++; r.d = RANK_TIERS[r.t].divs; }
+        }
+      } else {
+        if (r.s > 0) { r.s--; continue; }
+        if (!T.divs) { r.t = this.tierIndex('grand'); r.d = 1; r.s = RANK_TIERS[r.t].need - 1; continue; } // rớt khỏi Thần bài
+        if (r.t === 0 && r.d === T.divs) continue;                        // Sắt 3 là đáy: không rớt thêm
+        if (r.d < T.divs) { r.d++; r.s = T.need - 1; } else { r.t--; r.d = 1; r.s = RANK_TIERS[r.t].need - 1; }
+      }
+    }
+    const to = this.cur();
+    if (this.isBetter(to, r.best)) r.best = { t: to.t, d: to.d, s: to.s };
+    const vf = this.value(from.t, from.d), vt = this.value(to.t, to.d);
+    return { from, to, promoted: vt > vf, demoted: vt < vf, tierUp: to.t > from.t, tierDown: to.t < from.t };
+  },
+  /* số sao thay đổi sau một ván đấu hạng */
+  matchDelta(outcome, avgLv, streak) {
+    const t = Data.rank.t;
+    if (outcome === 'draw') return 0;
+    if (outcome === 'win') {
+      if (t >= 4 && avgLv < 1) return 0;                 // đánh AI Dễ ở hạng cao không được sao
+      let d = 1; if (avgLv >= 2) d++; if (streak >= 3) d++;
+      return Math.min(3, d);
+    }
+    return (avgLv < 1 && t >= 2) ? -2 : -1;
+  },
+  /* áp dụng kết quả một ván đấu hạng */
+  apply(outcome, avgLv, streak) {
+    this.ensure();
+    const delta = this.matchDelta(outcome, avgLv, streak), r = Data.rank;
+    if (outcome === 'win') r.w++; else if (outcome === 'lose') r.l++;
+    const ch = this.addStars(delta); ch.delta = delta; ch.label = this.curLabel(); ch.fromLabel = this.label(ch.from.t, ch.from.d, ch.from.s);
+    return ch;
+  },
+  /* đầu mùa mới: reset hạng theo bảng RANK_RESET. Trả về thông tin nếu có reset. */
+  ensure() {
+    const r = Data.rank, cur = this.seasonId();
+    if (!r.season) { r.season = cur; return null; }                    // hồ sơ mới: bắt đầu mùa hiện tại, không reset
+    if (r.season >= cur) return null;
+    const from = this.cur(), m = RANK_RESET[RANK_TIERS[r.t].id], nt = this.tierIndex(m[0]);
+    r.hist.unshift({ season: r.season, t: from.t, d: from.d, s: from.s }); if (r.hist.length > 12) r.hist.length = 12;
+    r.t = nt; r.d = m[1]; r.s = 0; r.w = 0; r.l = 0; r.season = cur;
+    return { from, to: this.cur(), season: cur, fromLabel: this.label(from.t, from.d, from.s), toLabel: this.curLabel() };
+  }
+};
+
+/* ============================ TÀI XỈU (giải trí — đặt XP, không tính hạng) ============================ */
+const TX = { RATIOS: [5, 10, 25, 50, 100], MIN_BET: 10 };
+function txBetFor(xp, ratio) { if (xp < TX.MIN_BET) return 0; return clamp(Math.round(xp * ratio / 100), TX.MIN_BET, xp); }
+const TX_ENGINE = {
+  id: 'taiXiu', kind: 'dice', casual: true, finishDelay: 2100,
+  setup(opts) { gameState = newGameState(); const gs = gameState; gs.currentGame = 'taiXiu'; gs.players = makePlayers(clamp(opts.players || 4, 2, 4)); },
+  deal() {
+    const gs = gameState;
+    gs.dice = [0, 0, 0]; gs.over = null; gs.phase = 'play'; gs.turn = 0; gs.xp0 = Data.xp; gs.pick = { side: null, ratio: 10 };
+    gs.ai = gs.players.map((p, i) => (i === 0 ? null : { side: Math.random() < 0.5 ? 'tai' : 'xiu', ratio: pick([5, 10, 25]) }));
+    gs.hist = Array.from({ length: 12 }, () => { const d = [1, 2, 3].map(() => 1 + rand(6)); return { s: d[0] + d[1] + d[2], bao: d[0] === d[1] && d[1] === d[2] }; });
+  },
+  humanTurn() { const gs = gameState; return !gs.over && gs.phase === 'play'; },
+  timeLimit(b) { return Math.max(25, b); },
+  getValidMoves() { const gs = gameState; return gs.over || !gs.pick.side ? [] : [{ type: 'roll' }]; },
+  validateMove(p, mv) {
+    const gs = gameState;
+    if (p !== 0 || gs.over || !mv) return { ok: false, reason: 'Chưa đến lượt' };
+    if (mv.type === 'side') return mv.side === 'tai' || mv.side === 'xiu' ? { ok: true, free: true } : { ok: false, reason: 'Chọn TÀI hoặc XỈU' };
+    if (mv.type === 'ratio') return TX.RATIOS.includes(mv.ratio) ? { ok: true, free: true } : { ok: false, reason: 'Mức cược không hợp lệ' };
+    if (mv.type === 'roll') return (mv.side || gs.pick.side) ? { ok: true } : { ok: false, reason: 'Hãy chọn TÀI hoặc XỈU trước khi lắc' };
+    return { ok: false, reason: 'Nước đi không hợp lệ' };
+  },
+  play(p, mv) {
+    const gs = gameState;
+    if (mv.type === 'side') { gs.pick.side = mv.side; return { type: 'side', sfx: 'select' }; }
+    if (mv.type === 'ratio') { gs.pick.ratio = mv.ratio; return { type: 'ratio', sfx: 'select' }; }
+    gs.pick.side = mv.side || gs.pick.side;
+    gs.dice = [1 + rand(6), 1 + rand(6), 1 + rand(6)];
+    gs.sum = gs.dice[0] + gs.dice[1] + gs.dice[2]; gs.bao = gs.dice[0] === gs.dice[1] && gs.dice[1] === gs.dice[2];
+    gs.result = gs.sum >= 11 ? 'tai' : 'xiu'; gs.win = !gs.bao && gs.pick.side === gs.result;
+    gs.bet = txBetFor(gs.xp0, gs.pick.ratio);
+    gs.delta = gs.win ? (gs.bet > 0 ? Math.max(1, Math.round(gs.bet * (0.7 + Math.random() * 0.6))) : 0) : -gs.bet; // thắng: cộng ngẫu nhiên theo mức cược, thua: trừ đúng mức cược
+    gs.aiRes = gs.players.map((q, i) => (i === 0 ? null : { win: !gs.bao && gs.ai[i].side === gs.result, amt: Math.round(1000 * gs.ai[i].ratio / 100 * (0.7 + Math.random() * 0.6)) }));
+    gs.over = { reason: 'roll' }; gs.phase = 'over';
+    return { type: 'roll', sfx: 'deal' };
+  },
+  nextTurn() { }, checkWin: () => gameState.over,
+  aiChoose() { return { type: 'roll' }; },
+  timeoutMove() { const gs = gameState; return { type: 'roll', side: gs.pick.side || (Math.random() < 0.5 ? 'tai' : 'xiu') }; },
+  hint() { return { type: 'side', side: Math.random() < 0.5 ? 'tai' : 'xiu' }; },
+  seatView(i) {
+    const gs = gameState, a = gs.ai[i], r = gs.aiRes && gs.aiRes[i];
+    return { cnt: (a.side === 'tai' ? 'TÀI' : 'XỈU') + ' · ' + a.ratio + '%', warn: r ? (r.win ? '★ +' + r.amt : '−' + r.amt) : 'Đã đặt cược', rows: [], alert: false };
+  },
+  tableView() {
+    const gs = gameState, over = !!gs.over;
+    return {
+      dice: over ? gs.dice : null, sum: over ? gs.sum : 0, result: over ? gs.result : null, bao: over ? gs.bao : false, hist: gs.hist, rows: [],
+      info: over ? (gs.bao ? '🎲 BÃO! Nhà cái ăn tất' : 'Tổng ' + gs.sum + ' → ' + (gs.result === 'tai' ? 'TÀI' : 'XỈU')) : 'Chọn TÀI (11–17) hoặc XỈU (4–10), chọn mức cược rồi LẮC'
+    };
+  },
+  handView() {
+    const gs = gameState, xp = gs.xp0, rows = [[], []], bet = txBetFor(xp, gs.pick.ratio);
+    rows[0].push({ txt: 'XỈU · 4–10', act: 'g:side', data: { side: 'xiu' }, on: gs.pick.side === 'xiu', cls: 'big xiu' });
+    rows[0].push({ txt: 'TÀI · 11–17', act: 'g:side', data: { side: 'tai' }, on: gs.pick.side === 'tai', cls: 'big tai' });
+    TX.RATIOS.forEach(r => rows[1].push({ txt: r === 100 ? 'ALL-IN' : r + '%', act: 'g:ratio', data: { ratio: r }, on: gs.pick.ratio === r, cls: 'chip', dis: xp < TX.MIN_BET }));
+    return { panel: rows, note: xp < TX.MIN_BET ? 'Bạn có ' + xp + ' XP (< ' + TX.MIN_BET + ') — chế độ luyện tập, không mất/được XP' : 'Cược ' + bet + ' XP (' + gs.pick.ratio + '% của ' + xp + ' XP)' };
+  },
+  myInfo() {
+    const gs = gameState;
+    if (gs.over) return gs.win ? '🎉 Thắng! +' + gs.delta + ' XP' : (gs.bao ? 'Bão — thua ' + (-gs.delta) + ' XP' : 'Thua ' + (-gs.delta) + ' XP');
+    return '⭐ XP hiện có: ' + gs.xp0 + (gs.pick.side ? ' · bạn chọn ' + (gs.pick.side === 'tai' ? 'TÀI' : 'XỈU') : '');
+  },
+  actionsView(my) { return gameState.over ? [] : [{ txt: '🎲 LẮC XÚC XẮC', act: 'g:roll', cls: 'primary', dis: !my }]; },
+  calculateResult() {
+    const gs = gameState;
+    const nets = gs.players.map((p, i) => (i === 0 ? gs.delta : (gs.aiRes[i].win ? gs.aiRes[i].amt : -gs.aiRes[i].amt)));
+    const order = [...gs.players.keys()].sort((a, b) => nets[b] - nets[a] || a - b);
+    const side = i => (i === 0 ? gs.pick.side : gs.ai[i].side) === 'tai' ? 'Tài' : 'Xỉu';
+    return {
+      outcome: gs.win ? 'win' : 'lose', casual: true, xpDelta: gs.delta, specials: [],
+      rankings: order.map(p => ({ p, label: side(p) + ' ' + (nets[p] >= 0 ? '+' : '') + nets[p] + (p === 0 ? ' XP' : ' điểm') })),
+      headline: gs.bao ? '🎲 BÃO! Nhà cái ăn tất' : (gs.win ? '🎉 THẮNG +' + gs.delta + ' XP' : null)
+    };
+  },
+  detail() { const gs = gameState; return ['Xúc xắc: ' + gs.dice.join(' - ') + ' = ' + gs.sum + (gs.bao ? ' (bão)' : ' → ' + (gs.result === 'tai' ? 'TÀI' : 'XỈU')), 'Bạn chọn ' + (gs.pick.side === 'tai' ? 'Tài' : 'Xỉu') + ' · cược ' + gs.bet + ' XP (' + gs.pick.ratio + '%) · ' + (gs.delta >= 0 ? '+' : '') + gs.delta + ' XP']; }
+};
+GAME_ENGINES.taiXiu = TX_ENGINE;
+
+/* ============================ KHO VẬT PHẨM: độ hiếm, khung avatar, danh hiệu ============================ */
+const RARITY = { common: { name: 'Thường', col: '#9fb2a8' }, rare: { name: 'Hiếm', col: '#4aa3ff' }, epic: { name: 'Sử thi', col: '#b46bff' }, legendary: { name: 'Huyền thoại', col: '#ffb631' } };
+const FRAMES = [
+  { id: 'none', name: 'Không khung', r: 'common', lv: 1 },
+  { id: 'rk0', name: 'Khung Sắt', r: 'common', rank: 0 }, { id: 'rk1', name: 'Khung Đồng', r: 'common', rank: 1 },
+  { id: 'rk2', name: 'Khung Bạc', r: 'rare', rank: 2 }, { id: 'rk3', name: 'Khung Vàng', r: 'rare', rank: 3 },
+  { id: 'rk4', name: 'Khung Bạch kim', r: 'epic', rank: 4 }, { id: 'rk5', name: 'Khung Kim cương', r: 'epic', rank: 5 },
+  { id: 'rk6', name: 'Khung Tinh anh', r: 'epic', rank: 6 }, { id: 'rk7', name: 'Khung Bậc thầy', r: 'legendary', rank: 7 },
+  { id: 'rk8', name: 'Khung Đại cao thủ', r: 'legendary', rank: 8 }, { id: 'rk9', name: 'Khung Thần bài', r: 'legendary', rank: 9 },
+  { id: 'champ', name: 'Nhà vô địch', r: 'epic', cond: () => Data.statistics.championships >= 1, reqText: 'Vô địch 1 giải đấu' },
+  { id: 'streak', name: 'Chuỗi 7 ngày', r: 'rare', cond: () => (Data.daily.best || 0) >= 7, reqText: 'Đăng nhập 7 ngày liên tiếp' },
+  { id: 'lv50', name: 'Lão luyện', r: 'epic', lv: 50 }
+];
+const TITLE_ITEMS = [
+  { id: 'auto', name: 'Theo level', r: 'common', lv: 1, dyn: () => titleFor(Data.level) },
+  { id: 'rank', name: 'Theo hạng hiện tại', r: 'rare', lv: 1, dyn: () => Rank.curLabel() }
+].concat(TITLES.map((t, i) => ({ id: 'lv' + t[0], name: t[1], r: i < 2 ? 'common' : i < 4 ? 'rare' : i < 6 ? 'epic' : 'legendary', lv: t[0] }))).concat([
+  { id: 'champ', name: 'Nhà vô địch', r: 'epic', cond: () => Data.statistics.championships >= 1, reqText: 'Vô địch 1 giải đấu' },
+  { id: 'legend', name: 'Thần bài vô địch', r: 'legendary', rank: 9 }
+]);
+function currentFrame() { const f = FRAMES.find(x => x.id === Data.settings.frame); return f && itemUnlocked(f) ? f : FRAMES[0]; }
+function frameClass() { const f = currentFrame(); return f.id === 'none' ? '' : 'frame-' + f.id; }
+function currentTitle() {
+  const t = TITLE_ITEMS.find(x => x.id === Data.settings.title);
+  if (!t || !itemUnlocked(t)) return titleFor(Data.level);
+  return t.dyn ? t.dyn() : t.name;
+}
+function itemReq(it) {
+  const p = []; if (it.lv && it.lv > 1) p.push('Level ' + it.lv); if (it.rank != null) p.push('Đạt hạng ' + RANK_TIERS[it.rank].name); if (it.reqText) p.push(it.reqText);
+  return p.length ? p.join(' + ') : 'Có sẵn';
+}
 
 /* ============================ 10. GIAO DIỆN ============================ */
 function handleError(err) {
@@ -2941,6 +3194,7 @@ function gameIcon(kind) {
     case 'mb': b = miniCard(14, 38, -24, 'A♠') + miniCard(24, 33, -10, 'K♥', 1) + miniCard(34, 31, 0, 'Q♣') + miniCard(44, 33, 10, 'J♦', 1) + miniCard(52, 38, 24, '10♠'); break;
     case 'chips': b = '<circle cx="22" cy="40" r="11" fill="#c4192d" stroke="#fff" stroke-width="3" stroke-dasharray="5 4"/><circle cx="40" cy="42" r="11" fill="#1d4ed8" stroke="#fff" stroke-width="3" stroke-dasharray="5 4"/>' + miniCard(34, 22, 8, 'A♠'); break;
     case 'hc': b = miniCard(32, 34, 0, 'A♠', 0, 1); break;
+    case 'dice': { const die = (x, y, r, pips) => '<g transform="translate(' + x + ' ' + y + ') rotate(' + r + ')"><rect x="-11" y="-11" width="22" height="22" rx="5" fill="#fffdf8" stroke="#8a8f99"/>' + pips.map(p => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2" fill="#15171c"/>').join('') + '</g>'; b = die(20, 36, -14, [[-5, -5], [0, 0], [5, 5]]) + die(42, 30, 10, [[-5, -5], [5, -5], [0, 0], [-5, 5], [5, 5]]) + die(40, 49, -6, [[-5, -5], [5, -5], [-5, 0], [5, 0], [-5, 5], [5, 5]]); break; }
     case 'rummy': b = miniCard(20, 34, -12, '7♥', 1) + miniCard(32, 34, 0, '8♥', 1) + miniCard(44, 34, 12, '9♥', 1); break;
     case 'sol': b = miniCard(16, 24, 0, 'K♠') + miniCard(30, 32, 0, 'Q♥', 1) + miniCard(44, 40, 0, 'J♣'); break;
     case 'fc': b = '<rect x="6" y="10" width="11" height="15" rx="2" fill="none" stroke="#f5c542"/><rect x="19" y="10" width="11" height="15" rx="2" fill="none" stroke="#f5c542"/><rect x="34" y="10" width="11" height="15" rx="2" fill="none" stroke="#f5c542"/><rect x="47" y="10" width="11" height="15" rx="2" fill="none" stroke="#f5c542"/>' + miniCard(32, 44, 0, 'A♦', 1); break;
@@ -2972,8 +3226,8 @@ function createCardElement(card, opts) {
 }
 
 /* ---------- Điều hướng ---------- */
-const SCREENS = ['home', 'games', 'play', 'solo', 'tournament', 'rooms', 'missions', 'leaderboard', 'themes', 'history', 'profile', 'stats', 'achievements', 'settings', 'guide'];
-const SCREEN_TITLES = { home: 'CARD MASTER', games: 'Chơi game', play: '', solo: '', tournament: 'Giải đấu', rooms: 'Phòng chơi', missions: 'Nhiệm vụ', leaderboard: 'Xếp hạng', themes: 'Giao diện', history: 'Lịch sử ván', profile: 'Hồ sơ', stats: 'Thống kê', achievements: 'Thành tích', settings: 'Cài đặt', guide: 'Hướng dẫn' };
+const SCREENS = ['home', 'games', 'play', 'solo', 'rank', 'tournament', 'rooms', 'missions', 'leaderboard', 'themes', 'history', 'profile', 'stats', 'achievements', 'settings', 'guide'];
+const SCREEN_TITLES = { home: 'CARD MASTER', games: 'Chơi game', play: '', solo: '', tournament: 'Giải đấu', rooms: 'Phòng chơi', missions: 'Nhiệm vụ', leaderboard: 'Xếp hạng', rank: 'Rank', themes: 'Kho vật phẩm', history: 'Lịch sử ván', profile: 'Hồ sơ', stats: 'Thống kê', achievements: 'Thành tích', settings: 'Cài đặt', guide: 'Hướng dẫn' };
 const UI = {
   screen: 'home', stack: [], selected: new Set(), lock: false, seats: {}, lastTableKey: '', handKey: '',
   updateTimer(secs, frac) {
@@ -3038,7 +3292,10 @@ RENDERERS.home = function () {
   $('#home-xp-fill').style.width = xpBarHtml() + '%';
   $('#home-xp-text').textContent = fmt(Data.xp) + ' / ' + fmt(xpNeed(Data.level)) + ' XP';
   $('#btn-play-now').textContent = Data.currentMatch ? '▶ TIẾP TỤC VÁN' : '🎴 CHƠI NGAY';
-  const ht = $('#home-title'); if (ht) ht.textContent = '🎖️ ' + titleFor(Data.level);
+  const ht = $('#home-title'); if (ht) ht.textContent = '🎖️ ' + currentTitle();
+  const rr = Rank.ensure(); if (rr) { saveData(); showRankReset(rr); }
+  const hr = $('#home-rank'); if (hr) hr.textContent = RANK_TIERS[Data.rank.t].icon + ' ' + Rank.curLabel();
+  paintAvatars();
   buildHomeExtra();
 };
 
@@ -3060,6 +3317,7 @@ function gameCard(id, ready) {
   if (ready) {
     const tags = h('div', 'tags');
     if (m.kind === 'solo') { tags.appendChild(h('span', 'tag', '👤 1 người')); tags.appendChild(h('span', 'tag', '↶ Hoàn tác')); tags.appendChild(h('span', 'tag', '💡 Gợi ý')); }
+    else if (m.casual) { tags.appendChild(h('span', 'tag', '👥 ' + m.minP + ' người')); tags.appendChild(h('span', 'tag casual', '🎲 Giải trí · không tính hạng')); tags.appendChild(h('span', 'tag', '⭐ Cược XP')); }
     else {
       tags.appendChild(h('span', 'tag', '👥 ' + (m.minP === m.maxP ? m.minP : m.minP + '–' + m.maxP) + (m.kind === 'bj' ? ' + nhà cái' : '')));
       tags.appendChild(h('span', 'tag', '⏱ ' + Data.settings.turnTime + 's'));
@@ -3116,10 +3374,13 @@ function setupGame(id) {
     const arr = []; for (let i = m.minP; i <= m.maxP; i++) arr.push(i);
     body.appendChild(segmented(arr, players, v => { players = v; }));
   }
-  body.appendChild(h('label', 'lbl', 'Độ khó AI'));
-  body.appendChild(segmented([0, 1, 2, 3, 4], level, v => { level = v; }, v => v === 4 ? '🎲' : LEVEL_ICONS[v] + ' ' + LEVEL_NAMES[v]));
-  body.appendChild(h('label', 'lbl', 'Thời gian mỗi lượt'));
-  body.appendChild(segmented(TIME_OPTIONS, time, v => { time = v; }, v => v + 's'));
+  if (m.casual) body.appendChild(h('p', 'muted', '🎲 Giải trí: không tính hạng. Bạn đặt cược bằng XP của mình (thắng được cộng XP ngẫu nhiên theo mức cược, thua bị trừ đúng mức cược). Bàn 4 người.'));
+  else {
+    body.appendChild(h('label', 'lbl', 'Độ khó AI'));
+    body.appendChild(segmented([0, 1, 2, 3, 4], level, v => { level = v; }, v => v === 4 ? '🎲' : LEVEL_ICONS[v] + ' ' + LEVEL_NAMES[v]));
+    body.appendChild(h('label', 'lbl', 'Thời gian mỗi lượt'));
+    body.appendChild(segmented(TIME_OPTIONS, time, v => { time = v; }, v => v + 's'));
+  }
   const gcfg = Data.settings.gameCfg || (Data.settings.gameCfg = {}); let anh = ((gcfg.baCay || {}).anh) !== false;
   if (id === 'baCay') { body.appendChild(h('label', 'lbl', 'Luật Ba Cây')); body.appendChild(segmented([true, false], anh, v => { anh = v; }, v => v ? 'Ba cây ảnh: Bật' : 'Ba cây ảnh: Tắt')); }
   Modal.open({
@@ -3138,7 +3399,9 @@ RENDERERS.profile = function () {
   $('#pf-country').textContent = c.flag + ' ' + c.name;
   $('#pf-age').textContent = 'Tuổi: ' + Data.profile.age;
   $('#pf-level').textContent = 'Lv.' + Data.level;
-  const pt = $('#pf-title'); if (pt) pt.textContent = '🎖️ ' + titleFor(Data.level);
+  const pt = $('#pf-title'); if (pt) pt.textContent = '🎖️ ' + currentTitle();
+  const pr = $('#pf-rank'); if (pr) pr.textContent = RANK_TIERS[Data.rank.t].icon + ' ' + Rank.curLabel() + ' · cao nhất: ' + Rank.label(Data.rank.best.t, Data.rank.best.d, Data.rank.best.s);
+  paintAvatars();
   $('#pf-xp-fill').style.width = xpBarHtml() + '%';
   $('#pf-xp-text').textContent = 'XP ' + fmt(Data.xp) + ' / ' + fmt(xpNeed(Data.level));
   const rate = st.total ? Math.round(st.wins / st.total * 100) : 0;
@@ -3205,17 +3468,18 @@ RENDERERS.stats = function () {
   let fav = '—', fp = 0;
   Object.keys(st.games).forEach(k => { if (st.games[k].played > fp && GAME_META[k]) { fp = st.games[k].played; fav = GAME_META[k].name; } });
   const rows = [['Tổng trận', st.total], ['Thắng', st.wins], ['Thua', st.losses], ['Hòa', st.draws], ['Win rate', rate + '%'], ['Win streak', st.streak],
-    ['Best streak', st.bestStreak], ['Game yêu thích', fav], ['Thời gian chơi', fmtTime(st.playTime)], ['Số lần vô địch', st.championships], ['Số giải tham gia', st.tournaments]];
+    ['Best streak', st.bestStreak], ['Game yêu thích', fav], ['Thời gian chơi', fmtTime(st.playTime)], ['Số lần vô địch', st.championships], ['Số giải tham gia', st.tournaments], ['Hạng hiện tại', Rank.curLabel()], ['Hạng cao nhất', Rank.label(Data.rank.best.t, Data.rank.best.d, Data.rank.best.s)]];
   const g = $('#stats-grid'); g.textContent = '';
   rows.forEach(r => { const d = h('div', 'stat'); d.appendChild(h('b', '', String(r[1]))); d.appendChild(h('small', '', r[0])); g.appendChild(d); });
   const t = $('#stats-games'); t.textContent = '';
-  READY_GAMES.forEach(id => {
+  READY_GAMES.filter(id => !GAME_META[id].casual).forEach(id => {
     const s = st.games[id] || { played: 0, won: 0, lost: 0, draw: 0 };
     const row = h('div', 'trow'); row.appendChild(h('span', 'tname', GAME_META[id].name));
     row.appendChild(h('span', '', s.played + ' ván')); row.appendChild(h('span', '', s.won + 'T'));
     row.appendChild(h('span', '', s.lost + 'B')); row.appendChild(h('span', '', s.played ? Math.round(s.won / s.played * 100) + '%' : '—'));
     t.appendChild(row);
   });
+  if (st.fun && st.fun.played) { const f = st.fun, row = h('div', 'trow'); row.appendChild(h('span', 'tname', '🎲 Tài Xỉu (giải trí)')); row.appendChild(h('span', '', f.played + ' ván')); row.appendChild(h('span', '', f.won + 'T')); row.appendChild(h('span', '', f.lost + 'B')); row.appendChild(h('span', '', (f.net >= 0 ? '+' : '') + f.net + ' XP')); t.appendChild(row); }
   buildStatBars();
 };
 
@@ -3263,7 +3527,7 @@ RENDERERS.settings = function () {
   sp.appendChild(segmented([0, 1, 2], Data.settings.aiSpeed, v => { Data.settings.aiSpeed = v; saveData(); }, v => ['🐢 Chậm', '🚶 Vừa', '⚡ Nhanh'][v]));
   root.appendChild(sp);
   root.appendChild(toggleRow('📳 Rung (điện thoại)', 'vibrate'));
-  const thr = h('div', 'setting'); thr.appendChild(h('span', '', '🎨 Giao diện bài & bàn'));
+  const thr = h('div', 'setting'); thr.appendChild(h('span', '', '🎒 Kho vật phẩm (mặt bài, bàn, khung)'));
   const thb = h('button', 'btn small', 'Mở'); thb.type = 'button'; thb.dataset.action = 'goto'; thb.dataset.target = 'themes'; thr.appendChild(thb); root.appendChild(thr);
   const bk = h('div', 'setting'); bk.appendChild(h('span', '', '💾 Sao lưu dữ liệu'));
   const bkw = h('div', 'btn-pair'); const ex = h('button', 'btn small', 'Xuất'); ex.type = 'button'; ex.addEventListener('click', exportDataModal);
@@ -3478,6 +3742,9 @@ function fmtDate(t) { try { return new Date(t).toLocaleString('vi-VN', { day: '2
 /* ---------- Trang chủ: danh hiệu, quà, nhiệm vụ, giải đang chơi ---------- */
 function buildHomeExtra() {
   const root = $('#home-extra'); if (!root) return; root.textContent = '';
+  { const T = RANK_TIERS[Data.rank.t], rk = h('button', 'mini-card link rank-card'); rk.type = 'button'; rk.dataset.action = 'goto'; rk.dataset.target = 'rank'; rk.style.setProperty('--tc', T.col);
+    rk.appendChild(h('span', 'mc-ic', T.icon)); const t0 = h('div', 'mc-t'); t0.appendChild(h('b', '', 'Rank: ' + Rank.curLabel() + '  ' + rankStars(Data.rank.t, Data.rank.s)));
+    t0.appendChild(h('small', 'muted', 'Mùa ' + Data.rank.season + ' · còn ' + Rank.daysLeft() + ' ngày · bậc tiếp: ' + rankNextLabel())); rk.appendChild(t0); root.appendChild(rk); }
   const unclaimed = Daily.check();
   if (unclaimed) {
     const c = h('div', 'mini-card gift'); c.appendChild(h('span', 'mc-ic', '🎁'));
@@ -3543,7 +3810,7 @@ RENDERERS.leaderboard = function () {
   root.appendChild(h('p', 'muted small', 'Bảng xếp hạng mô phỏng ngoại tuyến (đổi theo tuần) — xếp theo tổng XP tích luỹ.'));
   const c = COUNTRY_BY_CODE[Data.profile.country] || COUNTRY_BY_CODE.VN;
   const me = h('div', 'lb-row me'); me.appendChild(h('span', 'lb-rank', '#' + Leaderboard.rankOf(list, mine)));
-  me.appendChild(h('span', 'lb-av', Data.profile.avatar)); const nm = h('span', 'lb-name'); nm.appendChild(h('b', '', Data.profile.name + ' (Bạn)')); nm.appendChild(h('small', 'muted', c.flag + ' Lv.' + Data.level + ' · ' + titleFor(Data.level))); me.appendChild(nm);
+  me.appendChild(h('span', 'lb-av ' + frameClass(), Data.profile.avatar)); const nm = h('span', 'lb-name'); nm.appendChild(h('b', '', Data.profile.name + ' (Bạn)')); nm.appendChild(h('small', 'muted', c.flag + ' Lv.' + Data.level + ' · ' + currentTitle())); me.appendChild(nm);
   me.appendChild(h('span', 'lb-score', fmt(mine))); root.appendChild(me);
   const box = h('div', 'lb-list');
   list.slice(0, LBUI.shown).forEach((e, i) => {
@@ -3556,29 +3823,6 @@ RENDERERS.leaderboard = function () {
   if (!list.length) root.appendChild(h('p', 'muted center', 'Chưa có ai trong bảng này.'));
 };
 
-/* ---------- Màn: Giao diện (mặt sau lá bài, màu bàn) ---------- */
-RENDERERS.themes = function () {
-  const root = $('#themes-body'); root.textContent = '';
-  root.appendChild(h('p', 'muted', 'Mở khoá thêm giao diện khi lên level. Level hiện tại: ' + Data.level));
-  const sect = (title, items, current, key, previewFn) => {
-    root.appendChild(h('h3', 'sub', title));
-    const grid = h('div', 'theme-grid');
-    items.forEach(it => {
-      const ok = itemUnlocked(it), on = current.id === it.id;
-      const b = h('button', 'theme-item' + (on ? ' on' : '') + (ok ? '' : ' locked'), ''); b.type = 'button'; b.setAttribute('aria-label', it.name + (ok ? '' : ' (khoá, cần Lv.' + it.lv + ')'));
-      b.appendChild(previewFn(it)); b.appendChild(h('b', '', it.name)); b.appendChild(h('small', 'muted', ok ? (on ? '✓ Đang dùng' : 'Chọn') : '🔒 Lv.' + it.lv));
-      b.addEventListener('click', () => {
-        if (!ok) { showToast('🔒 Mở khoá ở Level ' + it.lv, 'warning'); return; }
-        Data.settings[key] = it.id; saveData(); applyTheme(); SFX.play('select'); RENDERERS.themes();
-      });
-      grid.appendChild(b);
-    });
-    root.appendChild(grid);
-  };
-  sect('Mặt sau lá bài', CARD_BACKS, currentCardBack(), 'cardBack', it => { const i = h('img', 'theme-card'); i.alt = ''; i.src = cardBackUri(it); return i; });
-  sect('Màu bàn chơi', TABLES, currentTable(), 'table', it => { const d = h('div', 'theme-felt'); d.style.background = 'radial-gradient(circle at 50% 40%,' + it.c[0] + ',' + it.c[1] + ')'; return d; });
-};
-
 /* ---------- Màn: Lịch sử ván ---------- */
 RENDERERS.history = function () {
   const root = $('#history-body'); root.textContent = '';
@@ -3588,9 +3832,9 @@ RENDERERS.history = function () {
   Data.history.forEach(e => {
     const row = h('div', 'hist-row ' + e.o);
     row.appendChild(h('span', 'hist-ic', e.o === 'win' ? '🏆' : e.o === 'draw' ? '🤝' : '❌'));
-    const t = h('div', 'hist-t'); t.appendChild(h('b', '', (GAME_META[e.g] ? GAME_META[e.g].name : e.g) + (e.tour ? ' · Giải đấu' : '') + (e.room ? ' · Phòng' : '')));
+    const t = h('div', 'hist-t'); t.appendChild(h('b', '', (GAME_META[e.g] ? GAME_META[e.g].name : e.g) + (e.tour ? ' · Giải đấu' : '') + (e.room ? ' · Phòng' : '') + (e.fun ? ' · Giải trí' : '')));
     t.appendChild(h('small', 'muted', fmtDate(e.t) + ' · vs ' + (e.opp || []).join(', ') + ' · ' + fmtTime(e.sec || 0)));
-    row.appendChild(t); row.appendChild(h('span', 'hist-xp', '+' + (e.xp || 0) + ' XP')); root.appendChild(row);
+    row.appendChild(t); row.appendChild(h('span', 'hist-xp' + ((e.xp || 0) < 0 ? ' neg' : ''), ((e.xp || 0) >= 0 ? '+' : '') + (e.xp || 0) + ' XP')); root.appendChild(row);
   });
   const clr = h('button', 'btn small danger', 'Xoá lịch sử'); clr.type = 'button';
   clr.addEventListener('click', () => { Data.history = []; saveData(); RENDERERS.history(); });
@@ -3668,7 +3912,7 @@ function sortHand(cards) {
 function buildStatBars() {
   const root = $('#stats-bars'); if (!root) return; root.textContent = '';
   root.appendChild(h('h3', 'sub', 'Tỷ lệ thắng theo game'));
-  READY_GAMES.forEach(id => {
+  READY_GAMES.filter(id => !GAME_META[id].casual).forEach(id => {
     const s = Data.statistics.games[id] || { played: 0, won: 0 }, pct = s.played ? Math.round(s.won / s.played * 100) : 0;
     const row = h('div', 'bar-row'); row.appendChild(h('span', 'bar-name', GAME_META[id].name));
     const bar = h('div', 'bar'); const f = h('i', ''); f.style.width = pct + '%'; bar.appendChild(f); row.appendChild(bar);
@@ -3768,6 +4012,179 @@ function renderRoomsList() {
 RENDERERS.rooms = function () { if (!RoomsUI.built) buildRoomsControls(); renderRoomsList(); };
 
 
+
+/* ============================ 10e. TÀI XỈU (giao diện), RANK, KHO VẬT PHẨM ============================ */
+const DIE_PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+function dieEl(n) {
+  const d = h('div', 'die' + (n ? '' : ' blank') + (n === 1 ? ' one' : '')); const pos = n ? DIE_PIPS[n] : [];
+  for (let i = 0; i < 9; i++) d.appendChild(h('span', 'pip' + (pos.includes(i) ? ' on' : '')));
+  if (!n) d.appendChild(h('b', 'die-q', '?'));
+  d.dataset.n = n || 0; return d;
+}
+/* Bàn Tài Xỉu: 3 xúc xắc có hiệu ứng lắc + dải lịch sử cầu (chỉ để tham khảo) */
+function renderDiceBox(box, v) {
+  box.classList.add('dice-mode'); box.textContent = '';
+  const gs = gameState, wrap = h('div', 'dice-box'), row = h('div', 'dice-row');
+  const ds = clamp(Math.min(Math.floor(box.clientWidth / 4.4), Math.floor((box.clientHeight - 64) / 1.15)), 34, 66);
+  wrap.style.setProperty('--ds', ds + 'px');
+  const faces = v.dice || [0, 0, 0], dice = faces.map(f => dieEl(f)); dice.forEach(d => row.appendChild(d)); wrap.appendChild(row);
+  const res = h('div', 'dice-result' + (v.result ? ' ' + v.result : ''), v.dice ? (v.bao ? 'BÃO ' + v.sum : (v.result === 'tai' ? 'TÀI ' : 'XỈU ') + v.sum) : '');
+  wrap.appendChild(res);
+  const hist = h('div', 'dice-hist'); hist.title = 'Lịch sử gần đây (tham khảo)';
+  v.hist.forEach(x => hist.appendChild(h('span', 'hd ' + (x.bao ? 'bao' : x.s >= 11 ? 'tai' : 'xiu'), x.bao ? 'B' : x.s >= 11 ? 'T' : 'X'))); wrap.appendChild(hist);
+  box.appendChild(wrap);
+  // hiệu ứng lắc: đổi mặt ngẫu nhiên rồi dừng ở kết quả
+  if (v.dice && !gs.diceDone) {
+    if (!canAnimate()) { gs.diceDone = true; res.classList.add('show'); return; }
+    if (UI.diceTimer) return;
+    res.classList.remove('show'); let n = 0; dice.forEach(d => d.classList.add('rolling'));
+    UI.diceTimer = setInterval(() => {
+      n++;
+      dice.forEach((d, i) => { const f = n < 9 ? 1 + rand(6) : faces[i]; const nd = dieEl(f); nd.classList.add('rolling'); d.replaceWith(nd); dice[i] = nd; });
+      if (n % 2 === 0) SFX.play('deal');
+      if (n >= 10) { clearInterval(UI.diceTimer); UI.diceTimer = null; gs.diceDone = true; dice.forEach(d => d.classList.remove('rolling')); res.classList.add('show'); SFX.play(gs.win ? 'eat' : 'card'); }
+    }, 90);
+  } else if (v.dice) res.classList.add('show');
+}
+/* Khu điều khiển cược thay cho tay bài (Tài Xỉu) */
+function renderHandPanel(hand, hv) {
+  const key = 'P' + JSON.stringify([hv.panel.map(r => r.map(b => [b.txt, !!b.on, !!b.dis])), hv.note]);
+  if (UI.handKey === key) return; UI.handKey = key;
+  hand.textContent = ''; hand.classList.add('panel'); hand.style.width = '';
+  hv.panel.forEach(row => {
+    const r = h('div', 'panel-row');
+    row.forEach(b => {
+      const e = h('button', 'panel-btn ' + (b.cls || '') + (b.on ? ' on' : ''), b.txt); e.type = 'button'; e.dataset.action = b.act;
+      Object.keys(b.data || {}).forEach(k => { e.dataset[k] = b.data[k]; }); if (b.dis) e.disabled = true; e.setAttribute('aria-pressed', b.on ? 'true' : 'false'); r.appendChild(e);
+    });
+    hand.appendChild(r);
+  });
+  if (hv.note) hand.appendChild(h('div', 'panel-note', hv.note));
+}
+
+/* ---------- Rank: hiển thị ---------- */
+function rankStars(t, s) { const T = RANK_TIERS[t]; return T.divs ? '★'.repeat(s) + '☆'.repeat(T.need - s) : '★ ' + s + ' / ' + RANK_MAX_STARS; }
+function rankNextLabel() {
+  const r = Data.rank, T = RANK_TIERS[r.t]; if (!T.divs) return r.s >= RANK_MAX_STARS ? 'Đã đạt tối đa' : 'Tích đủ 9999 sao';
+  return r.d > 1 ? T.name + ' ' + (r.d - 1) : (RANK_TIERS[r.t + 1].divs ? RANK_TIERS[r.t + 1].name + ' ' + RANK_TIERS[r.t + 1].divs : RANK_TIERS[r.t + 1].name);
+}
+function paintAvatars() {
+  const fc = frameClass(), a = $('#home-avatar'), b = $('#pf-avatar');
+  if (a) a.className = 'avatar-lg ' + fc; if (b) b.className = 'avatar-xl ' + fc;
+}
+function rankChangeFx(info) {
+  if (info.promoted) {
+    SFX.play(info.tierUp ? 'levelup' : 'achievement');
+    showBanner(info.tierUp ? 'THĂNG HẠNG!' : 'LÊN BẬC!', 'rank', 2000, RANK_TIERS[info.to.t].icon + ' ' + info.label);
+    if (info.tierUp) { confetti(); vibrate([60, 40, 60]); }
+  } else if (info.demoted) showToast('📉 Rớt hạng: ' + info.fromLabel + ' → ' + info.label, 'warning');
+}
+function showRankReset(rr) {
+  const body = h('div', 'rules');
+  body.appendChild(h('p', '', 'Mùa ' + rr.season + ' bắt đầu. Hạng của bạn được reset: ' + rr.fromLabel + ' → ' + rr.toLabel + ' (sao về 0).'));
+  body.appendChild(h('p', 'muted', 'Hạng cao nhất từng đạt vẫn được giữ để mở vật phẩm và khung avatar.'));
+  Modal.open({ title: '🔄 Mùa rank mới', body, buttons: [{ text: 'Xem Rank', fn: () => navigateTo('rank') }, { text: 'OK', cls: 'primary' }] });
+}
+RENDERERS.rank = function () {
+  const rr = Rank.ensure(); if (rr) saveData();
+  const root = $('#rank-body'); root.textContent = '';
+  const r = Data.rank, T = RANK_TIERS[r.t];
+  const hero = h('div', 'rank-hero'); hero.style.setProperty('--tc', T.col);
+  hero.appendChild(h('div', 'rank-badge', T.icon));
+  hero.appendChild(h('div', 'rank-name', T.divs ? T.name + ' ' + r.d : T.name));
+  if (T.divs) {
+    const st = h('div', 'stars'); for (let i = 0; i < T.need; i++) st.appendChild(h('span', 'st' + (i < r.s ? ' on' : ''), '★')); hero.appendChild(st);
+    hero.appendChild(h('div', 'muted', r.s + '/' + T.need + ' sao · bậc tiếp theo: ' + rankNextLabel()));
+  } else {
+    hero.appendChild(h('div', 'legend-stars', '★ ' + fmt(r.s) + ' / ' + fmt(RANK_MAX_STARS)));
+    const bar = h('div', 'xp-bar'); const f = h('i', ''); f.style.width = Math.round(r.s / RANK_MAX_STARS * 100) + '%'; bar.appendChild(f); hero.appendChild(bar);
+    hero.appendChild(h('div', 'muted', 'Không còn giới hạn bậc — tích sao đến tối đa ' + fmt(RANK_MAX_STARS)));
+  }
+  hero.appendChild(h('div', 'muted small', 'Mùa ' + r.season + ' · còn ' + Rank.daysLeft() + ' ngày · ' + r.w + ' thắng / ' + r.l + ' thua'));
+  hero.appendChild(h('div', 'small', '🏅 Hạng cao nhất: ' + RANK_TIERS[r.best.t].icon + ' ' + Rank.label(r.best.t, r.best.d, r.best.s)));
+  root.appendChild(hero);
+
+  root.appendChild(h('h3', 'sub', 'Thang hạng'));
+  const curV = Rank.value(r.t, r.d);
+  RANK_TIERS.forEach((Tt, ti) => {
+    const row = h('div', 'tier-row' + (ti === r.t ? ' cur' : '') + (ti <= r.best.t ? ' reached' : '')); row.style.setProperty('--tc', Tt.col);
+    row.appendChild(h('span', 'tier-ic', Tt.icon)); row.appendChild(h('span', 'tier-name', Tt.name));
+    const chips = h('span', 'tier-divs');
+    if (Tt.divs) for (let d = Tt.divs; d >= 1; d--) { const v = Rank.value(ti, d); chips.appendChild(h('i', 'div-chip' + (ti === r.t && d === r.d ? ' on' : v < curV ? ' done' : ''), String(d))); }
+    else chips.appendChild(h('i', 'div-chip wide' + (ti === r.t ? ' on' : ''), ti === r.t ? '★ ' + fmt(r.s) : '★ tối đa ' + fmt(RANK_MAX_STARS)));
+    row.appendChild(chips); row.appendChild(h('small', 'tier-need', Tt.divs ? Tt.need + ' sao/bậc' : 'không chia bậc')); root.appendChild(row);
+  });
+
+  root.appendChild(h('h3', 'sub', 'Cách tính sao'));
+  ['Mọi ván đấu với AI đều tính hạng (kể cả trong Phòng và Giải đấu). Tài Xỉu và các game xếp bài một người không tính hạng.',
+    'Thắng +1 sao; +1 nếu có AI Khó/Siêu khó; +1 nếu đang thắng liên tiếp từ 3 ván (tối đa +3). Hòa không đổi.',
+    'Thua −1 sao (−2 nếu thua AI Dễ từ hạng Bạc trở lên). Từ Bạch kim trở lên, thắng AI Dễ không được sao.',
+    'Đủ sao thì lên bậc (bậc đi từ lớn xuống 1, hết bậc 1 thì sang hạng mới). Hết sao thì tụt bậc. Sắt 3 là đáy.'
+  ].forEach(t => root.appendChild(h('p', 'muted small', '• ' + t)));
+
+  root.appendChild(h('h3', 'sub', 'Reset đầu mùa (mỗi ' + RANK_SEASON_DAYS + ' ngày)'));
+  const rt = h('div', 'reset-table');
+  for (let i = 0; i < 7; i++) { const m = RANK_RESET[RANK_TIERS[i].id], mt = RANK_TIERS[Rank.tierIndex(m[0])]; const x = h('div', 'trow reset'); x.appendChild(h('span', '', RANK_TIERS[i].icon + ' ' + RANK_TIERS[i].name)); x.appendChild(h('span', 'arrow', '→')); x.appendChild(h('span', 'to', mt.icon + ' ' + mt.name + ' ' + m[1])); rt.appendChild(x); }
+  { const m = RANK_RESET.master, mt = RANK_TIERS[Rank.tierIndex(m[0])]; const x = h('div', 'trow reset'); x.appendChild(h('span', '', '🔮 Bậc thầy trở lên')); x.appendChild(h('span', 'arrow', '→')); x.appendChild(h('span', 'to', mt.icon + ' ' + mt.name + ' ' + m[1])); rt.appendChild(x); }
+  root.appendChild(rt);
+  if (r.hist.length) {
+    root.appendChild(h('h3', 'sub', 'Các mùa trước'));
+    r.hist.slice(0, 6).forEach(e => { if (RANK_TIERS[e.t]) root.appendChild(h('div', 'trow hist', 'Mùa ' + e.season + ': ' + RANK_TIERS[e.t].icon + ' ' + Rank.label(e.t, e.d, e.s))); });
+  }
+  const inv = h('button', 'btn small', '🎒 Xem khung & vật phẩm theo hạng'); inv.type = 'button'; inv.dataset.action = 'goto'; inv.dataset.target = 'themes'; root.appendChild(inv);
+};
+
+/* ---------- Kho vật phẩm: khung vật phẩm có độ hiếm ---------- */
+const INV = { tab: 'back' };
+const INV_CATS = [
+  { id: 'back', name: '🂠 Mặt bài', items: () => CARD_BACKS, key: 'cardBack', cur: () => currentCardBack().id },
+  { id: 'table', name: '🟩 Bàn chơi', items: () => TABLES, key: 'table', cur: () => currentTable().id },
+  { id: 'frame', name: '🖼️ Khung avatar', items: () => FRAMES, key: 'frame', cur: () => currentFrame().id },
+  { id: 'title', name: '🎖️ Danh hiệu', items: () => TITLE_ITEMS, key: 'title', cur: () => { const t = TITLE_ITEMS.find(x => x.id === Data.settings.title); return t && itemUnlocked(t) ? t.id : 'auto'; } }
+];
+function itemPreview(cat, it) {
+  if (cat.id === 'back') { const i = h('img', 'theme-card'); i.alt = ''; i.src = cardBackUri(it); return i; }
+  if (cat.id === 'table') { const d = h('div', 'theme-felt'); d.style.background = 'radial-gradient(circle at 50% 40%,' + it.c[0] + ',' + it.c[1] + ')'; return d; }
+  if (cat.id === 'frame') return h('div', 'fprev' + (it.id === 'none' ? '' : ' frame-' + it.id), Data.profile.avatar);
+  return h('div', 'tprev', it.dyn ? it.dyn() : it.name);
+}
+function equipItem(cat, it) {
+  Data.settings[cat.key] = it.id; saveData(); applyTheme(); paintAvatars(); SFX.play('select'); RENDERERS.themes();
+  if (UI.screen === 'home') RENDERERS.home(); if (UI.screen === 'profile') RENDERERS.profile();
+}
+function openItem(cat, it) {
+  const ok = itemUnlocked(it), on = cat.cur() === it.id, R = RARITY[it.r || 'common'];
+  const body = h('div', 'item-detail'); body.style.setProperty('--rc', R.col);
+  const pv = h('div', 'item-big r-' + (it.r || 'common')); pv.appendChild(itemPreview(cat, it)); body.appendChild(pv);
+  body.appendChild(h('div', 'item-rar', R.name));
+  body.appendChild(h('p', ok ? 'ok' : 'muted', ok ? '✓ Đã mở khoá' : '🔒 Chưa mở khoá'));
+  body.appendChild(h('p', 'muted small', 'Cách có: ' + itemReq(it)));
+  const btns = [{ text: 'Đóng' }];
+  if (ok && !on) btns.push({ text: 'TRANG BỊ', cls: 'primary', fn: () => equipItem(cat, it) });
+  else if (ok) btns.push({ text: '✓ Đang dùng', cls: 'primary' });
+  Modal.open({ title: it.name, body, buttons: btns });
+}
+function itemSlot(cat, it) {
+  const ok = itemUnlocked(it), on = cat.cur() === it.id, R = RARITY[it.r || 'common'];
+  const b = h('button', 'item-slot r-' + (it.r || 'common') + (on ? ' on' : '') + (ok ? '' : ' locked')); b.type = 'button'; b.style.setProperty('--rc', R.col);
+  b.setAttribute('aria-label', it.name + ' — ' + R.name + (ok ? (on ? ', đang dùng' : '') : ', chưa mở khoá'));
+  const pv = h('div', 'item-prev'); pv.appendChild(itemPreview(cat, it)); b.appendChild(pv);
+  b.appendChild(h('b', 'item-name', it.name)); b.appendChild(h('small', 'item-rar', R.name));
+  if (on) b.appendChild(h('span', 'item-badge on', '✓')); else if (!ok) b.appendChild(h('span', 'item-badge', '🔒'));
+  b.addEventListener('click', () => { SFX.play('click'); openItem(cat, it); });
+  return b;
+}
+RENDERERS.themes = function () {
+  const root = $('#themes-body'); root.textContent = '';
+  let tot = 0, own = 0; INV_CATS.forEach(c => c.items().forEach(it => { tot++; if (itemUnlocked(it)) own++; }));
+  const head = h('div', 'inv-head'); head.appendChild(h('b', '', '🎒 Đã sưu tầm ' + own + '/' + tot + ' vật phẩm'));
+  const lg = h('div', 'rar-legend'); Object.keys(RARITY).forEach(k => { const s = h('span', 'rar-chip', RARITY[k].name); s.style.setProperty('--rc', RARITY[k].col); lg.appendChild(s); }); head.appendChild(lg); root.appendChild(head);
+  root.appendChild(segmented(INV_CATS.map(c => c.id), INV.tab, v => { INV.tab = v; RENDERERS.themes(); }, v => INV_CATS.find(c => c.id === v).name));
+  const cat = INV_CATS.find(c => c.id === INV.tab) || INV_CATS[0], items = cat.items();
+  root.appendChild(h('p', 'muted small', 'Đã mở ' + items.filter(itemUnlocked).length + '/' + items.length + ' · chạm vào vật phẩm để xem chi tiết và trang bị.'));
+  const grid = h('div', 'item-grid'); items.forEach(it => grid.appendChild(itemSlot(cat, it))); root.appendChild(grid);
+};
+
 /* ============================ 11. MÀN HÌNH CHƠI ============================ */
 function viewport() { return { w: window.innerWidth, h: window.innerHeight }; }
 function setAppHeight() { document.documentElement.style.setProperty('--app-h', window.innerHeight + 'px'); }
@@ -3799,6 +4216,7 @@ function buildPlayScreen() {
   UI.selected.clear(); UI.lastTableKey = ''; UI.handKey = ''; UI.dealerWasHidden = false; UI.dealerPrevCount = 0;
   $('#table-cards').textContent = ''; $('#hand').textContent = ''; $('#table-cards').className = eng.tableView ? 'rows' : '';
   const rt = $('#raise-tray'); if (rt) rt.hidden = true; const et = $('#emote-tray'); if (et) et.hidden = true;
+  if (UI.diceTimer) { clearInterval(UI.diceTimer); UI.diceTimer = null; } $('#hand').classList.remove('panel'); $('#table-cards').classList.remove('dice-mode');
   $('#screen-play').dataset.kind = eng.kind;
   $('#screen-play').classList.remove('win-glow');
 }
@@ -3815,6 +4233,7 @@ function layoutPlay() {
 }
 function layoutHand() {
   const wrap = $('#hand-wrap'), hand = $('#hand'); if (!wrap || !hand) return;
+  if (hand.classList.contains('panel')) return;
   const n = hand.children.length; if (!n) return;
   const L = calculateHandLayout({
     mode: 'row', viewportWidth: wrap.clientWidth - 12, viewportHeight: wrap.clientHeight - 22, cardCount: n, cardWidth: 86, gap: 6, minStep: 22,
@@ -3842,8 +4261,11 @@ function layoutRows(box) {
 }
 function renderHand() {
   const gs = gameState, hand = $('#hand'), eng = Match.engine;
+  const hv0 = eng.handView ? eng.handView() : null;
+  if (hv0 && hv0.panel) { renderHandPanel(hand, hv0); return true; }
+  if (hand.classList.contains('panel')) { hand.classList.remove('panel'); UI.handKey = ''; }
   let items;
-  if (eng.handView) items = eng.handView().cards;
+  if (hv0) items = hv0.cards;
   else if (eng.kind === 'shed') items = sortHand(gs.hands[0].slice()).map(c => ({ card: c, down: false }));
   else items = gs.hands[0].reduce((a, x) => a.concat(x.cards), []).map(c => ({ card: c, down: false }));
   const key = items.map(x => (x.down ? 'x' : x.card.id)).join(',');
@@ -3875,6 +4297,7 @@ function renderSeatsGeneric() {
 function renderTableGeneric() {
   const eng = Match.engine, box = $('#table-cards'), info = $('#table-info'), v = eng.tableView();
   info.textContent = v.info || ''; box.classList.add('rows'); box.textContent = '';
+  if (v.dice !== undefined) { renderDiceBox(box, v); return; }
   (v.rows || []).forEach(r => {
     const row = h('div', 't-row' + (r.tap ? ' tap' : '')); if (r.tapKey != null) row.dataset.key = r.tapKey;
     if (r.label) { const l = h('div', 't-lbl'); l.textContent = r.label; l.style.whiteSpace = 'pre-line'; row.appendChild(l); }
@@ -4151,7 +4574,7 @@ const Match = {
   afterMove() {
     if (!this.running) return;
     const gs = gameState, eng = this.engine;
-    if (gs.over) { this.persist(); Timers.set(() => this.finish(), 600); return; }
+    if (gs.over) { this.persist(); Timers.set(() => this.finish(), eng.finishDelay || 600); return; }
     const wasLead = gs.lastPlay;
     eng.nextTurn();
     if (gs.newRound && eng.kind === 'shed') { // thu bài về chồng rồi vòng mới
@@ -4193,12 +4616,17 @@ const Match = {
     const diff = gs.players.slice(1).reduce((a, p) => a + Math.max(0, p.level), 0) / Math.max(1, gs.players.length - 1);
     const specials = res.specials.slice();
     if (res.outcome === 'win' && eng.kind === 'shed' && gs.players.length > 1 && gs.players.slice(1).every(p => p.level === 3)) specials.push('beatHard');
-    recordMatch(this.gameId, res.outcome, seconds);
+    const casual = !!eng.casual;
+    if (!casual) recordMatch(this.gameId, res.outcome, seconds);
+    else { const f = Data.statistics.fun; f.played++; if (res.outcome === 'win') f.won++; else f.lost++; f.net += res.xpDelta || 0; res.casual = true; }
     const isTour = this.tour;
-    const xp = calcXP(res.outcome, Math.round(diff), Data.statistics.streak, specials.filter(s => ['trang', 'baoSamOk', 'chanSam', 'blackjack', 'xibang', 'nguLinh', 'quad'].includes(s)).length);
-    const before = Data.level; const add = addXP(xp);
-    pushHistory({ t: Date.now(), g: this.gameId, o: res.outcome, xp: add.amount, opp: gs.players.slice(1, 4).map(p => p.name), tour: !!isTour, room: !!this.roomCtx, sec: Math.round(seconds) });
-    Missions.onMatch(this.gameId, res.outcome, { tour: !!isTour, room: !!this.roomCtx, hard: gs.players.slice(1).some(p => p.level === 3) });
+    const xp = casual ? 0 : calcXP(res.outcome, Math.round(diff), Data.statistics.streak, specials.filter(s => ['trang', 'baoSamOk', 'chanSam', 'blackjack', 'xibang', 'nguLinh', 'quad'].includes(s)).length);
+    const before = Data.level; const add = casual ? ((res.xpDelta || 0) >= 0 ? addXP(res.xpDelta || 0, 1000000) : subXP(-res.xpDelta)) : addXP(xp);
+    let rankInfo = null; // đấu hạng: không áp dụng cho game giải trí
+    if (!casual && gs.players.length >= 2) { try { rankInfo = Rank.apply(res.outcome, diff, Data.statistics.streak); } catch (e) { handleError(e); } }
+    res.rankInfo = rankInfo;
+    pushHistory({ t: Date.now(), g: this.gameId, o: res.outcome, xp: add.amount, opp: gs.players.slice(1, 4).map(p => p.name), tour: !!isTour, room: !!this.roomCtx, sec: Math.round(seconds), fun: casual });
+    if (!casual) Missions.onMatch(this.gameId, res.outcome, { tour: !!isTour, room: !!this.roomCtx, hard: gs.players.slice(1).some(p => p.level === 3) });
     const ach = checkAchievements(specials);
     Data.currentMatch = null; Data.currentGame = null; saveData();
     this.running = false; this.token++;
@@ -4208,6 +4636,7 @@ const Match = {
     if (res.outcome === 'win') { SFX.play('win'); confetti(); vibrate([60, 40, 60]); $('#screen-play').classList.add('win-glow'); } else if (res.outcome === 'lose') { SFX.play('lose'); vibrate(160); } else SFX.play('notification');
     if (gs.over && gs.over.winner > 0 && eng.kind === 'shed') aiEmote(gs.over.winner, 'win', 500);
     Timers.set(() => { showResult(res, add, ach, before, isTour ? (tourNote || 'Trận giải đấu') : null); }, res.outcome === 'win' ? 700 : 450);
+    if (rankInfo && (rankInfo.promoted || rankInfo.demoted)) Timers.set(() => rankChangeFx(rankInfo), 1500);
   },
   persist() {
     try {
@@ -4264,7 +4693,13 @@ function showResult(res, add, ach, levelBefore, tourNote) {
     row.appendChild(h('small', 'res-detail', r.label || '')); body.appendChild(row);
   });
   if (res.dealerValue != null) body.appendChild(h('p', 'muted', 'Nhà cái: ' + (res.dealerValue > 21 ? 'quắc (' + res.dealerValue + ')' : res.dealerValue + ' điểm')));
-  body.appendChild(h('div', 'res-xp', '+' + add.amount + ' XP' + (Data.level > levelBefore ? '  ·  🎉 Lên Level ' + Data.level + '!' : '')));
+  body.appendChild(h('div', 'res-xp' + (add.amount < 0 ? ' neg' : ''), (add.amount >= 0 ? '+' : '−') + Math.abs(add.amount) + ' XP' + (res.casual ? ' · Giải trí' : '') + (Data.level > levelBefore ? '  ·  🎉 Lên Level ' + Data.level + '!' : '')));
+  if (res.casual) body.appendChild(h('p', 'muted small center', 'Tài Xỉu chỉ để giải trí — không tính đấu hạng.'));
+  if (res.rankInfo) {
+    const ri = res.rankInfo, T = RANK_TIERS[Data.rank.t], sg = ri.delta > 0 ? '+' + ri.delta + ' ⭐' : ri.delta < 0 ? ri.delta + ' ⭐' : '±0 ⭐';
+    const prog = T.divs ? Data.rank.s + '/' + T.need + ' sao' : '★ ' + Data.rank.s;
+    body.appendChild(h('div', 'res-rank' + (ri.promoted ? ' up' : ri.demoted ? ' down' : ''), '🏅 Đấu hạng: ' + sg + ' · ' + (ri.promoted ? '🎉 THĂNG HẠNG ' + ri.fromLabel + ' → ' + ri.label : ri.demoted ? '📉 Rớt hạng ' + ri.fromLabel + ' → ' + ri.label : ri.label + ' (' + prog + ')')));
+  }
   ach.forEach(a => body.appendChild(h('div', 'res-ach', '🏅 Thành tích mới: ' + a.name)));
   if (ach.length) setTimeout(() => SFX.play('achievement'), 400);
   const id = Match.gameId, extra = Match.extra || {};
@@ -4680,8 +5115,16 @@ const Solo = {
 };
 
 /* ============================ 13. SỰ KIỆN & KHỞI TẠO ============================ */
+/* Lá bài chạm trúng tính theo vị trí ngang của ngón tay: lá nào đang lộ ở điểm đó thì chọn lá đó,
+   không bị ảnh hưởng bởi lá khác đang nhấc lên (tránh ấn nhầm khi các lá chồng nhẹ lên nhau) */
+function handCardAt(clientX) {
+  let hit = null;
+  $$('#hand .hand-card').forEach(c => { const r = c.getBoundingClientRect(); if (clientX >= r.left && clientX <= r.right) hit = c; });
+  return hit;
+}
 function onHandClick(e) {
-  const c = e.target.closest('.hand-card'); if (!c || UI.lock) return;
+  let c = e.target.closest('.hand-card'); if (!c || UI.lock) return;
+  if (e.clientX) { const byX = handCardAt(e.clientX); if (byX) c = byX; } // bàn phím (Enter/Space) có clientX = 0 nên giữ nguyên lá đang focus
   const id = c.dataset.id; if (!id) return;
   if (UI.selected.has(id)) UI.selected.delete(id); else UI.selected.add(id);
   c.classList.toggle('selected', UI.selected.has(id)); SFX.play('select');
@@ -4745,6 +5188,7 @@ function doAction(act, t) {
       if (act.indexOf('g:') === 0) {
         const sel = [...UI.selected], mv = { type: act.slice(2), cards: sel, card: sel[0] };
         if (t.dataset.src) mv.src = t.dataset.src; if (t.dataset.to) mv.to = parseInt(t.dataset.to, 10);
+        if (t.dataset.side) mv.side = t.dataset.side; if (t.dataset.ratio) mv.ratio = parseInt(t.dataset.ratio, 10);
         const rt = $('#raise-tray'); if (rt) rt.hidden = true;
         Match.humanMove(mv);
       }
@@ -4774,6 +5218,7 @@ function setIcons() {
 }
 function init() {
   try { Data = Store.load(); } catch (e) { Data = defaultData(); }
+  let rankReset = null; try { rankReset = Rank.ensure(); } catch (e) { }
   saveData(); applySettings(); setAppHeight(); setIcons(); try { Missions.ensure(); buildEmoteTray(); } catch (e) { }
   document.addEventListener('click', e => {
     const t = e.target.closest('[data-action]'); if (!t || t.disabled) return;
@@ -4822,6 +5267,7 @@ function init() {
         buttons: [{ text: 'TIẾP TỤC', cls: 'primary', fn: () => navigateTo('tournament') }, { text: 'Để sau' }]
       });
     }
+    if (rankReset) showRankReset(rankReset);
   }));
 }
 if (IN_BROWSER) {
