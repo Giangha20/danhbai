@@ -1954,4 +1954,481 @@ html,body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue"
   }
 }
 
+/* ============================ VÍ XU & TÀI KHOẢN ĐÁM MÂY ONLINE ============================ */
+.coin-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.22), rgba(161, 98, 7, 0.15));
+  border: 1px solid rgba(234, 179, 8, 0.45);
+  color: #fbbf24;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  user-select: none;
+}
+.coin-pill:hover {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.35), rgba(161, 98, 7, 0.25));
+  border-color: #facc15;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.25);
+}
+.coin-pill:active {
+  transform: scale(0.96);
+}
+.coin-pill .coin-icon {
+  font-size: 1rem;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+}
+.coin-pill .coin-plus {
+  background: #eab308;
+  color: #1e1e1e;
+  width: 15px;
+  height: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 900;
+  margin-left: 2px;
+}
+:root[data-theme="light"] .coin-pill {
+  background: linear-gradient(135deg, #fef9c3, #fef08a);
+  border-color: #facc15;
+  color: #854d0e;
+  box-shadow: 0 2px 6px rgba(161, 98, 7, 0.12);
+}
+
+/* Cloud Account Button */
+.cloud-account-btn {
+  position: relative;
+}
+.cloud-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #64748b;
+  border: 1.5px solid #0f172a;
+  transition: background 0.25s ease;
+}
+.cloud-dot.online {
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
+}
+.cloud-dot.syncing {
+  background: #eab308;
+  animation: pulse-sync 1s infinite alternate;
+}
+@keyframes pulse-sync {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
+}
+
+/* Profile Card Cloud & Coin Rows */
+.pc-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.pc-cloud-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.pc-cloud-pill:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+.pc-cloud-pill .cloud-dot {
+  position: static;
+  width: 6px;
+  height: 6px;
+  border: none;
+}
+.pc-coin-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(0, 0, 0, 0.2));
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  padding: 3px 10px;
+  border-radius: 10px;
+  margin: 3px 0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: fit-content;
+}
+.pc-coin-row:hover {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.25), rgba(0, 0, 0, 0.3));
+  border-color: rgba(234, 179, 8, 0.55);
+}
+.pc-coin-num {
+  font-weight: 800;
+  color: #fbbf24;
+  font-size: 0.88rem;
+}
+.pc-coin-add {
+  font-size: 0.72rem;
+  color: #fef08a;
+  opacity: 0.85;
+  text-decoration: underline;
+}
+
+/* Profile Screen Account & Coin Banners */
+.pf-account-banner,
+.pf-coin-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  margin: 8px 0;
+  text-align: left;
+}
+.pf-account-banner {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+.pf-coin-banner {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(66, 32, 6, 0.3));
+  border: 1px solid rgba(234, 179, 8, 0.35);
+  cursor: pointer;
+}
+.pf-ab-left,
+.pf-cb-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.pf-cloud-icon,
+.pf-cb-left .coin-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.pf-ab-title,
+.pf-cb-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+.pf-cb-title b {
+  color: #fbbf24;
+}
+:root[data-theme="light"] .pf-account-banner {
+  background: #f8fafc;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+:root[data-theme="light"] .pf-account-banner .pf-ab-title {
+  color: #0f172a;
+}
+:root[data-theme="light"] .pf-coin-banner {
+  background: linear-gradient(135deg, #fef9c3, #fef08a);
+  border-color: #facc15;
+}
+:root[data-theme="light"] .pf-cb-title b {
+  color: #854d0e;
+}
+
+/* Shop / Kho Đồ Wallet Sticky Bar */
+.shop-wallet-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.18), rgba(20, 20, 20, 0.6));
+  border: 1px solid rgba(234, 179, 8, 0.35);
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+.shop-wallet-banner .swb-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+.shop-wallet-banner .swb-left b {
+  color: #fbbf24;
+  font-size: 1.05rem;
+}
+:root[data-theme="light"] .shop-wallet-banner {
+  background: linear-gradient(135deg, #fef9c3, #fffbeb);
+  border-color: #facc15;
+}
+:root[data-theme="light"] .shop-wallet-banner .swb-left b {
+  color: #854d0e;
+}
+
+/* Item Slot Price Badge */
+.item-slot .item-price-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fbbf24;
+  background: rgba(0, 0, 0, 0.65);
+  padding: 2px 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  margin-top: 3px;
+}
+.item-slot.on .item-price-tag {
+  display: none;
+}
+
+/* Item Detail Buy Box */
+.item-price-box {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 10px 0;
+  text-align: center;
+}
+.item-price-box .ipb-val {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fbbf24;
+}
+.item-price-box .ipb-bal {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+/* Betting Pill On Game Table */
+.table-bet-pill {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%) translateZ(0);
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(234, 179, 8, 0.4);
+  padding: 4px 12px;
+  border-radius: 20px;
+  color: #f8fafc;
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 25;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+.table-bet-pill b {
+  color: #fbbf24;
+}
+.table-bet-pill svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* Result Modal Coin Display */
+.res-coins {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  padding: 8px 14px;
+  border-radius: 10px;
+  margin: 8px 0;
+}
+.res-coins svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+.res-aid-call {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 6px 0 10px;
+}
+.res-coins.win {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(234, 179, 8, 0.2));
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #4ade80;
+}
+.res-coins.lose {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+.res-coins small {
+  font-size: 0.8rem;
+  font-weight: 500;
+  opacity: 0.85;
+  color: #cbd5e1;
+}
+
+/* Account Modal Styling */
+.auth-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 14px;
+}
+.auth-tab-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  padding: 8px 12px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s ease;
+}
+.auth-tab-btn.active {
+  color: #fbbf24;
+  border-bottom-color: #fbbf24;
+}
+.auth-field {
+  margin-bottom: 12px;
+  text-align: left;
+}
+.auth-field label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  margin-bottom: 4px;
+}
+.auth-field input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #fff;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.auth-field input:focus {
+  border-color: #fbbf24;
+}
+.auth-status-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  text-align: left;
+}
+.auth-status-card .asc-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.auth-status-card .asc-avatar {
+  font-size: 1.8rem;
+}
+.auth-status-card .asc-user {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #f8fafc;
+}
+.auth-status-card .asc-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #4ade80;
+}
+.auth-sync-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+.auth-token-box {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px;
+  font-family: monospace;
+  font-size: 0.75rem;
+  word-break: break-all;
+  max-height: 80px;
+  overflow-y: auto;
+  user-select: all;
+  margin: 6px 0;
+}
+
+/* Coins Claim / Reward Modal */
+.coins-modal-head {
+  text-align: center;
+  padding: 10px 0;
+}
+.coins-modal-head .cmh-num {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #fbbf24;
+  text-shadow: 0 0 15px rgba(250, 204, 21, 0.4);
+}
+.reward-card-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+.reward-item-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: left;
+}
+.reward-item-card.aid {
+  border-color: rgba(234, 179, 8, 0.4);
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.12), rgba(15, 23, 42, 0.8));
+}
+.reward-item-card .ric-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.reward-item-card .ric-desc {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+
 

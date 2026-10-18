@@ -482,8 +482,11 @@ function calculateHandLayout(o) {
 function defaultData() {
   return {
     v: 2,
+    coins: 50000,
+    purchased: [],
+    auth: null,
     profile: { name: 'Minh', avatar: '👨', country: 'VN', age: 25 },
-    settings: { frame: 'none', title: 'auto', gameCfg: {}, sound: true, notify: true, vibrate: true, aiSpeed: 1, cardBack: 'classic', table: 'green', effects: true, animation: true, reducedMotion: false, theme: 'dark', aiLevel: 1, turnTime: 15, players: {} },
+    settings: { frame: 'none', title: 'auto', gameCfg: {}, sound: true, notify: true, vibrate: true, aiSpeed: 1, cardBack: 'classic', table: 'green', effects: true, animation: true, reducedMotion: false, theme: 'dark', aiLevel: 1, turnTime: 15, players: {}, lastBet: 1000, autoCloudSync: true, cloudUrl: '' },
     statistics: { total: 0, wins: 0, losses: 0, draws: 0, streak: 0, bestStreak: 0, playTime: 0, tournaments: 0, championships: 0, games: {}, fun: { played: 0, won: 0, lost: 0, net: 0 } },
     achievements: {},
     xp: 0,
@@ -494,7 +497,7 @@ function defaultData() {
     rooms: { room: 1, epoch: (Date.now() % 100000) + 1 },
     tourMeta: { daily: '', weekly: '', game: 'tienLen', history: [], trophies: [] },
     missions: { date: '', list: [], bonus: false },
-    daily: { last: '', streak: 0, claimed: '', best: 0 },
+    daily: { last: '', streak: 0, claimed: '', best: 0, claimedCoins: '' },
     rank: { season: 0, t: 0, d: 3, s: 0, best: { t: 0, d: 3, s: 0 }, w: 0, l: 0, hist: [] },
     history: []
   };
@@ -512,6 +515,14 @@ function sanitizeData(d) {
   const x = mergeDefaults(defaultData(), d);
   if ((Number(d && d.v) || 1) < 2) { x.level = 1; x.xp = 0; } // bản cũ dùng Lv.12 mặc định giả → đặt lại Lv.1 / 0 XP
   x.v = 2;
+  x.coins = Math.max(0, Math.round(Number(x.coins != null ? x.coins : 50000)));
+  if (!Array.isArray(x.purchased)) x.purchased = [];
+  if (x.auth && typeof x.auth === 'object') {
+    x.auth = { username: sanitizeName(x.auth.username || ''), lastSync: Number(x.auth.lastSync) || 0 };
+  } else x.auth = null;
+  if (x.settings.lastBet == null) x.settings.lastBet = 1000;
+  if (x.settings.autoCloudSync == null) x.settings.autoCloudSync = true;
+  if (typeof x.settings.cloudUrl !== 'string') x.settings.cloudUrl = '';
   x.profile.name = sanitizeName(x.profile.name) || 'Minh';
   if (!COUNTRY_BY_CODE[x.profile.country]) x.profile.country = 'VN';
   x.profile.age = clamp(Math.round(Number(x.profile.age) || 25), 6, 120);
@@ -574,7 +585,630 @@ const Store = {
   }
 };
 let Data = defaultData();
-function saveData() { return Store.save(Data); }
+function formatCoins(n) {
+  return (Math.round(Number(n)) || 0).toLocaleString('vi-VN') + ' Xu';
+}
+function formatCoinsShort(n) {
+  const v = Math.round(Number(n)) || 0;
+  if (Math.abs(v) >= 1000000) return (v / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (Math.abs(v) >= 1000) return (v / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  return String(v);
+}
+function updateTopPills() {
+  if (!IN_BROWSER) return;
+  const tc = $('#top-coin-val'); if (tc) tc.textContent = formatCoinsShort(Data.coins);
+  const cd = $('#cloud-status-dot');
+  const btnC = $('#btn-cloud-account');
+  if (cd) {
+    if (Data.auth && Data.auth.username) {
+      cd.className = 'cloud-dot online';
+      if (btnC) btnC.setAttribute('title', 'Đã lưu online: ' + Data.auth.username);
+    } else {
+      cd.className = 'cloud-dot';
+      if (btnC) btnC.setAttribute('title', 'Tài khoản & Lưu online (Chưa đăng nhập)');
+    }
+  }
+  const hc = $('#home-coin-val'); if (hc) hc.textContent = formatCoins(Data.coins);
+  const hcd = $('#home-cloud-dot');
+  const hct = $('#home-cloud-text');
+  if (hcd && hct) {
+    if (Data.auth && Data.auth.username) {
+      hcd.className = 'cloud-dot online';
+      hct.textContent = Data.auth.username;
+    } else {
+      hcd.className = 'cloud-dot';
+      hct.textContent = 'Lưu online';
+    }
+  }
+  const pfc = $('#pf-coin-val'); if (pfc) pfc.textContent = formatCoins(Data.coins);
+  const pfat = $('#pf-account-title');
+  const pfas = $('#pf-account-sub');
+  if (pfat && pfas) {
+    if (Data.auth && Data.auth.username) {
+      pfat.textContent = '☁️ ' + Data.auth.username + ' (Đã kết nối)';
+      const syncDate = Data.auth.lastSync ? new Date(Data.auth.lastSync).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'Vừa xong';
+      pfas.textContent = '🟢 Đã đồng bộ lúc ' + syncDate;
+    } else {
+      pfat.textContent = 'Chưa liên kết online';
+      pfas.textContent = 'Đăng ký / đăng nhập để lưu vĩnh viễn';
+    }
+  }
+}
+function saveData() {
+  const ok = Store.save(Data);
+  try {
+    if (typeof CloudAuth !== 'undefined' && Data.auth && Data.auth.username && Data.settings && Data.settings.autoCloudSync !== false) {
+      CloudAuth.autoSync();
+    }
+    updateTopPills();
+  } catch (e) { }
+  return ok;
+}
+
+/* ============================ 4c. HỆ THỐNG TÀI KHOẢN & LƯU TRỮ ĐÁM MÂY ONLINE ============================ */
+const ONLINE_ACCOUNTS_KEY = 'card_master_cloud_accounts_v1';
+const CloudAuth = {
+  _debounceTimer: null,
+  getAccounts() {
+    try {
+      const raw = localStorage.getItem(ONLINE_ACCOUNTS_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) { return {}; }
+  },
+  saveAccounts(db) {
+    try {
+      localStorage.setItem(ONLINE_ACCOUNTS_KEY, JSON.stringify(db));
+      return true;
+    } catch (e) { return false; }
+  },
+  async hash(str) {
+    try {
+      if (window.crypto && crypto.subtle && window.TextEncoder) {
+        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+    } catch (e) { }
+    let h1 = 0xdeadbeef, h2 = 0x41c64e6d;
+    for (let i = 0; i < str.length; i++) {
+      const ch = str.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761);
+      h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+    h2 = Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
+  },
+  async register(username, password) {
+    username = (username || '').trim();
+    if (!username || username.length < 3) throw new Error('Tên tài khoản phải từ 3–20 ký tự');
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) throw new Error('Tên tài khoản chỉ gồm chữ cái, số và gạch dưới');
+    if (!password || password.length < 4) throw new Error('Mật khẩu phải từ 4 ký tự trở lên');
+    const ukey = username.toLowerCase();
+    const db = this.getAccounts();
+    if (db[ukey]) throw new Error('Tên tài khoản này đã tồn tại!');
+    const passHash = await this.hash(password);
+    const snap = JSON.parse(JSON.stringify(Data, cardReplacer));
+    db[ukey] = {
+      username,
+      hash: passHash,
+      createdAt: Date.now(),
+      lastSync: Date.now(),
+      data: snap
+    };
+    this.saveAccounts(db);
+    Data.auth = { username, lastSync: Date.now() };
+    if (!Data.profile.name || Data.profile.name === 'Minh') Data.profile.name = username;
+    saveData();
+    if (Data.settings.cloudUrl) this.pushRemote(Data.settings.cloudUrl, username, passHash, snap);
+    return username;
+  },
+  async login(username, password) {
+    username = (username || '').trim();
+    if (!username || !password) throw new Error('Vui lòng điền tài khoản và mật khẩu');
+    const ukey = username.toLowerCase();
+    const db = this.getAccounts();
+    const acc = db[ukey];
+    if (!acc) throw new Error('Tài khoản không tồn tại!');
+    const passHash = await this.hash(password);
+    if (acc.hash && acc.hash !== passHash) throw new Error('Mật khẩu không chính xác!');
+    if (acc.data) {
+      Data = sanitizeData(acc.data);
+    }
+    Data.auth = { username: acc.username, lastSync: Date.now() };
+    acc.lastSync = Date.now();
+    this.saveAccounts(db);
+    saveData();
+    applySettings();
+    applyTheme();
+    updateTopPills();
+    if (UI.screen === 'home') RENDERERS.home();
+    if (UI.screen === 'profile') RENDERERS.profile();
+    if (UI.screen === 'settings') RENDERERS.settings();
+    return acc.username;
+  },
+  logout() {
+    if (!Data.auth) return;
+    const oldU = Data.auth.username;
+    this.syncSaveManual(true);
+    Data.auth = null;
+    saveData();
+    updateTopPills();
+    if (UI.screen === 'home') RENDERERS.home();
+    if (UI.screen === 'profile') RENDERERS.profile();
+    if (UI.screen === 'settings') RENDERERS.settings();
+    showToast('Đã đăng xuất tài khoản ' + oldU, 'info');
+  },
+  async changePassword(oldPass, newPass) {
+    if (!Data.auth || !Data.auth.username) throw new Error('Bạn chưa đăng nhập');
+    if (!newPass || newPass.length < 4) throw new Error('Mật khẩu mới phải từ 4 ký tự trở lên');
+    const ukey = Data.auth.username.toLowerCase();
+    const db = this.getAccounts();
+    const acc = db[ukey];
+    if (!acc) throw new Error('Không tìm thấy tài khoản');
+    if (acc.hash) {
+      const oldHash = await this.hash(oldPass);
+      if (acc.hash !== oldHash) throw new Error('Mật khẩu cũ không chính xác');
+    }
+    acc.hash = await this.hash(newPass);
+    this.saveAccounts(db);
+    return true;
+  },
+  autoSync() {
+    if (!Data.auth || !Data.auth.username) return;
+    clearTimeout(this._debounceTimer);
+    this._debounceTimer = setTimeout(() => {
+      try {
+        const ukey = Data.auth.username.toLowerCase();
+        const db = this.getAccounts();
+        if (db[ukey]) {
+          db[ukey].data = JSON.parse(JSON.stringify(Data, cardReplacer));
+          db[ukey].lastSync = Date.now();
+          this.saveAccounts(db);
+          Data.auth.lastSync = Date.now();
+          updateTopPills();
+        }
+        if (Data.settings.cloudUrl) {
+          this.pushRemote(Data.settings.cloudUrl, Data.auth.username, (db[ukey] || {}).hash, Data);
+        }
+      } catch (e) { }
+    }, 400);
+  },
+  syncSaveManual(silent) {
+    if (!Data.auth || !Data.auth.username) {
+      if (!silent) this.openModal();
+      return;
+    }
+    const ukey = Data.auth.username.toLowerCase();
+    const db = this.getAccounts();
+    if (!db[ukey]) {
+      db[ukey] = { username: Data.auth.username, createdAt: Date.now(), hash: '' };
+    }
+    db[ukey].data = JSON.parse(JSON.stringify(Data, cardReplacer));
+    db[ukey].lastSync = Date.now();
+    this.saveAccounts(db);
+    Data.auth.lastSync = Date.now();
+    saveData();
+    if (!silent) {
+      SFX.play('success');
+      showToast('☁️ Đã lưu toàn bộ tiến trình & xu lên mây thành công!', 'success');
+    }
+  },
+  syncLoadManual() {
+    if (!Data.auth || !Data.auth.username) {
+      this.openModal();
+      return;
+    }
+    const ukey = Data.auth.username.toLowerCase();
+    const db = this.getAccounts();
+    const acc = db[ukey];
+    if (!acc || !acc.data) {
+      showToast('Chưa có bản lưu đám mây nào cho tài khoản này', 'warning');
+      return;
+    }
+    Data = sanitizeData(acc.data);
+    Data.auth = { username: acc.username, lastSync: Date.now() };
+    saveData();
+    applySettings();
+    applyTheme();
+    updateTopPills();
+    if (UI.screen === 'home') RENDERERS.home();
+    if (UI.screen === 'profile') RENDERERS.profile();
+    if (UI.screen === 'settings') RENDERERS.settings();
+    SFX.play('success');
+    showToast('📥 Đã tải và đồng bộ thành công dữ liệu từ đám mây!', 'success');
+  },
+  exportSyncToken() {
+    if (!Data.auth || !Data.auth.username) return '';
+    const ukey = Data.auth.username.toLowerCase();
+    const db = this.getAccounts();
+    const acc = db[ukey] || { username: Data.auth.username, data: Data };
+    const payload = {
+      u: acc.username,
+      h: acc.hash || '',
+      d: acc.data || Data,
+      t: Date.now()
+    };
+    try {
+      return btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+    } catch (e) {
+      return btoa(JSON.stringify(payload));
+    }
+  },
+  importSyncToken(tokenStr) {
+    tokenStr = (tokenStr || '').trim();
+    if (!tokenStr) throw new Error('Vui lòng nhập mã đồng bộ');
+    let payload;
+    try {
+      let json = '';
+      try { json = decodeURIComponent(escape(atob(tokenStr))); }
+      catch (e) { json = atob(tokenStr); }
+      payload = JSON.parse(json);
+    } catch (e) { throw new Error('Mã đồng bộ không hợp lệ'); }
+    if (!payload.u || !payload.d) throw new Error('Dữ liệu mã đồng bộ không đúng định dạng');
+    const ukey = payload.u.toLowerCase();
+    const db = this.getAccounts();
+    db[ukey] = {
+      username: payload.u,
+      hash: payload.h || '',
+      createdAt: Date.now(),
+      lastSync: Date.now(),
+      data: payload.d
+    };
+    this.saveAccounts(db);
+    Data = sanitizeData(payload.d);
+    Data.auth = { username: payload.u, lastSync: Date.now() };
+    saveData();
+    applySettings();
+    applyTheme();
+    updateTopPills();
+    if (UI.screen === 'home') RENDERERS.home();
+    if (UI.screen === 'profile') RENDERERS.profile();
+    if (UI.screen === 'settings') RENDERERS.settings();
+    SFX.play('success');
+    return payload.u;
+  },
+  async pushRemote(url, username, hash, data) {
+    try {
+      await fetch(url.replace(/\/$/, '') + '/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, hash, data, timestamp: Date.now() })
+      });
+    } catch (e) { }
+  },
+  openModal() {
+    const isLoggedIn = !!(Data.auth && Data.auth.username);
+    const body = h('div', 'account-modal');
+
+    if (isLoggedIn) {
+      const card = h('div', 'auth-status-card');
+      const head = h('div', 'asc-head');
+      head.appendChild(h('div', 'asc-avatar', Data.profile.avatar || '👨'));
+      const uwrap = h('div', '');
+      uwrap.appendChild(h('div', 'asc-user', Data.auth.username));
+      const syncTime = Data.auth.lastSync ? new Date(Data.auth.lastSync).toLocaleString('vi-VN') : 'Vừa xong';
+      uwrap.appendChild(h('small', 'asc-tag', '🟢 Đã kết nối Đám mây'));
+      head.appendChild(uwrap);
+      card.appendChild(head);
+
+      const infoList = h('div', 'storage-text-wrap');
+      infoList.appendChild(h('p', '', '🪙 Số dư: <b>' + formatCoins(Data.coins) + '</b> · Cấp độ: <b>Lv.' + Data.level + '</b> · Rank: <b>' + Rank.curLabel() + '</b>'));
+      infoList.appendChild(h('small', 'muted', '⏱ Lần đồng bộ cuối: ' + syncTime));
+      card.appendChild(infoList);
+
+      const sRow = h('div', 'auth-sync-row');
+      const btnPush = h('button', 'btn small primary', '☁️ Lưu Lên Mây Ngay');
+      btnPush.type = 'button';
+      btnPush.addEventListener('click', () => { this.syncSaveManual(); Modal.closeAll(); this.openModal(); });
+      sRow.appendChild(btnPush);
+
+      const btnPull = h('button', 'btn small', '📥 Tải Từ Mây');
+      btnPull.type = 'button';
+      btnPull.addEventListener('click', () => { this.syncLoadManual(); Modal.closeAll(); this.openModal(); });
+      sRow.appendChild(btnPull);
+      card.appendChild(sRow);
+      body.appendChild(card);
+
+      const tokBox = h('div', 'auth-field');
+      tokBox.appendChild(h('label', '', '📲 Mã chuyển thiết bị (Copy mã này để đăng nhập trên điện thoại/máy khác):'));
+      const tokTa = h('textarea', 'auth-token-box');
+      tokTa.readOnly = true;
+      tokTa.value = this.exportSyncToken();
+      tokTa.rows = 2;
+      tokBox.appendChild(tokTa);
+      const cpBtn = h('button', 'btn tiny', '📋 Sao chép mã');
+      cpBtn.type = 'button';
+      cpBtn.addEventListener('click', () => { tokTa.select(); copyText(tokTa.value); showToast('Đã sao chép mã đồng bộ!', 'success'); });
+      tokBox.appendChild(cpBtn);
+      body.appendChild(tokBox);
+
+      const actionRow = h('div', 'auth-sync-row');
+      const btnCp = h('button', 'btn small', '🔑 Đổi mật khẩu');
+      btnCp.type = 'button';
+      btnCp.addEventListener('click', () => { Modal.closeAll(); this.openChangePassModal(); });
+      actionRow.appendChild(btnCp);
+
+      const btnLo = h('button', 'btn small danger', '🚪 Đăng xuất');
+      btnLo.type = 'button';
+      btnLo.addEventListener('click', () => {
+        Modal.open({
+          title: 'Đăng xuất?',
+          body: 'Bạn có chắc chắn muốn đăng xuất tài khoản ' + Data.auth.username + '? Dữ liệu sẽ được lưu an toàn trên đám mây.',
+          buttons: [
+            { text: 'Ở lại' },
+            { text: 'ĐĂNG XUẤT', cls: 'danger', fn: () => { this.logout(); Modal.closeAll(); } }
+          ]
+        });
+      });
+      actionRow.appendChild(btnLo);
+      body.appendChild(actionRow);
+
+      Modal.open({
+        title: '☁️ Tài Khoản & Lưu Đám Mây',
+        body,
+        buttons: [{ text: 'Đóng', cls: 'primary' }]
+      });
+    } else {
+      let curTab = 'login';
+      const tabs = h('div', 'auth-tabs');
+      const bLog = h('button', 'auth-tab-btn active', 'ĐĂNG NHẬP');
+      const bReg = h('button', 'auth-tab-btn', 'ĐĂNG KÝ MỚI');
+      const bTok = h('button', 'auth-tab-btn', 'NHẬP MÃ THIẾT BỊ');
+      tabs.appendChild(bLog); tabs.appendChild(bReg); tabs.appendChild(bTok);
+      body.appendChild(tabs);
+
+      const formBox = h('div', '');
+      body.appendChild(formBox);
+
+      const renderForm = () => {
+        formBox.textContent = '';
+        bLog.className = 'auth-tab-btn' + (curTab === 'login' ? ' active' : '');
+        bReg.className = 'auth-tab-btn' + (curTab === 'register' ? ' active' : '');
+        bTok.className = 'auth-tab-btn' + (curTab === 'token' ? ' active' : '');
+
+        if (curTab === 'login') {
+          const uField = h('div', 'auth-field');
+          uField.appendChild(h('label', '', 'Tên tài khoản:'));
+          const inU = h('input', ''); inU.type = 'text'; inU.placeholder = 'Nhập tên tài khoản...';
+          uField.appendChild(inU); formBox.appendChild(uField);
+
+          const pField = h('div', 'auth-field');
+          pField.appendChild(h('label', '', 'Mật khẩu:'));
+          const inP = h('input', ''); inP.type = 'password'; inP.placeholder = 'Nhập mật khẩu...';
+          pField.appendChild(inP); formBox.appendChild(pField);
+
+          const err = h('p', 'err', ''); formBox.appendChild(err);
+
+          const subBtn = h('button', 'btn primary wide', 'ĐĂNG NHẬP ONLINE');
+          subBtn.type = 'button';
+          subBtn.addEventListener('click', async () => {
+            err.textContent = '';
+            try {
+              subBtn.disabled = true;
+              subBtn.textContent = 'Đang kiểm tra...';
+              const u = await this.login(inU.value, inP.value);
+              SFX.play('success');
+              showToast('🎉 Đăng nhập thành công! Chào mừng ' + u + ' trở lại.', 'success');
+              Modal.closeAll();
+            } catch (e) {
+              err.textContent = e.message || 'Lỗi đăng nhập';
+              subBtn.disabled = false;
+              subBtn.textContent = 'ĐĂNG NHẬP ONLINE';
+            }
+          });
+          formBox.appendChild(subBtn);
+        } else if (curTab === 'register') {
+          const uField = h('div', 'auth-field');
+          uField.appendChild(h('label', '', 'Tên tài khoản mới (3–20 ký tự):'));
+          const inU = h('input', ''); inU.type = 'text'; inU.placeholder = 'Ví dụ: giangha20...';
+          uField.appendChild(inU); formBox.appendChild(uField);
+
+          const pField = h('div', 'auth-field');
+          pField.appendChild(h('label', '', 'Mật khẩu (từ 4 ký tự):'));
+          const inP = h('input', ''); inP.type = 'password'; inP.placeholder = 'Nhập mật khẩu...';
+          pField.appendChild(inP); formBox.appendChild(pField);
+
+          const p2Field = h('div', 'auth-field');
+          p2Field.appendChild(h('label', '', 'Nhập lại mật khẩu:'));
+          const inP2 = h('input', ''); inP2.type = 'password'; inP2.placeholder = 'Xác nhận lại mật khẩu...';
+          p2Field.appendChild(inP2); formBox.appendChild(p2Field);
+
+          const note = h('small', 'muted', 'ℹ️ Toàn bộ số xu, level, rank và kho đồ hiện tại của bạn sẽ được tự động lưu lên đám mây của tài khoản mới này.');
+          formBox.appendChild(note);
+
+          const err = h('p', 'err', ''); formBox.appendChild(err);
+
+          const subBtn = h('button', 'btn primary wide', 'TẠO TÀI KHOẢN & LƯU ONLINE');
+          subBtn.type = 'button';
+          subBtn.style.marginTop = '10px';
+          subBtn.addEventListener('click', async () => {
+            err.textContent = '';
+            if (inP.value !== inP2.value) { err.textContent = 'Hai mật khẩu không trùng khớp!'; return; }
+            try {
+              subBtn.disabled = true;
+              subBtn.textContent = 'Đang khởi tạo...';
+              const u = await this.register(inU.value, inP.value);
+              SFX.play('success');
+              confetti();
+              showToast('🎉 Đăng ký thành công! Dữ liệu của ' + u + ' đã được lưu online.', 'success');
+              Modal.closeAll();
+            } catch (e) {
+              err.textContent = e.message || 'Lỗi đăng ký';
+              subBtn.disabled = false;
+              subBtn.textContent = 'TẠO TÀI KHOẢN & LƯU ONLINE';
+            }
+          });
+          formBox.appendChild(subBtn);
+        } else if (curTab === 'token') {
+          const tField = h('div', 'auth-field');
+          tField.appendChild(h('label', '', 'Dán mã đồng bộ được sao chép từ thiết bị khác vào đây:'));
+          const inT = h('textarea', 'auth-token-box'); inT.rows = 4; inT.placeholder = 'Dán chuỗi mã đồng bộ...';
+          tField.appendChild(inT); formBox.appendChild(tField);
+
+          const err = h('p', 'err', ''); formBox.appendChild(err);
+
+          const subBtn = h('button', 'btn primary wide', 'KHÔI PHỤC TÀI KHOẢN');
+          subBtn.type = 'button';
+          subBtn.addEventListener('click', () => {
+            err.textContent = '';
+            try {
+              const u = this.importSyncToken(inT.value);
+              showToast('🎉 Khôi phục thành công tài khoản ' + u + '!', 'success');
+              Modal.closeAll();
+            } catch (e) {
+              err.textContent = e.message || 'Mã không hợp lệ';
+            }
+          });
+          formBox.appendChild(subBtn);
+        }
+      };
+
+      bLog.addEventListener('click', () => { curTab = 'login'; renderForm(); });
+      bReg.addEventListener('click', () => { curTab = 'register'; renderForm(); });
+      bTok.addEventListener('click', () => { curTab = 'token'; renderForm(); });
+      renderForm();
+
+      Modal.open({
+        title: '☁️ Đăng Nhập / Đăng Ký Online',
+        body,
+        buttons: [{ text: 'Đóng' }]
+      });
+    }
+  },
+  openChangePassModal() {
+    const body = h('div', 'setup');
+    const f1 = h('div', 'auth-field'); f1.appendChild(h('label', '', 'Mật khẩu cũ:'));
+    const ip1 = h('input', ''); ip1.type = 'password'; f1.appendChild(ip1); body.appendChild(f1);
+
+    const f2 = h('div', 'auth-field'); f2.appendChild(h('label', '', 'Mật khẩu mới (từ 4 ký tự):'));
+    const ip2 = h('input', ''); ip2.type = 'password'; f2.appendChild(ip2); body.appendChild(f2);
+
+    const f3 = h('div', 'auth-field'); f3.appendChild(h('label', '', 'Nhập lại mật khẩu mới:'));
+    const ip3 = h('input', ''); ip3.type = 'password'; f3.appendChild(ip3); body.appendChild(f3);
+
+    const err = h('p', 'err', ''); body.appendChild(err);
+
+    Modal.open({
+      title: '🔑 Đổi Mật Khẩu',
+      body,
+      buttons: [
+        { text: 'Huỷ' },
+        {
+          text: 'LƯU MẬT KHẨU MỚI', cls: 'primary', keep: true, fn: async m => {
+            err.textContent = '';
+            if (ip2.value !== ip3.value) { err.textContent = 'Mật khẩu mới nhập lại không khớp!'; return; }
+            try {
+              await this.changePassword(ip1.value, ip2.value);
+              showToast('Đã đổi mật khẩu thành công!', 'success');
+              Modal.close(m);
+            } catch (e) { err.textContent = e.message || 'Không thể đổi mật khẩu'; }
+          }
+        }
+      ]
+    });
+  }
+};
+
+/* ---------- Quỹ Xu & Nhận Xu Miễn Phí Modal ---------- */
+function openCoinsModal() {
+  const body = h('div', 'coins-modal');
+  const head = h('div', 'coins-modal-head');
+  head.appendChild(h('div', 'muted small', 'Số Dư Ví Của Bạn'));
+  head.appendChild(h('div', 'cmh-num', formatCoins(Data.coins)));
+  head.appendChild(h('small', 'muted', 'Dùng để đặt cược trong game & mở khóa vĩnh viễn mọi bàn chơi, mặt bài, avatar'));
+  body.appendChild(head);
+
+  const grid = h('div', 'reward-card-grid');
+
+  // 1. Cứu trợ tân thủ / cạn xu
+  const aidCard = h('div', 'reward-item-card aid');
+  const aidLeft = h('div', '');
+  aidLeft.appendChild(h('div', 'ric-title', '🪙 Trợ Cấp Khi Cạn Xu (+20.000 Xu)'));
+  aidLeft.appendChild(h('div', 'ric-desc', Data.coins < 5000 ? 'Số dư dưới 5.000 Xu — Bạn được nhận ngay!' : 'Tự động kích hoạt khi số dư của bạn dưới 5.000 Xu.'));
+  aidCard.appendChild(aidLeft);
+  const aidBtn = h('button', 'btn small gold', Data.coins < 5000 ? 'Nhận Cứu Trợ' : 'Chưa cần cứu trợ');
+  aidBtn.type = 'button';
+  if (Data.coins >= 5000) aidBtn.disabled = true;
+  else {
+    aidBtn.addEventListener('click', () => {
+      Data.coins += 20000;
+      saveData();
+      SFX.play('coins');
+      confetti();
+      showToast('🎉 Đã nhận +20.000 Xu trợ cấp thành công!', 'success');
+      Modal.closeAll();
+      openCoinsModal();
+    });
+  }
+  aidCard.appendChild(aidBtn);
+  grid.appendChild(aidCard);
+
+  // 2. Điểm danh nhận xu hàng ngày
+  const tKey = Tour.dateKey();
+  const claimedToday = Data.daily && Data.daily.claimedCoins === tKey;
+  const streak = (Data.daily && Data.daily.streak) || 1;
+  const dailyAmount = 10000 + Math.min(streak, 7) * 2000;
+
+  const dailyCard = h('div', 'reward-item-card');
+  const dLeft = h('div', '');
+  dLeft.appendChild(h('div', 'ric-title', '📅 Điểm Danh Hàng Ngày (+' + formatCoins(dailyAmount) + ')'));
+  dLeft.appendChild(h('div', 'ric-desc', 'Chuỗi ' + streak + ' ngày liên tiếp · Nhận xu mỗi ngày'));
+  dailyCard.appendChild(dLeft);
+  const dailyBtn = h('button', 'btn small ' + (claimedToday ? '' : 'primary'), claimedToday ? 'Đã nhận hôm nay' : 'Điểm Danh');
+  dailyBtn.type = 'button';
+  if (claimedToday) dailyBtn.disabled = true;
+  else {
+    dailyBtn.addEventListener('click', () => {
+      Data.coins += dailyAmount;
+      if (!Data.daily) Data.daily = {};
+      Data.daily.claimedCoins = tKey;
+      saveData();
+      SFX.play('coins');
+      confetti();
+      showToast('🎉 Điểm danh thành công! +' + formatCoins(dailyAmount), 'success');
+      Modal.closeAll();
+      openCoinsModal();
+    });
+  }
+  dailyCard.appendChild(dailyBtn);
+  grid.appendChild(dailyCard);
+
+  // 3. Quà may mắn mỗi ngày
+  const luckyKey = 'lucky_' + tKey;
+  const luckyClaimed = Data.daily && Data.daily[luckyKey];
+  const luckyCard = h('div', 'reward-item-card');
+  const lLeft = h('div', '');
+  lLeft.appendChild(h('div', 'ric-title', '🎁 Quà May Mắn Mỗi Ngày (+5.000 – 30.000 Xu)'));
+  lLeft.appendChild(h('div', 'ric-desc', 'Mở quà ngẫu nhiên 1 lần mỗi ngày'));
+  luckyCard.appendChild(lLeft);
+  const luckyBtn = h('button', 'btn small ' + (luckyClaimed ? '' : 'gold'), luckyClaimed ? 'Đã mở hôm nay' : 'Mở Quà');
+  luckyBtn.type = 'button';
+  if (luckyClaimed) luckyBtn.disabled = true;
+  else {
+    luckyBtn.addEventListener('click', () => {
+      const luckyCoins = [5000, 10000, 15000, 20000, 25000, 30000][Math.floor(Math.random() * 6)];
+      Data.coins += luckyCoins;
+      if (!Data.daily) Data.daily = {};
+      Data.daily[luckyKey] = true;
+      saveData();
+      SFX.play('coins');
+      confetti();
+      showToast('🎁 Bạn mở được ' + formatCoins(luckyCoins) + '!', 'success');
+      Modal.closeAll();
+      openCoinsModal();
+    });
+  }
+  luckyCard.appendChild(luckyBtn);
+  grid.appendChild(luckyCard);
+
+  body.appendChild(grid);
+
+  Modal.open({
+    title: '🪙 Quỹ Xu & Nhận Xu Miễn Phí',
+    body,
+    buttons: [{ text: 'Đóng', cls: 'primary' }]
+  });
+}
 
 /* ============================ 4b. VECTOR SVG ICONS & REAL GRAPHICS ============================ */
 const SVG_DEFS = {
@@ -625,7 +1259,12 @@ const SVG_DEFS = {
   cake: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s2-1 4-1 4 1 4 1 2-1 4-1 4 1 4 1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><circle cx="7" cy="4" r="1"/><circle cx="12" cy="4" r="1"/><circle cx="17" cy="4" r="1"/></svg>',
   stadium: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6"/><path d="M4 12V7a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v5"/></svg>',
   lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
-  arrow_right: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>'
+  arrow_right: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>',
+  cloud: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>',
+  coin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 7v10M10 9.5h4M10 14.5h4"/></svg>',
+  wallet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>',
+  key: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-1.5 1.5L14 9l-1.5-1.5L11 9l-1.5-1.5L8 9l-1.5-1.5L2 12a6 6 0 1 0 8.5 8.5L21 10V2h-8z"/></svg>',
+  refresh_cw: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>'
 };
 
 function appSvg(name, size, cls) {
@@ -744,7 +1383,8 @@ const SFX = (function () {
     notification: () => { tone(660, 0.08, 'sine', 0.06); tone(880, 0.1, 'sine', 0.06, 0.09); },
     success: () => { tone(784, 0.09, 'sine', 0.05); tone(1047, 0.14, 'sine', 0.05, 0.08); },
     warn: () => { tone(440, 0.1, 'square', 0.035); tone(440, 0.1, 'square', 0.035, 0.14); },
-    error: () => { tone(220, 0.22, 'sawtooth', 0.05); tone(165, 0.25, 'sawtooth', 0.05, 0.16); }
+    error: () => { tone(220, 0.22, 'sawtooth', 0.05); tone(165, 0.25, 'sawtooth', 0.05, 0.16); },
+    coins: () => { [1319, 1568, 2093, 2637].forEach((f, i) => tone(f, 0.08, 'sine', 0.05, i * 0.06)); }
   };
   return {
     play(name) {
@@ -2734,6 +3374,15 @@ const Tour = {
 const TITLES = [[1, 'Tân binh'], [5, 'Học việc'], [10, 'Tay chơi'], [20, 'Cao thủ'], [35, 'Đại cao thủ'], [50, 'Bậc thầy'], [75, 'Huyền thoại'], [100, 'CARD MASTER']];
 function titleFor(level) { let t = TITLES[0][1]; TITLES.forEach(x => { if (level >= x[0]) t = x[1]; }); return t; }
 
+/* ---------- Kho vật phẩm & Độ hiếm & Giá Xu ---------- */
+const RARITY = { common: { name: 'Thường', col: '#9fb2a8' }, rare: { name: 'Hiếm', col: '#4aa3ff' }, epic: { name: 'Sử thi', col: '#b46bff' }, legendary: { name: 'Huyền thoại', col: '#ffb631' } };
+const RARITY_PRICE = { common: 5000, rare: 25000, epic: 100000, legendary: 300000 };
+function itemPrice(it) {
+  if (it.price != null) return it.price;
+  if (['classic', 'green', 'none', 'auto'].includes(it.id)) return 0;
+  return RARITY_PRICE[it.r || 'common'] || 5000;
+}
+
 /* ---------- Giao diện mở khoá theo level (mặt sau lá bài, màu bàn) ---------- */
 const CARD_BACKS = [
   // --- Cổ điển & Tinh thể ---
@@ -2802,6 +3451,8 @@ const TABLES = [
   { id: 'champ', name: 'Nỉ Vô địch Giải đấu', lv: 1, cond: () => (Data.statistics?.championships || 0) >= 1, reqText: 'Vô địch 1 giải đấu', r: 'legendary', c: ['#422006', '#1c0d02', '#f59e0b'] }
 ];
 function itemUnlocked(it) {
+  if (['classic', 'green', 'none', 'auto'].includes(it.id)) return true;
+  if (Data.purchased && Data.purchased.includes(it.id)) return true;
   if (it.lv && Data.level < it.lv) return false;
   if (it.rank != null && Rank.bestTier() < it.rank) return false;
   if (it.cond && !it.cond()) return false;
@@ -2936,12 +3587,25 @@ const Missions = {
     }
   },
   claim(i) {
-    this.ensure(); const m = Data.missions.list[i]; if (!m) return 0;
-    const d = this.def(m.id); if (!d || m.claimed || m.prog < d.goal) return 0;
-    m.claimed = true; addXP(d.xp); saveData(); return d.xp;
+    this.ensure(); const m = Data.missions.list[i]; if (!m) return null;
+    const d = this.def(m.id); if (!d || m.claimed || m.prog < d.goal) return null;
+    m.claimed = true;
+    const coins = d.xp * 50;
+    addXP(d.xp);
+    Data.coins = (Data.coins || 0) + coins;
+    saveData();
+    return { xp: d.xp, coins };
   },
   canClaimBonus() { return !Data.missions.bonus && Data.missions.list.length === 3 && Data.missions.list.every(m => m.claimed); },
-  claimBonus() { if (!this.canClaimBonus()) return 0; Data.missions.bonus = true; addXP(this.ALL_BONUS); saveData(); return this.ALL_BONUS; },
+  claimBonus() {
+    if (!this.canClaimBonus()) return null;
+    Data.missions.bonus = true;
+    const coins = this.ALL_BONUS * 100;
+    addXP(this.ALL_BONUS);
+    Data.coins = (Data.coins || 0) + coins;
+    saveData();
+    return { xp: this.ALL_BONUS, coins };
+  },
   readyCount() { this.ensure(); return Data.missions.list.filter(m => { const d = this.def(m.id); return d && !m.claimed && m.prog >= d.goal; }).length; }
 };
 
@@ -2955,7 +3619,18 @@ const Daily = {
     return d.claimed !== t;
   },
   reward() { return 40 + 20 * Math.min(Math.max(Data.daily.streak, 1), 7); },
-  claim() { const t = Tour.dateKey(); if (Data.daily.claimed === t) return 0; Data.daily.claimed = t; const r = this.reward(); addXP(r); saveData(); return r; }
+  coinReward() { return 5000 + Math.min(Math.max(Data.daily.streak, 1), 7) * 2000; },
+  claim() {
+    const t = Tour.dateKey();
+    if (Data.daily.claimed === t) return null;
+    Data.daily.claimed = t;
+    const r = this.reward();
+    const c = this.coinReward();
+    addXP(r);
+    Data.coins = (Data.coins || 0) + c;
+    saveData();
+    return { xp: r, coins: c };
+  }
 };
 
 /* ---------- Bảng xếp hạng (mô phỏng offline, đổi theo tuần) ---------- */
@@ -3209,7 +3884,6 @@ const TX_ENGINE = {
 GAME_ENGINES.taiXiu = TX_ENGINE;
 
 /* ============================ KHO VẬT PHẨM: độ hiếm, khung avatar, danh hiệu ============================ */
-const RARITY = { common: { name: 'Thường', col: '#9fb2a8' }, rare: { name: 'Hiếm', col: '#4aa3ff' }, epic: { name: 'Sử thi', col: '#b46bff' }, legendary: { name: 'Huyền thoại', col: '#ffb631' } };
 const FRAMES = [
   { id: 'none', name: 'Không khung', r: 'common', lv: 1 },
   { id: 'rk0', name: 'Khung Sắt', r: 'common', rank: 0 }, { id: 'rk1', name: 'Khung Đồng', r: 'common', rank: 1 },
@@ -3619,10 +4293,34 @@ function setupGame(id) {
   }
   const gcfg = Data.settings.gameCfg || (Data.settings.gameCfg = {}); let anh = ((gcfg.baCay || {}).anh) !== false;
   if (id === 'baCay') { body.appendChild(h('label', 'lbl', 'Luật Ba Cây')); body.appendChild(segmented([true, false], anh, v => { anh = v; }, v => v ? 'Ba cây ảnh: Bật' : 'Ba cây ảnh: Tắt')); }
+
+  const betOptions = [0, 500, 1000, 5000, 10000, 25000, 50000];
+  let chosenBet = (Data.lastBet != null && betOptions.includes(Data.lastBet)) ? Data.lastBet : 1000;
+  if (chosenBet > (Data.coins || 0)) {
+    const affordable = betOptions.filter(b => b <= (Data.coins || 0));
+    chosenBet = affordable.length ? affordable[affordable.length - 1] : 0;
+  }
+  body.appendChild(h('label', 'lbl', 'Mức cược Xu 🪙 (Ví hiện có: ' + formatCoins(Data.coins || 0) + ')'));
+  body.appendChild(segmented(betOptions, chosenBet, v => {
+    if (v > (Data.coins || 0)) {
+      showToast('⚠️ Không đủ xu (cần ' + formatCoins(v) + '). Hãy nhận thêm xu miễn phí!', 'warning');
+      return;
+    }
+    chosenBet = v;
+  }, v => v === 0 ? '0 (Tập)' : formatCoinsShort(v)));
+
   Modal.open({
     title: m.name, body, buttons: [
       { text: '📖 Luật', keep: true, fn: () => showRules(id) },
-      { text: 'CHƠI', cls: 'primary', fn: () => { if (id === 'baCay') gcfg.baCay = { anh }; Data.settings.players[id] = players; Data.settings.aiLevel = level; Data.settings.turnTime = time; saveData(); Match.start(id, { players }); } }
+      { text: 'CHƠI', cls: 'primary', fn: () => {
+        if (id === 'baCay') gcfg.baCay = { anh };
+        Data.settings.players[id] = players;
+        Data.settings.aiLevel = level;
+        Data.settings.turnTime = time;
+        Data.lastBet = chosenBet;
+        saveData();
+        Match.start(id, { players, bet: chosenBet });
+      } }
     ]
   });
 }
@@ -3637,6 +4335,18 @@ RENDERERS.profile = function () {
   $('#pf-level').textContent = 'Lv.' + Data.level;
   const pt = $('#pf-title'); if (pt) pt.textContent = '🎖️ ' + currentTitle();
   const pr = $('#pf-rank'); if (pr) pr.innerHTML = rankTierBadgeSvg(RANK_TIERS[Data.rank.t].id, 18).outerHTML + ' ' + Rank.curLabel() + ' · cao nhất: ' + Rank.label(Data.rank.best.t, Data.rank.best.d, Data.rank.best.s);
+  const pfCoin = $('#pf-coin-val'); if (pfCoin) pfCoin.textContent = formatCoins(Data.coins || 0);
+  const pfat = $('#pf-account-title'), pfas = $('#pf-account-sub');
+  if (pfat && pfas) {
+    if (Data.auth && Data.auth.username) {
+      pfat.textContent = '☁️ ' + Data.auth.username + ' (Đã kết nối)';
+      const syncDate = Data.auth.lastSync ? fmtDate(Data.auth.lastSync) : 'Vừa xong';
+      pfas.textContent = '🟢 Đã đồng bộ lúc ' + syncDate;
+    } else {
+      pfat.textContent = 'Chưa liên kết online';
+      pfas.textContent = 'Đăng ký / đăng nhập để lưu vĩnh viễn';
+    }
+  }
   paintAvatars();
   $('#pf-xp-fill').style.width = xpBarHtml() + '%';
   $('#pf-xp-text').textContent = 'XP ' + fmt(Data.xp) + ' / ' + fmt(xpNeed(Data.level));
@@ -4103,7 +4813,80 @@ RENDERERS.settings = function () {
   secAi.appendChild(cardAi);
   wrap.appendChild(secAi);
 
-  // Section 4: Dữ liệu & Bộ nhớ
+  // Section 4: Lưu trữ Online & Tài khoản
+  const secCloud = h('div', 'settings-section');
+  const headCloud = h('div', 'settings-section-head');
+  headCloud.appendChild(appSvg('cloud', 20, 'sec-icon-gold'));
+  headCloud.appendChild(h('h3', '', 'LƯU TRỮ ONLINE & TÀI KHOẢN'));
+  secCloud.appendChild(headCloud);
+
+  const cardCloud = h('div', 'settings-card');
+  const isLogged = !!(Data.auth && Data.auth.username);
+
+  // Status item
+  const clItem = h('div', 'setting-item');
+  const clLeft = h('div', 'setting-item-left');
+  const clBox = h('div', 'item-icon-box ' + (isLogged ? 'ic-sound' : 'ic-motion'));
+  clBox.appendChild(appSvg('cloud', 22));
+  clLeft.appendChild(clBox);
+  const clText = h('div', 'item-text');
+  clText.appendChild(h('b', '', isLogged ? ('Tài khoản: ' + Data.auth.username) : 'Chưa đăng nhập tài khoản'));
+  clText.appendChild(h('small', '', isLogged ? (Data.auth.lastSync ? ('Đã đồng bộ ' + fmtDate(Data.auth.lastSync)) : 'Tự động sao lưu tiến trình') : 'Đăng ký hoặc đăng nhập để lưu online vĩnh viễn'));
+  clLeft.appendChild(clText);
+  clItem.appendChild(clLeft);
+
+  const clBtn = h('button', 'btn small ' + (isLogged ? '' : 'primary'), isLogged ? 'Quản lý' : 'Đăng nhập');
+  clBtn.type = 'button';
+  clBtn.addEventListener('click', () => CloudAuth.openModal());
+  clItem.appendChild(clBtn);
+  cardCloud.appendChild(clItem);
+
+  cardCloud.appendChild(h('div', 'setting-divider'));
+
+  // Auto-sync switch
+  const autoItem = h('div', 'setting-item');
+  const autoLeft = h('div', 'setting-item-left');
+  const autoBox = h('div', 'item-icon-box ic-motion');
+  autoBox.appendChild(appSvg('refresh_cw', 22));
+  autoLeft.appendChild(autoBox);
+  const autoText = h('div', 'item-text');
+  autoText.appendChild(h('b', '', 'Tự động đồng bộ lên mây'));
+  autoText.appendChild(h('small', '', 'Tự động lưu khi thắng trận, đổi thông tin hoặc mở quà'));
+  autoLeft.appendChild(autoText);
+  autoItem.appendChild(autoLeft);
+
+  const autoToggle = h('label', 'toggle-switch');
+  const autoInp = h('input', '');
+  autoInp.type = 'checkbox';
+  autoInp.checked = Data.settings.autoCloudSync !== false;
+  autoInp.addEventListener('change', () => {
+    Data.settings.autoCloudSync = autoInp.checked;
+    saveData();
+    showToast(Data.settings.autoCloudSync ? 'Đã bật tự động đồng bộ' : 'Đã tắt tự động đồng bộ', 'info');
+  });
+  autoToggle.appendChild(autoInp);
+  autoToggle.appendChild(h('span', 'toggle-slider'));
+  autoItem.appendChild(autoToggle);
+  cardCloud.appendChild(autoItem);
+
+  if (isLogged) {
+    cardCloud.appendChild(h('div', 'setting-divider'));
+    const syncRow = h('div', 'auth-sync-row');
+    const bPush = h('button', 'btn small primary', '⬆ Đẩy lên mây');
+    bPush.type = 'button';
+    bPush.addEventListener('click', () => { CloudAuth.syncSaveManual(); RENDERERS.settings(); });
+    const bPull = h('button', 'btn small', '⬇ Tải từ mây');
+    bPull.type = 'button';
+    bPull.addEventListener('click', () => { CloudAuth.syncLoadManual(); RENDERERS.settings(); });
+    syncRow.appendChild(bPush);
+    syncRow.appendChild(bPull);
+    cardCloud.appendChild(syncRow);
+  }
+
+  secCloud.appendChild(cardCloud);
+  wrap.appendChild(secCloud);
+
+  // Section 5: Dữ liệu & Bộ nhớ
   const secData = h('div', 'settings-section');
   const headData = h('div', 'settings-section-head');
   headData.appendChild(appSvg('floppy', 20, 'sec-icon-gold'));
@@ -4409,16 +5192,16 @@ function buildHomeExtra() {
   const unclaimed = Daily.check();
   if (unclaimed) {
     const c = h('div', 'mini-card gift'); c.appendChild(h('span', 'mc-ic', '🎁'));
-    const t = h('div', 'mc-t'); t.appendChild(h('b', '', 'Quà đăng nhập · chuỗi ' + Data.daily.streak + ' ngày')); t.appendChild(h('small', 'muted', '+' + Daily.reward() + ' XP đang chờ bạn'));
+    const t = h('div', 'mc-t'); t.appendChild(h('b', '', 'Quà đăng nhập · chuỗi ' + Data.daily.streak + ' ngày')); t.appendChild(h('small', 'muted', '+' + Daily.reward() + ' XP & +' + formatCoins(Daily.coinReward())));
     const b = h('button', 'btn small primary', 'NHẬN'); b.type = 'button';
-    b.addEventListener('click', () => { const r = Daily.claim(); if (r) { showToast('🎁 Nhận +' + r + ' XP', 'success'); RENDERERS.home(); } });
+    b.addEventListener('click', () => { const r = Daily.claim(); if (r) { SFX.play('coins'); showToast('🎁 Nhận +' + r.xp + ' XP & +' + formatCoins(r.coins), 'success'); RENDERERS.home(); } });
     c.appendChild(t); c.appendChild(b); root.appendChild(c);
   }
   Missions.ensure();
   const done = Data.missions.list.filter(m => m.claimed).length, ready = Missions.readyCount();
   const mc = h('button', 'mini-card link'); mc.type = 'button'; mc.dataset.action = 'goto'; mc.dataset.target = 'missions';
   mc.appendChild(h('span', 'mc-ic', '📅'));
-  const t2 = h('div', 'mc-t'); t2.appendChild(h('b', '', 'Nhiệm vụ hôm nay: ' + done + '/3 đã nhận')); t2.appendChild(h('small', ready ? 'ready' : 'muted', ready ? '🎉 ' + ready + ' nhiệm vụ có thể nhận thưởng' : 'Hoàn thành để nhận XP'));
+  const t2 = h('div', 'mc-t'); t2.appendChild(h('b', '', 'Nhiệm vụ hôm nay: ' + done + '/3 đã nhận')); t2.appendChild(h('small', ready ? 'ready' : 'muted', ready ? '🎉 ' + ready + ' nhiệm vụ có thể nhận thưởng' : 'Hoàn thành để nhận XP & Xu'));
   mc.appendChild(t2); root.appendChild(mc);
   const T = Data.tournament;
   if (T && T.status === 'active') {
@@ -4437,9 +5220,9 @@ RENDERERS.missions = function () {
   const days = h('div', 'streak');
   for (let i = 1; i <= 7; i++) { const d = h('span', 'day' + (i <= Math.min(Data.daily.streak, 7) ? ' on' : ''), String(i)); days.appendChild(d); }
   g.appendChild(days);
-  g.appendChild(h('p', 'muted', 'Chuỗi hiện tại: ' + Data.daily.streak + ' ngày · quà hôm nay +' + Daily.reward() + ' XP (tối đa +180 XP ở ngày thứ 7)'));
+  g.appendChild(h('p', 'muted', 'Chuỗi hiện tại: ' + Data.daily.streak + ' ngày · quà hôm nay: +' + Daily.reward() + ' XP & +' + formatCoins(Daily.coinReward())));
   const gb = h('button', 'btn small primary', unclaimed ? 'NHẬN QUÀ HÔM NAY' : 'Đã nhận hôm nay'); gb.type = 'button'; if (!unclaimed) gb.disabled = true;
-  gb.addEventListener('click', () => { const r = Daily.claim(); if (r) { showToast('🎁 Nhận +' + r + ' XP', 'success'); RENDERERS.missions(); } });
+  gb.addEventListener('click', () => { const r = Daily.claim(); if (r) { SFX.play('coins'); showToast('🎁 Nhận +' + r.xp + ' XP & +' + formatCoins(r.coins), 'success'); RENDERERS.missions(); } });
   g.appendChild(gb); root.appendChild(g);
   root.appendChild(h('h3', 'sub', 'Nhiệm vụ hôm nay'));
   Data.missions.list.forEach((m, i) => {
@@ -4447,16 +5230,16 @@ RENDERERS.missions = function () {
     const c = h('div', 'tour-card mission' + (m.claimed ? ' claimed' : ''));
     c.appendChild(h('b', '', d.name));
     const bar = h('div', 'xp-bar'); const fill = h('i', ''); fill.style.width = Math.min(100, Math.round(m.prog / d.goal * 100)) + '%'; bar.appendChild(fill); c.appendChild(bar);
-    c.appendChild(h('small', 'muted', Math.min(m.prog, d.goal) + ' / ' + d.goal + ' · thưởng +' + d.xp + ' XP'));
+    c.appendChild(h('small', 'muted', Math.min(m.prog, d.goal) + ' / ' + d.goal + ' · thưởng +' + d.xp + ' XP & +' + formatCoins(d.xp * 50)));
     const ready = m.prog >= d.goal && !m.claimed;
-    const b = h('button', 'btn small' + (ready ? ' primary' : ''), m.claimed ? '✓ Đã nhận' : ready ? 'NHẬN +' + d.xp + ' XP' : 'Chưa xong'); b.type = 'button'; if (!ready) b.disabled = true;
-    b.addEventListener('click', () => { const xp = Missions.claim(i); if (xp) { showToast('🎉 +' + xp + ' XP', 'success'); RENDERERS.missions(); } });
+    const b = h('button', 'btn small' + (ready ? ' primary' : ''), m.claimed ? '✓ Đã nhận' : ready ? 'NHẬN THƯỞNG' : 'Chưa xong'); b.type = 'button'; if (!ready) b.disabled = true;
+    b.addEventListener('click', () => { const r = Missions.claim(i); if (r) { SFX.play('coins'); showToast('🎉 +' + r.xp + ' XP & +' + formatCoins(r.coins), 'success'); RENDERERS.missions(); } });
     c.appendChild(b); root.appendChild(c);
   });
   const bonus = h('div', 'tour-card');
-  bonus.appendChild(h('b', '', '⭐ Hoàn thành cả 3 nhiệm vụ: +' + Missions.ALL_BONUS + ' XP'));
+  bonus.appendChild(h('b', '', '⭐ Hoàn thành cả 3 nhiệm vụ: +' + Missions.ALL_BONUS + ' XP & +10.000 Xu'));
   const bb = h('button', 'btn small' + (Missions.canClaimBonus() ? ' primary' : ''), Data.missions.bonus ? '✓ Đã nhận' : Missions.canClaimBonus() ? 'NHẬN THƯỞNG' : 'Nhận hết 3 nhiệm vụ trước'); bb.type = 'button'; if (!Missions.canClaimBonus()) bb.disabled = true;
-  bb.addEventListener('click', () => { const xp = Missions.claimBonus(); if (xp) { showToast('⭐ +' + xp + ' XP', 'success'); RENDERERS.missions(); } });
+  bb.addEventListener('click', () => { const r = Missions.claimBonus(); if (r) { SFX.play('coins'); showToast('⭐ +' + r.xp + ' XP & +' + formatCoins(r.coins), 'success'); RENDERERS.missions(); } });
   bonus.appendChild(bb); root.appendChild(bonus);
   root.appendChild(h('p', 'muted small center', 'Nhiệm vụ làm mới mỗi ngày.'));
 };
@@ -4495,7 +5278,10 @@ RENDERERS.history = function () {
     row.appendChild(h('span', 'hist-ic', e.o === 'win' ? '🏆' : e.o === 'draw' ? '🤝' : '❌'));
     const t = h('div', 'hist-t'); t.appendChild(h('b', '', (GAME_META[e.g] ? GAME_META[e.g].name : e.g) + (e.tour ? ' · Giải đấu' : '') + (e.room ? ' · Phòng' : '') + (e.fun ? ' · Giải trí' : '')));
     t.appendChild(h('small', 'muted', fmtDate(e.t) + ' · vs ' + (e.opp || []).join(', ') + ' · ' + fmtTime(e.sec || 0)));
-    row.appendChild(t); row.appendChild(h('span', 'hist-xp' + ((e.xp || 0) < 0 ? ' neg' : ''), ((e.xp || 0) >= 0 ? '+' : '') + (e.xp || 0) + ' XP')); root.appendChild(row);
+    row.appendChild(t);
+    const xpCoins = ((e.xp || 0) >= 0 ? '+' : '') + (e.xp || 0) + ' XP' + (e.coins ? (' • ' + (e.coins > 0 ? '+' : '') + formatCoinsShort(e.coins) + ' 🪙') : '');
+    row.appendChild(h('span', 'hist-xp' + ((e.xp || 0) < 0 ? ' neg' : ''), xpCoins));
+    root.appendChild(row);
   });
   const clr = h('button', 'btn small danger', 'Xoá lịch sử'); clr.type = 'button';
   clr.addEventListener('click', () => { Data.history = []; saveData(); RENDERERS.history(); });
@@ -4765,10 +5551,13 @@ function startRankedMatch(gameId) {
     // Vàng (3), Bạch Kim (4), Kim Cương (5) -> Khó (2)
     // Tinh Anh (6), Bậc Thầy (7), Đại Cao Thủ (8), Thần Bài (9) -> Siêu khó (3)
     const aiLevel = tier <= 0 ? 0 : tier <= 2 ? 1 : tier <= 5 ? 2 : 3;
+    const standardBet = (tier + 1) * 1000;
+    const bet = Math.min(standardBet, Math.max(0, Data.coins || 0));
     Match.start(gameId, {
       ranked: true,
       players: 4,
-      aiLevel: aiLevel
+      aiLevel: aiLevel,
+      bet: bet
     });
     SFX.play('start');
   };
@@ -5157,6 +5946,7 @@ function equipItem(cat, it) {
 }
 function openItem(cat, it) {
   const ok = itemUnlocked(it), on = cat.cur() === it.id, R = RARITY[it.r || 'common'];
+  const price = itemPrice(it);
   const body = h('div', 'item-detail'); body.style.setProperty('--rc', R.col);
   const pv = h('div', 'item-big r-' + (it.r || 'common')); pv.appendChild(itemPreview(cat, it)); body.appendChild(pv);
   body.appendChild(h('div', 'item-rar', R.name));
@@ -5164,18 +5954,57 @@ function openItem(cat, it) {
   st.appendChild(appSvg(ok ? 'check' : 'lock', 15));
   st.appendChild(document.createTextNode(ok ? ' Đã mở khoá' : ' Chưa mở khoá'));
   body.appendChild(st);
-  body.appendChild(h('p', 'muted small', 'Cách có: ' + itemReq(it)));
+
+  if (!ok && price > 0) {
+    const pbox = h('div', 'item-price-box');
+    pbox.innerHTML = '<div class="ipb-val">🪙 ' + formatCoins(price) + '</div><div class="ipb-bal">Số dư hiện tại: <b>' + formatCoins(Data.coins) + '</b></div>';
+    body.appendChild(pbox);
+  }
+  body.appendChild(h('p', 'muted small', 'Cách mở: Dùng Xu mua ngay vĩnh viễn hoặc ' + itemReq(it)));
   const btns = [{ text: 'Đóng' }];
   if (ok && !on) btns.push({ text: 'TRANG BỊ', cls: 'primary', fn: () => equipItem(cat, it) });
   else if (ok) btns.push({ text: '✓ Đang dùng', cls: 'primary' });
+  else if (price > 0) {
+    btns.push({
+      text: 'MUA BẰNG XU (🪙 ' + formatCoinsShort(price) + ')',
+      cls: 'primary',
+      fn: () => {
+        if (Data.coins < price) {
+          Modal.open({
+            title: 'Không đủ xu!',
+            body: 'Bạn còn thiếu ' + formatCoins(price - Data.coins) + ' để mua vật phẩm này. Hãy chiến thắng thêm các ván cược hoặc nhận xu miễn phí!',
+            buttons: [
+              { text: 'Đóng' },
+              { text: '🪙 Nhận Xu Miễn Phí', cls: 'primary', fn: () => openCoinsModal() }
+            ]
+          });
+          return;
+        }
+        Data.coins -= price;
+        if (!Data.purchased) Data.purchased = [];
+        Data.purchased.push(it.id);
+        saveData();
+        SFX.play('coins');
+        confetti();
+        showToast('🎉 Đã mua và trang bị thành công ' + it.name + '!', 'success');
+        equipItem(cat, it);
+        updateTopPills();
+      }
+    });
+  }
   Modal.open({ title: it.name, body, buttons: btns });
 }
 function itemSlot(cat, it) {
   const ok = itemUnlocked(it), on = cat.cur() === it.id, R = RARITY[it.r || 'common'];
+  const price = itemPrice(it);
   const b = h('button', 'item-slot r-' + (it.r || 'common') + (on ? ' on' : '') + (ok ? '' : ' locked')); b.type = 'button'; b.style.setProperty('--rc', R.col);
   b.setAttribute('aria-label', it.name + ' — ' + R.name + (ok ? (on ? ', đang dùng' : '') : ', chưa mở khoá'));
   const pv = h('div', 'item-prev'); pv.appendChild(itemPreview(cat, it)); b.appendChild(pv);
   b.appendChild(h('b', 'item-name', it.name)); b.appendChild(h('small', 'item-rar', R.name));
+  if (!ok && price > 0) {
+    const pt = h('span', 'item-price-tag', '🪙 ' + formatCoinsShort(price));
+    b.appendChild(pt);
+  }
   if (on) {
     const bd = h('span', 'item-badge on'); bd.appendChild(appSvg('check', 11)); b.appendChild(bd);
   } else if (!ok) {
@@ -5186,16 +6015,26 @@ function itemSlot(cat, it) {
 }
 RENDERERS.themes = function () {
   const root = $('#themes-body'); root.textContent = '';
+  const swb = h('div', 'shop-wallet-banner');
+  const swbLeft = h('div', 'swb-left');
+  swbLeft.innerHTML = '<span class="coin-icon">🪙</span> Ví của bạn: <b>' + formatCoins(Data.coins) + '</b>';
+  swb.appendChild(swbLeft);
+  const swbBtn = h('button', 'btn small gold', '+ Nhận Xu');
+  swbBtn.type = 'button';
+  swbBtn.addEventListener('click', openCoinsModal);
+  swb.appendChild(swbBtn);
+  root.appendChild(swb);
+
   let tot = 0, own = 0; INV_CATS.forEach(c => c.items().forEach(it => { tot++; if (itemUnlocked(it)) own++; }));
   const head = h('div', 'inv-head');
   const tit = h('b', 'inv-title');
   tit.appendChild(appSvg('backpack', 18));
-  tit.appendChild(document.createTextNode(' Đã sưu tầm ' + own + '/' + tot + ' vật phẩm'));
+  tit.appendChild(document.createTextNode(' Đã sở hữu ' + own + '/' + tot + ' vật phẩm'));
   head.appendChild(tit);
   const lg = h('div', 'rar-legend'); Object.keys(RARITY).forEach(k => { const s = h('span', 'rar-chip', RARITY[k].name); s.style.setProperty('--rc', RARITY[k].col); lg.appendChild(s); }); head.appendChild(lg); root.appendChild(head);
   root.appendChild(segmented(INV_CATS.map(c => c.id), INV.tab, v => { INV.tab = v; RENDERERS.themes(); }, v => INV_CATS.find(c => c.id === v).name));
   const cat = INV_CATS.find(c => c.id === INV.tab) || INV_CATS[0], items = cat.items();
-  root.appendChild(h('p', 'muted small', 'Đã mở ' + items.filter(itemUnlocked).length + '/' + items.length + ' · chạm vào vật phẩm để xem chi tiết và trang bị.'));
+  root.appendChild(h('p', 'muted small', 'Chạm vào vật phẩm để xem chi tiết, trang bị hoặc dùng Xu mua ngay vĩnh viễn.'));
   const grid = h('div', 'item-grid'); items.forEach(it => grid.appendChild(itemSlot(cat, it))); root.appendChild(grid);
 };
 
@@ -5240,6 +6079,25 @@ function buildPlayScreen() {
   if (UI.diceTimer) { clearInterval(UI.diceTimer); UI.diceTimer = null; } $('#hand').classList.remove('panel'); $('#table-cards').classList.remove('dice-mode');
   $('#screen-play').dataset.kind = eng.kind;
   $('#screen-play').classList.remove('win-glow');
+
+  let betPill = $('#play-bet-pill');
+  if (!betPill) {
+    betPill = h('div', 'table-bet-pill');
+    betPill.id = 'play-bet-pill';
+    const tb = $('#table');
+    if (tb) tb.appendChild(betPill);
+  }
+  const curBet = Match.bet != null ? Match.bet : (gameState.bet || 0);
+  const pot = curBet * gs.players.length;
+  if (betPill) {
+    if (curBet > 0) {
+      betPill.hidden = false;
+      betPill.innerHTML = SVG_DEFS.coin + ' Cược: <b>' + formatCoinsShort(curBet) + '</b> • Hũ: <b>' + formatCoinsShort(pot) + '</b>';
+    } else {
+      betPill.hidden = false;
+      betPill.innerHTML = '🎮 <b>Tập chơi (0 Xu)</b>';
+    }
+  }
 }
 function playMetrics() {
   const v = viewport(), landscape = v.w > v.h;
@@ -5477,6 +6335,8 @@ const Match = {
       Modal.closeAll(); this.cleanup();
       this.gameId = gameId; this.engine = GAME_ENGINES[gameId]; this.running = true;
       this.extra = extra; this.tour = !!extra.tour; this.roomCtx = extra.room || null; this._wasHuman = false;
+      this.bet = extra.bet != null ? Math.max(0, Number(extra.bet) || 0) : (Data.lastBet != null ? Math.max(0, Number(Data.lastBet) || 0) : 1000);
+      gameState.bet = this.bet;
       this.startedAt = Date.now(); this.elapsedBefore = 0; this.token++;
       NEXT_OPP = extra.opponents || null; LEVEL_OVERRIDE = extra.aiLevel != null ? extra.aiLevel : null;
       try { this.engine.setup({ players: extra.players || Data.settings.players[gameId] || GAME_META[gameId].defP }); }
@@ -5646,6 +6506,45 @@ const Match = {
     const specials = res.specials.slice();
     if (res.outcome === 'win' && eng.kind === 'shed' && gs.players.length > 1 && gs.players.slice(1).every(p => p.level === 3)) specials.push('beatHard');
     const casual = !!eng.casual;
+
+    // Tính toán cược Xu
+    const bet = this.bet || 0;
+    let coinDelta = 0;
+    const nPlayers = Math.max(2, gs.players.length);
+    if (bet > 0) {
+      if (eng.kind === 'bj') {
+        if (res.outcome === 'win') {
+          const hasBj = specials.some(s => ['blackjack', 'xibang', 'nguLinh'].includes(s));
+          coinDelta = hasBj ? Math.round(bet * 1.5) : bet;
+        } else if (res.outcome === 'lose') {
+          coinDelta = -bet;
+        } else {
+          coinDelta = 0;
+        }
+      } else {
+        if (res.outcome === 'win') {
+          const hasTrang = specials.some(s => ['trang', 'baoSamOk', 'toWhite'].includes(s));
+          const mult = hasTrang ? 2 : 1;
+          coinDelta = (nPlayers - 1) * bet * mult;
+        } else if (res.outcome === 'lose') {
+          const hasPenalty = specials.some(s => ['chaySam', 'cong', 'thoi'].includes(s));
+          const mult = hasPenalty ? 2 : 1;
+          coinDelta = -bet * mult;
+        } else {
+          coinDelta = 0;
+        }
+      }
+    } else {
+      if (res.outcome === 'win') coinDelta = 100;
+    }
+
+    if (coinDelta < 0 && Math.abs(coinDelta) > (Data.coins || 0)) {
+      coinDelta = -(Data.coins || 0);
+    }
+    Data.coins = Math.max(0, (Data.coins || 0) + coinDelta);
+    res.coinDelta = coinDelta;
+    res.bet = bet;
+
     if (!casual) recordMatch(this.gameId, res.outcome, seconds);
     else { const f = Data.statistics.fun; f.played++; if (res.outcome === 'win') f.won++; else f.lost++; f.net += res.xpDelta || 0; res.casual = true; }
     const isTour = this.tour;
@@ -5654,7 +6553,7 @@ const Match = {
     let rankInfo = null; // đấu hạng: không áp dụng cho game giải trí
     if (!casual && gs.players.length >= 2) { try { rankInfo = Rank.apply(res.outcome, diff, Data.statistics.streak); } catch (e) { handleError(e); } }
     res.rankInfo = rankInfo;
-    pushHistory({ t: Date.now(), g: this.gameId, o: res.outcome, xp: add.amount, opp: gs.players.slice(1, 4).map(p => p.name), tour: !!isTour, room: !!this.roomCtx, sec: Math.round(seconds), fun: casual });
+    pushHistory({ t: Date.now(), g: this.gameId, o: res.outcome, xp: add.amount, coins: coinDelta, opp: gs.players.slice(1, 4).map(p => p.name), tour: !!isTour, room: !!this.roomCtx, sec: Math.round(seconds), fun: casual });
     if (!casual) Missions.onMatch(this.gameId, res.outcome, { tour: !!isTour, room: !!this.roomCtx, hard: gs.players.slice(1).some(p => p.level === 3) });
     const ach = checkAchievements(specials);
     Data.currentMatch = null; Data.currentGame = null; saveData();
@@ -5671,7 +6570,7 @@ const Match = {
     try {
       if (!this.running) return;
       const snap = JSON.parse(JSON.stringify(gameState, cardReplacer));
-      Data.currentMatch = { gameId: this.gameId, state: snap, elapsed: this.elapsedBefore + (Date.now() - this.startedAt) / 1000, savedAt: Date.now(), tour: !!this.tour, room: this.roomCtx || null, extra: this.extra ? { players: this.extra.players, aiLevel: this.extra.aiLevel, opponents: this.extra.opponents, room: this.extra.room } : null };
+      Data.currentMatch = { gameId: this.gameId, state: snap, elapsed: this.elapsedBefore + (Date.now() - this.startedAt) / 1000, savedAt: Date.now(), tour: !!this.tour, room: this.roomCtx || null, bet: this.bet, extra: this.extra ? { players: this.extra.players, aiLevel: this.extra.aiLevel, opponents: this.extra.opponents, room: this.extra.room, ranked: this.extra.ranked, bet: this.bet } : null };
       saveData();
     } catch (e) { /* lưu lỗi không được làm hỏng ván */ }
   },
@@ -5699,6 +6598,8 @@ const Match = {
       gameState = Object.assign(newGameState(), JSON.parse(JSON.stringify(cm.state), cardReviver));
       this.gameId = cm.gameId; this.engine = GAME_ENGINES[cm.gameId]; this.running = true;
       this.tour = !!cm.tour; this.roomCtx = cm.room || null; this.extra = cm.extra || {}; this._wasHuman = false;
+      this.bet = cm.bet != null ? cm.bet : (cm.extra && cm.extra.bet != null ? cm.extra.bet : 0);
+      gameState.bet = this.bet;
       this.startedAt = Date.now(); this.elapsedBefore = cm.elapsed || 0;
       navigateTo('play'); setAppHeight(); buildPlayScreen(); layoutPlayInit(); renderBoard();
       if (gameState.over) { this.finish(); return; }
@@ -5722,6 +6623,22 @@ function showResult(res, add, ach, levelBefore, tourNote) {
     row.appendChild(h('small', 'res-detail', r.label || '')); body.appendChild(row);
   });
   if (res.dealerValue != null) body.appendChild(h('p', 'muted', 'Nhà cái: ' + (res.dealerValue > 21 ? 'quắc (' + res.dealerValue + ')' : res.dealerValue + ' điểm')));
+  if (res.coinDelta != null) {
+    const cd = res.coinDelta;
+    const cEl = h('div', 'res-coins' + (cd > 0 ? ' win' : cd < 0 ? ' lose' : ''));
+    cEl.innerHTML = SVG_DEFS.coin + ' ' + (cd > 0 ? ('+' + formatCoins(cd)) : cd < 0 ? ('−' + formatCoins(Math.abs(cd))) : (res.bet > 0 ? '±0 Xu' : '+100 Xu (Tập chơi)'));
+    body.appendChild(cEl);
+    if (cd > 0) setTimeout(() => SFX.play('coins'), 300);
+  }
+  if ((Data.coins || 0) < 2000) {
+    const aidBox = h('div', 'res-aid-call');
+    const aidBtn = h('button', 'btn tiny primary', '🪙 Nhận Xu Cứu Trợ');
+    aidBtn.type = 'button';
+    aidBtn.addEventListener('click', () => { Modal.close(); openCoinsModal(); });
+    aidBox.appendChild(h('span', 'muted small', 'Hết xu cược? '));
+    aidBox.appendChild(aidBtn);
+    body.appendChild(aidBox);
+  }
   body.appendChild(h('div', 'res-xp' + (add.amount < 0 ? ' neg' : ''), (add.amount >= 0 ? '+' : '−') + Math.abs(add.amount) + ' XP' + (res.casual ? ' · Giải trí' : '') + (Data.level > levelBefore ? '  ·  🎉 Lên Level ' + Data.level + '!' : '')));
   if (res.casual) body.appendChild(h('p', 'muted small center', 'Tài Xỉu chỉ để giải trí — không tính đấu hạng.'));
   if (res.rankInfo) {
@@ -5736,7 +6653,7 @@ function showResult(res, add, ach, levelBefore, tourNote) {
     { text: 'TIẾP TỤC GIẢI', cls: 'primary', fn: () => navigateTo('tournament', { force: true }) },
     { text: 'XEM CHI TIẾT', keep: true, fn: () => showDetail() }
   ] : [
-    { text: 'CHƠI LẠI', cls: 'primary', fn: () => Match.start(id, extra.room ? extra : { players: extra.players }) },
+    { text: 'CHƠI LẠI', cls: 'primary', fn: () => Match.start(id, extra.room ? extra : { players: extra.players, bet: extra.bet, ranked: extra.ranked, aiLevel: extra.aiLevel }) },
     extra.room ? { text: 'VỀ PHÒNG', fn: () => navigateTo('rooms', { force: true }) } : { text: 'VỀ MENU', fn: () => { navigateTo('home', { force: true }); } },
     { text: 'XEM CHI TIẾT', keep: true, fn: () => showDetail() }
   ];
@@ -6130,12 +7047,16 @@ const Solo = {
     recordMatch(gid, 'win', secs);
     let xp = 90 + (gid === 'spider' ? ({ 1: 0, 2: 40, 4: 90 }[cfg.suits || 1]) : gid === 'solitaire' ? (cfg.draw === 3 ? 30 : 0) : 20);
     const specials = ['solo:' + gid]; const before = Data.level; const add = addXP(xp);
-    pushHistory({ t: Date.now(), g: gid, o: 'win', xp: add.amount, opp: [], tour: false, room: false, sec: Math.round(secs) });
+    const coinReward = gid === 'spider' ? ((cfg.suits || 1) >= 4 ? 10000 : 5000) : (gid === 'solitaire' && cfg.draw === 3 ? 5000 : 3000);
+    Data.coins = (Data.coins || 0) + coinReward;
+    pushHistory({ t: Date.now(), g: gid, o: 'win', xp: add.amount, coins: coinReward, opp: [], tour: false, room: false, sec: Math.round(secs) });
     Missions.onMatch(gid, 'win', {}); const ach = checkAchievements(specials);
     Data.currentMatch = null; Data.currentGame = null; saveData();
     SFX.play('win'); confetti(); vibrate([60, 40, 60]);
+    setTimeout(() => SFX.play('coins'), 400);
     const body = h('div', 'result'); body.appendChild(h('div', 'res-headline', '🏆 HOÀN THÀNH!'));
     body.appendChild(h('p', 'center', 'Thời gian ' + fmtTime(secs) + ' · ' + this.moves + ' nước đi'));
+    body.appendChild(h('div', 'res-coins win', SVG_DEFS.coin + ' +' + formatCoins(coinReward)));
     body.appendChild(h('div', 'res-xp', '+' + add.amount + ' XP' + (Data.level > before ? '  ·  🎉 Lên Level ' + Data.level + '!' : '')));
     ach.forEach(a => body.appendChild(h('div', 'res-ach', '🏅 Thành tích mới: ' + a.name)));
     this.running = false;
@@ -6204,6 +7125,8 @@ function setupHandSwipe() {
 }
 function doAction(act, t) {
   switch (act) {
+    case 'open-account': CloudAuth.openModal(); break;
+    case 'free-coins': openCoinsModal(); break;
     case 'goto': navigateTo(t.dataset.target); break;
     case 'back': goBack(); break;
     case 'play-now': if (Data.currentMatch) Match.resume(); else navigateTo('games'); break;

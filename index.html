@@ -34,6 +34,8 @@ document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}
     <button id="btn-back" class="icon-btn" type="button" data-action="back" aria-label="Quay lại" hidden><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
     <h1 id="screen-title">CARD MASTER</h1>
     <div class="top-actions">
+      <button id="top-coin-pill" class="coin-pill" type="button" data-action="free-coins" aria-label="Ví xu" title="Ví xu cược & mua đồ - Nhấn để nhận xu"><span class="coin-icon">🪙</span><span id="top-coin-val">50.000</span><span class="coin-plus">+</span></button>
+      <button id="btn-cloud-account" class="icon-btn cloud-account-btn" type="button" data-action="open-account" aria-label="Tài khoản Online" title="Tài khoản & Lưu trữ đám mây"><span id="cloud-status-dot" class="cloud-dot"></span><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg></button>
       <button id="btn-sound" class="icon-btn" type="button" data-action="toggle-sound" aria-label="Bật/tắt âm thanh" aria-pressed="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
       <button class="icon-btn" type="button" data-action="goto" data-target="settings" aria-label="Cài đặt"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
@@ -48,10 +50,18 @@ document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}
         <div class="profile-card">
           <div id="home-avatar" class="avatar-lg" aria-hidden="true">👨</div>
           <div class="pc-info">
-            <b id="home-name">Minh</b>
+            <div class="pc-name-row">
+              <b id="home-name">Minh</b>
+              <button class="pc-cloud-pill" id="home-cloud-pill" type="button" data-action="open-account" title="Quản lý tài khoản & lưu online"><span id="home-cloud-dot" class="cloud-dot"></span><span id="home-cloud-text">Lưu online</span></button>
+            </div>
             <small id="home-title" class="title-tag"></small>
             <span id="home-rank" class="rank-tag"></span>
             <span id="home-country">🇻🇳 Việt Nam</span>
+            <div class="pc-coin-row" data-action="free-coins" title="Chạm để xem quỹ xu và nhận xu miễn phí">
+              <span class="coin-icon">🪙</span>
+              <span class="pc-coin-num" id="home-coin-val">50.000 Xu</span>
+              <span class="pc-coin-add">+ Nhận xu</span>
+            </div>
             <div class="xp-row"><span id="home-level" class="lv">Lv.1</span>
               <div class="xp-bar"><i id="home-xp-fill"></i></div></div>
             <small id="home-xp-text"></small>
@@ -153,6 +163,26 @@ document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}
       <div class="pf-top">
         <div id="pf-avatar" class="avatar-xl">👨</div>
         <h2 id="pf-name">Minh</h2>
+        <div class="pf-account-banner" id="pf-account-banner">
+          <div class="pf-ab-left">
+            <span class="pf-cloud-icon">☁️</span>
+            <div>
+              <div class="pf-ab-title" id="pf-account-title">Chưa liên kết online</div>
+              <small class="muted" id="pf-account-sub">Đăng ký / đăng nhập để lưu vĩnh viễn</small>
+            </div>
+          </div>
+          <button class="btn tiny primary" type="button" data-action="open-account">Tài khoản</button>
+        </div>
+        <div class="pf-coin-banner" data-action="free-coins" title="Xem ví xu và nhận xu miễn phí">
+          <div class="pf-cb-left">
+            <span class="coin-icon">🪙</span>
+            <div>
+              <div class="pf-cb-title"><b id="pf-coin-val">50.000 Xu</b></div>
+              <small class="muted">Dùng đặt cược & mua skin</small>
+            </div>
+          </div>
+          <button class="btn tiny gold" type="button" data-action="free-coins">+ Nhận xu</button>
+        </div>
         <p id="pf-country"></p><p id="pf-title" class="title-tag"></p><p id="pf-rank" class="rank-tag"></p><p id="pf-age" class="muted"></p>
         <div class="xp-row wide"><span id="pf-level" class="lv">Lv.1</span><div class="xp-bar"><i id="pf-xp-fill"></i></div></div>
         <small id="pf-xp-text"></small>
