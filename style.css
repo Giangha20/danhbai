@@ -494,8 +494,8 @@ html,body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue"
 /* Đĩa sứ viền kim loại vàng bóng */
 .tx-plate {
   position: relative;
-  width: min(76vw, 250px);
-  height: min(76vw, 250px);
+  width: min(56vw, 34vh, 185px);
+  height: min(56vw, 34vh, 185px);
   border-radius: 50%;
   background: radial-gradient(circle at 45% 40%, #ffffff 0%, #e2e8f0 55%, #94a3b8 100%);
   border: 7px solid #e0b64d;
@@ -538,9 +538,10 @@ html,body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue"
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 8px;
   perspective: 700px;
   transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
 }
 
 /* Bát úp hoa văn rồng vàng */
@@ -584,13 +585,14 @@ html,body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue"
 }
 
 .tx-bowl.opened {
-  transform: translateY(-135%) rotate(-20deg) scale(0.92);
-  opacity: 0;
+  transform: translateY(-42px) translateX(56px) rotate(22deg) scale(0.85);
+  opacity: 0.15;
+  pointer-events: none;
 }
 
 /* ==================== XÚC XẮC 3D LẬP PHƯƠNG THỰC THẾ ==================== */
 .dice-3d {
-  --dice-size: min(12vw, 44px);
+  --dice-size: min(9.5vw, 34px);
   width: var(--dice-size);
   height: var(--dice-size);
   position: relative;
@@ -2608,9 +2610,9 @@ html,body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue"
   top: 10px;
   left: 50%;
   transform: translateX(-50%) translateZ(0);
-  background: rgba(15, 23, 42, 0.88);
-  border: 1px solid rgba(234, 179, 8, 0.4);
-  padding: 4px 12px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1.5px solid rgba(234, 179, 8, 0.55);
+  padding: 4px 14px;
   border-radius: 20px;
   color: #f8fafc;
   font-size: 0.82rem;
@@ -2618,8 +2620,72 @@ html,body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue"
   align-items: center;
   gap: 6px;
   z-index: 25;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+}
+.table-bet-pill:hover {
+  background: rgba(30, 41, 59, 0.96);
+  border-color: #fbbf24;
+}
+.table-bet-pill:active {
+  transform: translateX(-50%) scale(0.96);
+}
+.table-bet-pill .pill-edit {
+  font-size: 0.75rem;
+  opacity: 0.85;
+  margin-left: 2px;
+}
+/* Modal Tùy chỉnh mức cược */
+.bet-adjust-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0;
+}
+.bet-balance-card {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+}
+.bet-balance-card b {
+  color: #fbbf24;
+}
+.bet-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+.bet-choice-chip {
+  padding: 10px 6px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f8fafc;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+.bet-choice-chip:hover:not(:disabled) {
+  border-color: #fbbf24;
+  background: rgba(234, 179, 8, 0.15);
+}
+.bet-choice-chip.selected {
+  border-color: #fbbf24;
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.35), rgba(202, 138, 4, 0.2));
+  color: #fef08a;
+  box-shadow: 0 0 12px rgba(234, 179, 8, 0.3);
+}
+.bet-choice-chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 .table-bet-pill b {
   color: #fbbf24;

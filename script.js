@@ -3834,13 +3834,13 @@ const TX_ENGINE = {
     const userCoins = Data.coins || 0;
     const initialBet = userCoins >= baseBet ? baseBet : (userCoins >= 1000 ? 1000 : (userCoins > 0 ? userCoins : 0));
     
-    gs.dice = [0, 0, 0];
+    gs.dice = [1 + rand(6), 1 + rand(6), 1 + rand(6)];
     gs.over = null;
     gs.phase = 'play';
     gs.turn = 0;
     gs.userBet = initialBet;
-    gs.pick = { side: 'tai' }; // mặc định chọn Tài
-    gs.cupOpen = false;
+    gs.pick = { side: 'tai' };
+    gs.cupOpen = true;
     gs.shaking = false;
     gs.diceDone = false;
 
@@ -3898,6 +3898,10 @@ const TX_ENGINE = {
     }
     if (mv.type === 'setBet') {
       gs.userBet = parseInt(mv.amount, 10);
+      Match.bet = gs.userBet;
+      Data.lastBet = gs.userBet;
+      saveData();
+      updateBetPill();
       return { type: 'setBet', sfx: 'select' };
     }
 
@@ -4002,8 +4006,8 @@ const TX_ENGINE = {
     rows[0].push({ txt: 'CHẴN', act: 'g:side', data: { side: 'chan' }, on: curSide === 'chan', cls: 'chip chan' });
     rows[0].push({ txt: 'LẺ', act: 'g:side', data: { side: 'le' }, on: curSide === 'le', cls: 'chip le' });
 
-    // Hàng 2: Mức cược Xu
-    const chips = [1000, 5000, 10000, 25000, 50000];
+    // Hàng 2: Mức cược Xu phong phú
+    const chips = [500, 1000, 5000, 10000, 25000, 50000, 100000];
     chips.forEach(c => {
       rows[1].push({
         txt: formatCoinsShort(c),
@@ -4014,6 +4018,7 @@ const TX_ENGINE = {
         dis: coins < c && c > 1000
       });
     });
+    rows[1].push({ txt: '✏️ ĐỔI CƯỢC', act: 'change-bet', cls: 'chip coin-chip' });
 
     const sideNames = { tai: 'TÀI (11–17)', xiu: 'XỈU (4–10)', chan: 'CHẴN', le: 'LẺ' };
     const betNote = curBet > 0
@@ -5700,6 +5705,95 @@ function die3DEl(val, idx) {
 }
 
 // Bàn Tài Xỉu: Bát Đĩa Chuẩn Casino & 3 Xúc Xắc 3D Hoạt Ảnh Mượt Mà Trên Mọi Thiết Bị Mobile/PC
+
+/* ==================== TÙY CHỈNH ĐẶT CƯỢC TRONG BÀN CHƠI ==================== */
+function updateBetPill() {
+  if (!IN_BROWSER) return;
+  const betPill = $('#play-bet-pill');
+  if (!betPill || !Match.running) return;
+  const isTX = Match.gameId === 'taiXiu';
+  const curBet = isTX && gameState.userBet != null 
+    ? gameState.userBet 
+    : (Match.bet != null ? Match.bet : (gameState.bet || 0));
+  const pot = curBet * (gameState.players ? gameState.players.length : 4);
+  betPill.hidden = false;
+  betPill.classList.add('table-bet-pill');
+  betPill.title = 'Nhấn để tùy chỉnh mức cược';
+  if (curBet > 0) {
+    betPill.innerHTML = SVG_DEFS.coin + ' Cược: <b>' + formatCoinsShort(curBet) + '</b> • Hũ: <b>' + formatCoinsShort(pot) + '</b> <span class="pill-edit">✏️ Đổi</span>';
+  } else {
+    betPill.innerHTML = '🎮 <b>Tập chơi (0 Xu)</b> <span class="pill-edit">✏️ Đổi</span>';
+  }
+}
+
+function openBetModal() {
+  if (!IN_BROWSER) return;
+  if (!Match.running) return;
+  const isSolo = GAME_META[Match.gameId] && GAME_META[Match.gameId].kind === 'solo';
+  if (isSolo) return;
+
+  const isTX = Match.gameId === 'taiXiu';
+  const curBet = isTX && gameState.userBet != null
+    ? gameState.userBet
+    : (Match.bet != null ? Match.bet : (gameState.bet || 1000));
+  const coins = Data.coins || 0;
+  const betOptions = [0, 500, 1000, 2000, 5000, 10000, 25000, 50000, 100000];
+
+  const body = h('div', 'bet-adjust-modal');
+  body.appendChild(h('p', 'muted small center', 'Tùy chỉnh mức cược xu trực tiếp trong bàn chơi. Mức cược sẽ áp dụng ngay!'));
+
+  const curBalance = h('div', 'bet-balance-card center');
+  curBalance.innerHTML = '🪙 Ví hiện có: <b>' + formatCoins(coins) + ' Xu</b>';
+  body.appendChild(curBalance);
+
+  let selectedBet = curBet;
+  const chipContainer = h('div', 'bet-chips-grid');
+
+  betOptions.forEach(opt => {
+    const isAffordable = coins >= opt || opt === 0;
+    const btn = h('button', 'bet-choice-chip' + (opt === selectedBet ? ' selected' : '') + (!isAffordable ? ' disabled' : ''), opt === 0 ? 'Tập chơi (0 Xu)' : formatCoins(opt));
+    btn.type = 'button';
+    if (!isAffordable) btn.disabled = true;
+    btn.addEventListener('click', () => {
+      SFX.play('click');
+      selectedBet = opt;
+      $$('.bet-choice-chip', chipContainer).forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+    chipContainer.appendChild(btn);
+  });
+  body.appendChild(chipContainer);
+
+  Modal.open({
+    title: '🪙 Tùy chỉnh mức cược',
+    body,
+    buttons: [
+      { text: 'Đóng' },
+      {
+        text: 'ÁP DỤNG CƯỢC',
+        cls: 'primary',
+        fn: () => {
+          if (selectedBet > coins && selectedBet > 0) {
+            showToast('⚠️ Không đủ số dư Xu!', 'warning');
+            return;
+          }
+          Data.lastBet = selectedBet;
+          saveData();
+          Match.bet = selectedBet;
+          gameState.bet = selectedBet;
+          if (Match.gameId === 'taiXiu') {
+            gameState.userBet = selectedBet;
+          }
+          updateBetPill();
+          renderBoard();
+          SFX.play('coins');
+          showToast('✅ Đã đổi mức cược: ' + (selectedBet === 0 ? 'Tập chơi' : formatCoins(selectedBet) + ' Xu'), 'success');
+        }
+      }
+    ]
+  });
+}
+
 function renderDiceBox(box, v) {
   box.classList.add('dice-mode');
   box.textContent = '';
@@ -5707,7 +5801,7 @@ function renderDiceBox(box, v) {
 
   const wrap = h('div', 'dice-arena');
 
-  // Đĩa và Bát Tài Xỉu
+  // Đĩa và Bát Tài Xỉu Casino Chuẩn
   const plate = h('div', 'tx-plate');
   const felt = h('div', 'tx-plate-felt');
   plate.appendChild(felt);
@@ -5719,16 +5813,18 @@ function renderDiceBox(box, v) {
   diceEls.forEach(d => diceStage.appendChild(d));
   felt.appendChild(diceStage);
 
-  // Bát úp (có thể tự mở hoặc người chơi bấm để mở)
-  const bowl = h('div', 'tx-bowl');
+  // Bát úp hoa văn rồng vàng (Mở sẵn khi vào bàn để người chơi thấy xúc xắc 3D thật)
+  const isBowlOpen = (gs.cupOpen !== false && !gs.shaking);
+  const bowl = h('div', 'tx-bowl' + (isBowlOpen ? ' opened' : ''));
   bowl.innerHTML = '<div class="bowl-knob"></div><div class="bowl-rim"></div><div class="bowl-dragon">🎲</div>';
+  bowl.title = 'Bát Tài Xỉu';
   plate.appendChild(bowl);
 
   wrap.appendChild(plate);
 
   // Kết quả ván
-  const res = h('div', 'dice-result' + (v.result ? ' ' + v.result : ''));
-  if (v.dice) {
+  const res = h('div', 'dice-result' + (v.result ? ' ' + v.result : '') + (gs.over && gs.diceDone ? ' show' : ''));
+  if (gs.over && v.dice) {
     if (v.bao) res.textContent = '💥 BÃO ' + v.sum + ' (' + v.dice[0] + '-' + v.dice[1] + '-' + v.dice[2] + ')';
     else {
       const tx = v.sum >= 11 ? 'TÀI' : 'XỈU';
@@ -5753,87 +5849,10 @@ function renderDiceBox(box, v) {
 
   box.appendChild(wrap);
 
-  // Hoạt ảnh lắc bát và mở xúc xắc
-  if (v.dice && !gs.diceDone) {
-    if (!canAnimate()) {
-      gs.diceDone = true;
-      bowl.classList.add('opened');
-      res.classList.add('show');
-      return;
-    }
-    if (UI.diceTimer) return;
-
-    res.classList.remove('show');
-    bowl.classList.remove('opened');
-    plate.classList.add('shaking');
-    diceEls.forEach(d => d.classList.add('rolling-3d'));
-
-    let tick = 0;
-    vibrate([40, 30, 60]);
-    SFX.play('cup');
-
-    UI.diceTimer = setInterval(() => {
-      tick++;
-      if (tick % 2 === 0) {
-        SFX.play('dice');
-        vibrate(15);
-      }
-
-      // Xoay ngẫu nhiên xúc xắc trong bát khi đang lắc
-      if (tick < 12) {
-        diceEls.forEach(d => {
-          const rx = rand(4) * 90 + rand(30) - 15;
-          const ry = rand(4) * 90 + rand(30) - 15;
-          const rz = rand(4) * 90;
-          d.style.transform = 'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) rotateZ(' + rz + 'deg)';
-        });
-      }
-
-      // Dừng lắc và định vị mặt số cuối cùng
-      if (tick === 12) {
-        plate.classList.remove('shaking');
-        diceEls.forEach((d, i) => {
-          d.classList.remove('rolling-3d');
-          const targetVal = faces[i];
-          const rotations = {
-            1: { x: 0, y: 0 },
-            6: { x: 180, y: 0 },
-            2: { x: -90, y: 0 },
-            5: { x: 90, y: 0 },
-            3: { x: 0, y: -90 },
-            4: { x: 0, y: 90 }
-          };
-          const rot = rotations[targetVal] || { x: 0, y: 0 };
-          d.style.transform = 'rotateX(' + rot.x + 'deg) rotateY(' + rot.y + 'deg)';
-        });
-      }
-
-      // Mở bát để lộ xúc xắc 3D
-      if (tick === 15) {
-        bowl.classList.add('opened');
-        SFX.play('deal');
-      }
-
-      // Hiện kết quả và âm thanh thắng/thua
-      if (tick >= 18) {
-        clearInterval(UI.diceTimer);
-        UI.diceTimer = null;
-        gs.diceDone = true;
-        res.classList.add('show');
-        if (gs.win) {
-          SFX.play('win');
-          vibrate([60, 40, 60]);
-        } else {
-          SFX.play('lose');
-          vibrate(100);
-        }
-      }
-    }, 90);
-  } else if (v.dice) {
-    bowl.classList.add('opened');
-    res.classList.add('show');
+  // Định vị xoay mặt số 3D chuẩn xác cho xúc xắc
+  const applyRotations = (vals) => {
     diceEls.forEach((d, i) => {
-      const targetVal = faces[i];
+      const targetVal = vals[i];
       const rotations = {
         1: { x: 0, y: 0 },
         6: { x: 180, y: 0 },
@@ -5845,8 +5864,80 @@ function renderDiceBox(box, v) {
       const rot = rotations[targetVal] || { x: 0, y: 0 };
       d.style.transform = 'rotateX(' + rot.x + 'deg) rotateY(' + rot.y + 'deg)';
     });
+  };
+
+  // Nếu không lắc và bát đang mở: luôn xoay đúng mặt số đẹp
+  if (!gs.shaking && isBowlOpen) {
+    applyRotations(faces);
+  }
+
+  // Hoạt ảnh lắc bát xóc xúc xắc và mở nắp khi bấm LẮC
+  if (gs.shaking && !gs.diceDone) {
+    if (UI.diceTimer) return;
+
+    res.classList.remove('show');
+    bowl.classList.remove('opened');
+    plate.classList.add('shaking');
+    diceEls.forEach(d => d.classList.add('rolling-3d'));
+
+    let tick = 0;
+    vibrate([50, 40, 70]);
+    SFX.play('cup');
+
+    UI.diceTimer = setInterval(() => {
+      tick++;
+      if (tick % 2 === 0) {
+        SFX.play('dice');
+        vibrate(15);
+      }
+
+      // Xoay xúc xắc 3D đa hướng khi đang xóc
+      if (tick < 11) {
+        diceEls.forEach(d => {
+          const rx = rand(4) * 90 + rand(30) - 15;
+          const ry = rand(4) * 90 + rand(30) - 15;
+          const rz = rand(4) * 90;
+          d.style.transform = 'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) rotateZ(' + rz + 'deg)';
+        });
+      }
+
+      // Dừng lắc đĩa và xoay chuẩn mặt số kết quả
+      if (tick === 11) {
+        plate.classList.remove('shaking');
+        diceEls.forEach(d => d.classList.remove('rolling-3d'));
+        applyRotations(faces);
+      }
+
+      // Mở bát hé lộ xúc xắc 3D
+      if (tick === 13) {
+        bowl.classList.add('opened');
+        gs.cupOpen = true;
+        SFX.play('deal');
+      }
+
+      // Hiện kết quả và âm thanh thắng/thua
+      if (tick >= 16) {
+        clearInterval(UI.diceTimer);
+        UI.diceTimer = null;
+        gs.shaking = false;
+        gs.diceDone = true;
+        res.classList.add('show');
+        if (gs.win) {
+          SFX.play('win');
+          vibrate([60, 40, 60]);
+        } else {
+          SFX.play('lose');
+          vibrate(120);
+        }
+      }
+    }, 90);
+  } else if (v.dice && gs.diceDone) {
+    bowl.classList.add('opened');
+    res.classList.add('show');
+    applyRotations(faces);
   }
 }
+
 /* Khu điều khiển cược thay cho tay bài (Tài Xỉu) */
 function renderHandPanel(hand, hv) {
   const key = 'P' + JSON.stringify([hv.panel.map(r => r.map(b => [b.txt, !!b.on, !!b.dis])), hv.note]);
@@ -6465,20 +6556,13 @@ function buildPlayScreen() {
   if (!betPill) {
     betPill = h('div', 'table-bet-pill');
     betPill.id = 'play-bet-pill';
+    betPill.onclick = () => openBetModal();
     const tb = $('#table');
     if (tb) tb.appendChild(betPill);
+  } else {
+    betPill.onclick = () => openBetModal();
   }
-  const curBet = Match.bet != null ? Match.bet : (gameState.bet || 0);
-  const pot = curBet * gs.players.length;
-  if (betPill) {
-    if (curBet > 0) {
-      betPill.hidden = false;
-      betPill.innerHTML = SVG_DEFS.coin + ' Cược: <b>' + formatCoinsShort(curBet) + '</b> • Hũ: <b>' + formatCoinsShort(pot) + '</b>';
-    } else {
-      betPill.hidden = false;
-      betPill.innerHTML = '🎮 <b>Tập chơi (0 Xu)</b>';
-    }
-  }
+  updateBetPill();
 }
 function playMetrics() {
   const v = viewport(), landscape = v.w > v.h;
@@ -7581,11 +7665,16 @@ function doAction(act, t) {
       POKER_ENGINE.raiseOptions().forEach(o => { const b = h('button', 'raise-btn', o.label + ' · ' + o.to); b.type = 'button'; b.dataset.action = 'g:raise'; b.dataset.to = o.to; tr.appendChild(b); });
       tr.hidden = false; break;
     }
+    case 'change-bet': openBetModal(); break;
     default:
       if (act.indexOf('g:') === 0) {
         const sel = [...UI.selected], mv = { type: act.slice(2), cards: sel, card: sel[0] };
-        if (t.dataset.src) mv.src = t.dataset.src; if (t.dataset.to) mv.to = parseInt(t.dataset.to, 10);
-        if (t.dataset.side) mv.side = t.dataset.side; if (t.dataset.ratio) mv.ratio = parseInt(t.dataset.ratio, 10);
+        Object.keys(t.dataset).forEach(k => {
+          if (k !== 'action') {
+            const val = t.dataset[k];
+            mv[k] = /^\d+$/.test(val) ? parseInt(val, 10) : val;
+          }
+        });
         const rt = $('#raise-tray'); if (rt) rt.hidden = true;
         Match.humanMove(mv);
       }
