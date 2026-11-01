@@ -109,7 +109,7 @@ const GAME_META = {
   rummy: { name: 'Rummy', desc: 'Bốc, đánh, hạ bộ, gõ khi rác ≤ 10', minP: 2, maxP: 4, defP: 2, icon: 'rummy', kind: 'draw', ready: true },
   solitaire: { name: 'Solitaire', desc: 'Klondike một người · rút 1 hoặc 3 lá', minP: 1, maxP: 1, defP: 1, icon: 'sol', kind: 'solo', ready: true },
   freeCell: { name: 'FreeCell', desc: '8 cột, 4 ô trống, 4 nền', minP: 1, maxP: 1, defP: 1, icon: 'fc', kind: 'solo', ready: true },
-  taiXiu: { name: 'Tài Xỉu', desc: '3 xúc xắc · đặt XP · giải trí, không tính hạng', minP: 4, maxP: 4, defP: 4, icon: 'dice', kind: 'dice', ready: true, casual: true },
+  taiXiu: { name: 'Tài Xỉu', desc: 'Lắc 3 xúc xắc 3D · Đặt cược Tài/Xỉu & Chẵn/Lẻ · Cược Xu thưởng lớn', minP: 2, maxP: 5, defP: 4, icon: 'dice', kind: 'dice', ready: true, casual: false },
   spider: { name: 'Spider Solitaire', desc: '104 lá · 1/2/4 chất', minP: 1, maxP: 1, defP: 1, icon: 'spider', kind: 'solo', ready: true },
 };
 const READY_GAMES = Object.keys(GAME_META).filter(k => GAME_META[k].ready);
@@ -258,12 +258,13 @@ const RULES = {
     'Số lá di chuyển cùng lúc tối đa = (số ô trống + 1) × 2^(số cột trống) (không tính cột đích nếu nó đang trống).',
     'Chạm lá để chọn, chạm đích để chuyển; chạm đúp để lên nền. Có Hoàn tác, Gợi ý. Thắng khi cả 52 lá lên 4 nền.'
   ]],
-  taiXiu: ['Tài Xỉu', [
-    'Chỉ để giải trí — KHÔNG tính đấu hạng và không vào thống kê thắng/thua chính. Không có tiền thật: bạn chỉ đặt XP của chính mình.',
-    'Bàn 4 người (bạn + 3 người chơi AI). Lắc 3 xúc xắc: tổng 4–10 là XỈU, tổng 11–17 là TÀI. Ba xúc xắc giống nhau (bão) là nhà cái ăn tất — mọi cửa đều thua.',
-    'Chọn TÀI hoặc XỈU, chọn mức cược theo tỷ lệ XP đang có (5% / 10% / 25% / 50% / ALL-IN, tối thiểu 10 XP) rồi bấm LẮC. Dưới 10 XP bạn chỉ chơi luyện tập, không được/mất XP.',
-    'Thắng: cộng XP ngẫu nhiên khoảng 0,7–1,3 lần mức cược. Thua: trừ đúng mức cược. XP không xuống dưới 0 và level không bị tụt.',
-    'Mỗi ván là một lần lắc. Hãy chơi có chừng mực nhé!'
+  taiXiu: ['Tài Xỉu (Sic Bo Chuẩn)', [
+    'Bàn chơi 2–5 người với 3 xúc xắc 6 mặt (1 đến 6). Đặt cược bằng Xu 🪙 với tỷ lệ thắng rõ ràng, minh bạch.',
+    'CỬA CHÍNH: XỈU (tổng 3 xúc xắc từ 4 đến 10, tỷ lệ 1:1), TÀI (tổng 3 xúc xắc từ 11 đến 17, tỷ lệ 1:1).',
+    'CỬA PHỤ: CHẴN (tổng là số chẵn: 4, 6, 8, 10, 12, 14, 16), LẺ (tổng là số lẻ: 5, 7, 9, 11, 13, 15, 17) tỷ lệ 1:1.',
+    'LUẬT BÃO (3 xúc xắc cùng số nút, ví dụ 1-1-1, 5-5-5, 6-6-6): Nhà cái ăn tất các cửa Tài/Xỉu/Chẵn/Lẻ (tổng 3 và tổng 18 không thuộc Tài hay Xỉu).',
+    'HIỆU ỨNG THỰC TẾ: Xúc xắc 3D lập phương đổ bóng chân thực, rung lắc đĩa úp chuyển động mượt mà trên cả điện thoại và máy tính.',
+    'Cầu soi lịch sử hiển thị đầy đủ Tài (T), Xỉu (X), Bão (B) để người chơi dễ dàng theo dõi cầu.'
   ]],
   spider: ['Spider Solitaire', [
     'Dùng 104 lá với 1, 2 hoặc 4 chất. 10 cột (4 cột 6 lá, 6 cột 5 lá, chỉ lá cuối ngửa) và kho 50 lá.',
@@ -1384,7 +1385,9 @@ const SFX = (function () {
     success: () => { tone(784, 0.09, 'sine', 0.05); tone(1047, 0.14, 'sine', 0.05, 0.08); },
     warn: () => { tone(440, 0.1, 'square', 0.035); tone(440, 0.1, 'square', 0.035, 0.14); },
     error: () => { tone(220, 0.22, 'sawtooth', 0.05); tone(165, 0.25, 'sawtooth', 0.05, 0.16); },
-    coins: () => { [1319, 1568, 2093, 2637].forEach((f, i) => tone(f, 0.08, 'sine', 0.05, i * 0.06)); }
+    coins: () => { [1319, 1568, 2093, 2637].forEach((f, i) => tone(f, 0.08, 'sine', 0.05, i * 0.06)); },
+    dice: () => { noise(0.06, 0.16, 'bandpass', 1400 + Math.random() * 800, 0, 1.8); tone(340 + Math.random() * 120, 0.05, 'triangle', 0.08); },
+    cup: () => { noise(0.12, 0.18, 'lowpass', 600); tone(180, 0.15, 'sine', 0.15); }
   };
   return {
     play(name) {
@@ -1750,12 +1753,13 @@ function makeTienLen(id, cfg) {
     setup(opts) {
       gameState = newGameState();
       gameState.currentGame = id; gameState.cfg = cfg;
-      gameState.players = makePlayers(clamp(opts.players, 2, 4));
+      gameState.players = makePlayers(clamp(opts.players, 2, 5));
       gameState.deck = newShuffledDeck();
     },
     deal() {
       const gs = gameState, n = gs.players.length;
-      gs.hands = dealCards(gs.deck, n, 13).map(sortCards);
+      const cardsPerPerson = n >= 5 ? 10 : 13;
+      gs.hands = dealCards(gs.deck, n, cardsPerPerson).map(sortCards);
       gs.startCounts = gs.hands.map(x => x.length);
       gs.passed = new Array(n).fill(false); gs.lastPlay = null; gs.first = true; gs.playedCards = []; gs.over = null; gs.round = 0;
       let low = null, lp = 0;
@@ -1862,7 +1866,7 @@ const SAM_ENGINE = {
   classify: samClassify, canBeat: samCanBeat, generate: samGenerate,
   setup(opts) {
     gameState = newGameState(); gameState.currentGame = 'samLoc';
-    gameState.players = makePlayers(clamp(opts.players, 2, 4));
+    gameState.players = makePlayers(clamp(opts.players, 2, 5));
     gameState.deck = newShuffledDeck();
   },
   deal() {
@@ -3803,83 +3807,278 @@ const Rank = {
   }
 };
 
-/* ============================ TÀI XỈU (giải trí — đặt XP, không tính hạng) ============================ */
-const TX = { RATIOS: [5, 10, 25, 50, 100], MIN_BET: 10 };
-function txBetFor(xp, ratio) { if (xp < TX.MIN_BET) return 0; return clamp(Math.round(xp * ratio / 100), TX.MIN_BET, xp); }
+/* ============================ TÀI XỈU CHUẨN (Cược Xu, Xúc Xắc 3D Hoạt Ảnh Mượt Mà) ============================ */
+const TX = {
+  CHIP_VALUES: [1000, 5000, 10000, 25000, 50000],
+  SIDES: [
+    { id: 'xiu', label: 'XỈU 4–10', sub: 'Tỷ lệ 1:1', type: 'side' },
+    { id: 'tai', label: 'TÀI 11–17', sub: 'Tỷ lệ 1:1', type: 'side' },
+    { id: 'chan', label: 'CHẴN', sub: 'Tỷ lệ 1:1', type: 'extra' },
+    { id: 'le', label: 'LẺ', sub: 'Tỷ lệ 1:1', type: 'extra' }
+  ]
+};
+
 const TX_ENGINE = {
-  id: 'taiXiu', kind: 'dice', casual: true, finishDelay: 2100,
-  setup(opts) { gameState = newGameState(); const gs = gameState; gs.currentGame = 'taiXiu'; gs.players = makePlayers(clamp(opts.players || 4, 2, 4)); },
+  id: 'taiXiu', kind: 'dice', casual: false, finishDelay: 3200,
+  setup(opts) {
+    gameState = newGameState();
+    const gs = gameState;
+    gs.currentGame = 'taiXiu';
+    const numPlayers = clamp(opts.players || 4, 2, 5);
+    gs.players = makePlayers(numPlayers);
+    gs.bet = opts.bet || 1000;
+  },
   deal() {
     const gs = gameState;
-    gs.dice = [0, 0, 0]; gs.over = null; gs.phase = 'play'; gs.turn = 0; gs.xp0 = Data.xp; gs.pick = { side: null, ratio: 10 };
-    gs.ai = gs.players.map((p, i) => (i === 0 ? null : { side: Math.random() < 0.5 ? 'tai' : 'xiu', ratio: pick([5, 10, 25]) }));
-    gs.hist = Array.from({ length: 12 }, () => { const d = [1, 2, 3].map(() => 1 + rand(6)); return { s: d[0] + d[1] + d[2], bao: d[0] === d[1] && d[1] === d[2] }; });
+    const baseBet = Match.bet > 0 ? Match.bet : (gs.bet || 1000);
+    const userCoins = Data.coins || 0;
+    const initialBet = userCoins >= baseBet ? baseBet : (userCoins >= 1000 ? 1000 : (userCoins > 0 ? userCoins : 0));
+    
+    gs.dice = [0, 0, 0];
+    gs.over = null;
+    gs.phase = 'play';
+    gs.turn = 0;
+    gs.userBet = initialBet;
+    gs.pick = { side: 'tai' }; // mặc định chọn Tài
+    gs.cupOpen = false;
+    gs.shaking = false;
+    gs.diceDone = false;
+
+    // AI đặt cược đa dạng
+    const aiChoices = ['tai', 'xiu', 'chan', 'le'];
+    gs.ai = gs.players.map((p, i) => {
+      if (i === 0) return null;
+      const pickSide = pick(aiChoices);
+      const mult = pick([1, 1, 2, 3]);
+      return { side: pickSide, bet: Math.max(1000, baseBet * mult) };
+    });
+
+    if (!gs.hist) {
+      gs.hist = Array.from({ length: 14 }, () => {
+        const d = [1 + rand(6), 1 + rand(6), 1 + rand(6)];
+        const sum = d[0] + d[1] + d[2];
+        const isBao = d[0] === d[1] && d[1] === d[2];
+        return { s: sum, bao: isBao, dice: d };
+      });
+    }
   },
-  humanTurn() { const gs = gameState; return !gs.over && gs.phase === 'play'; },
-  timeLimit(b) { return Math.max(25, b); },
-  getValidMoves() { const gs = gameState; return gs.over || !gs.pick.side ? [] : [{ type: 'roll' }]; },
+  humanTurn() {
+    const gs = gameState;
+    return !gs.over && gs.phase === 'play';
+  },
+  timeLimit(b) { return Math.max(30, b); },
+  getValidMoves() {
+    const gs = gameState;
+    return (gs.over || !gs.pick.side) ? [] : [{ type: 'roll' }];
+  },
   validateMove(p, mv) {
     const gs = gameState;
     if (p !== 0 || gs.over || !mv) return { ok: false, reason: 'Chưa đến lượt' };
-    if (mv.type === 'side') return mv.side === 'tai' || mv.side === 'xiu' ? { ok: true, free: true } : { ok: false, reason: 'Chọn TÀI hoặc XỈU' };
-    if (mv.type === 'ratio') return TX.RATIOS.includes(mv.ratio) ? { ok: true, free: true } : { ok: false, reason: 'Mức cược không hợp lệ' };
-    if (mv.type === 'roll') return (mv.side || gs.pick.side) ? { ok: true } : { ok: false, reason: 'Hãy chọn TÀI hoặc XỈU trước khi lắc' };
+    if (mv.type === 'side') {
+      const valid = ['tai', 'xiu', 'chan', 'le'].includes(mv.side);
+      return valid ? { ok: true, free: true } : { ok: false, reason: 'Chọn Tài, Xỉu, Chẵn hoặc Lẻ' };
+    }
+    if (mv.type === 'setBet') {
+      const b = parseInt(mv.amount, 10);
+      if (isNaN(b) || b < 0) return { ok: false, reason: 'Mức cược không hợp lệ' };
+      if (b > (Data.coins || 0) && b > 0) return { ok: false, reason: 'Không đủ số dư Xu' };
+      return { ok: true, free: true };
+    }
+    if (mv.type === 'roll') {
+      if (!gs.pick.side) return { ok: false, reason: 'Hãy chọn cửa cược trước khi lắc' };
+      return { ok: true };
+    }
     return { ok: false, reason: 'Nước đi không hợp lệ' };
   },
   play(p, mv) {
     const gs = gameState;
-    if (mv.type === 'side') { gs.pick.side = mv.side; return { type: 'side', sfx: 'select' }; }
-    if (mv.type === 'ratio') { gs.pick.ratio = mv.ratio; return { type: 'ratio', sfx: 'select' }; }
-    gs.pick.side = mv.side || gs.pick.side;
+    if (mv.type === 'side') {
+      gs.pick.side = mv.side;
+      return { type: 'side', sfx: 'select' };
+    }
+    if (mv.type === 'setBet') {
+      gs.userBet = parseInt(mv.amount, 10);
+      return { type: 'setBet', sfx: 'select' };
+    }
+
+    // Nước đi lắc xúc xắc (ROLL)
+    gs.pick.side = mv.side || gs.pick.side || 'tai';
     gs.dice = [1 + rand(6), 1 + rand(6), 1 + rand(6)];
-    gs.sum = gs.dice[0] + gs.dice[1] + gs.dice[2]; gs.bao = gs.dice[0] === gs.dice[1] && gs.dice[1] === gs.dice[2];
-    gs.result = gs.sum >= 11 ? 'tai' : 'xiu'; gs.win = !gs.bao && gs.pick.side === gs.result;
-    gs.bet = txBetFor(gs.xp0, gs.pick.ratio);
-    gs.delta = gs.win ? (gs.bet > 0 ? Math.max(1, Math.round(gs.bet * (0.7 + Math.random() * 0.6))) : 0) : -gs.bet; // thắng: cộng ngẫu nhiên theo mức cược, thua: trừ đúng mức cược
-    gs.aiRes = gs.players.map((q, i) => (i === 0 ? null : { win: !gs.bao && gs.ai[i].side === gs.result, amt: Math.round(1000 * gs.ai[i].ratio / 100 * (0.7 + Math.random() * 0.6)) }));
-    gs.over = { reason: 'roll' }; gs.phase = 'over';
-    return { type: 'roll', sfx: 'deal' };
+    gs.sum = gs.dice[0] + gs.dice[1] + gs.dice[2];
+    gs.bao = gs.dice[0] === gs.dice[1] && gs.dice[1] === gs.dice[2];
+    
+    // Kết quả Tài / Xỉu
+    gs.txResult = (gs.sum >= 11 && gs.sum <= 17) ? 'tai' : (gs.sum >= 4 && gs.sum <= 10) ? 'xiu' : 'bao';
+    // Kết quả Chẵn / Lẻ
+    gs.parityResult = (gs.sum % 2 === 0) ? 'chan' : 'le';
+
+    // Xác định người chơi thắng hay thua
+    let userWin = false;
+    if (!gs.bao) {
+      if (gs.pick.side === 'tai' && gs.txResult === 'tai') userWin = true;
+      else if (gs.pick.side === 'xiu' && gs.txResult === 'xiu') userWin = true;
+      else if (gs.pick.side === 'chan' && gs.parityResult === 'chan') userWin = true;
+      else if (gs.pick.side === 'le' && gs.parityResult === 'le') userWin = true;
+    }
+    gs.win = userWin;
+    gs.result = gs.txResult;
+
+    const actualBet = Math.min(gs.userBet || 0, Data.coins || 0);
+    gs.actualBet = actualBet;
+    gs.deltaCoins = actualBet > 0 ? (gs.win ? actualBet : -actualBet) : (gs.win ? 100 : 0);
+
+    // AI kết quả
+    gs.aiRes = gs.players.map((q, i) => {
+      if (i === 0) return null;
+      const aiPick = gs.ai[i].side;
+      let aiWin = false;
+      if (!gs.bao) {
+        if (aiPick === 'tai' && gs.txResult === 'tai') aiWin = true;
+        else if (aiPick === 'xiu' && gs.txResult === 'xiu') aiWin = true;
+        else if (aiPick === 'chan' && gs.parityResult === 'chan') aiWin = true;
+        else if (aiPick === 'le' && gs.parityResult === 'le') aiWin = true;
+      }
+      return { win: aiWin, amt: gs.ai[i].bet, side: aiPick };
+    });
+
+    // Cập nhật lịch sử cầu
+    gs.hist.push({ s: gs.sum, bao: gs.bao, dice: gs.dice.slice() });
+    if (gs.hist.length > 20) gs.hist.shift();
+
+    gs.over = { reason: 'roll' };
+    gs.phase = 'over';
+    gs.shaking = true;
+    gs.cupOpen = false;
+    gs.diceDone = false;
+
+    return { type: 'roll', sfx: 'dice' };
   },
-  nextTurn() { }, checkWin: () => gameState.over,
+  nextTurn() {},
+  checkWin: () => gameState.over,
   aiChoose() { return { type: 'roll' }; },
-  timeoutMove() { const gs = gameState; return { type: 'roll', side: gs.pick.side || (Math.random() < 0.5 ? 'tai' : 'xiu') }; },
-  hint() { return { type: 'side', side: Math.random() < 0.5 ? 'tai' : 'xiu' }; },
+  timeoutMove() {
+    const gs = gameState;
+    return { type: 'roll', side: gs.pick.side || 'tai' };
+  },
+  hint() {
+    const sides = ['tai', 'xiu', 'chan', 'le'];
+    return { type: 'side', side: pick(sides) };
+  },
   seatView(i) {
     const gs = gameState, a = gs.ai[i], r = gs.aiRes && gs.aiRes[i];
-    return { cnt: (a.side === 'tai' ? 'TÀI' : 'XỈU') + ' · ' + a.ratio + '%', warn: r ? (r.win ? '★ +' + r.amt : '−' + r.amt) : 'Đã đặt cược', rows: [], alert: false };
+    const sideMap = { tai: 'TÀI', xiu: 'XỈU', chan: 'CHẴN', le: 'LẺ' };
+    const label = sideMap[a.side] || a.side;
+    return {
+      cnt: label + ' · ' + formatCoinsShort(a.bet),
+      warn: r ? (r.win ? '🎉 +' + formatCoinsShort(r.amt) : '−' + formatCoinsShort(r.amt)) : 'Đã đặt cược',
+      rows: [],
+      alert: false
+    };
   },
   tableView() {
     const gs = gameState, over = !!gs.over;
     return {
-      dice: over ? gs.dice : null, sum: over ? gs.sum : 0, result: over ? gs.result : null, bao: over ? gs.bao : false, hist: gs.hist, rows: [],
-      info: over ? (gs.bao ? '🎲 BÃO! Nhà cái ăn tất' : 'Tổng ' + gs.sum + ' → ' + (gs.result === 'tai' ? 'TÀI' : 'XỈU')) : 'Chọn TÀI (11–17) hoặc XỈU (4–10), chọn mức cược rồi LẮC'
+      dice: over ? gs.dice : null,
+      sum: over ? gs.sum : 0,
+      result: over ? gs.result : null,
+      bao: over ? gs.bao : false,
+      hist: gs.hist || [],
+      rows: [],
+      info: over
+        ? (gs.bao ? '💥 BÃO (' + gs.dice[0] + '-' + gs.dice[1] + '-' + gs.dice[2] + ')! Nhà cái ăn tất!' : 'Tổng ' + gs.sum + ' → ' + (gs.sum >= 11 ? 'TÀI' : 'XỈU') + ' (' + (gs.sum % 2 === 0 ? 'CHẴN' : 'LẺ') + ')')
+        : 'Chọn Cửa & Mức cược rồi bấm LẮC XÚC XẮC'
     };
   },
   handView() {
-    const gs = gameState, xp = gs.xp0, rows = [[], []], bet = txBetFor(xp, gs.pick.ratio);
-    rows[0].push({ txt: 'XỈU · 4–10', act: 'g:side', data: { side: 'xiu' }, on: gs.pick.side === 'xiu', cls: 'big xiu' });
-    rows[0].push({ txt: 'TÀI · 11–17', act: 'g:side', data: { side: 'tai' }, on: gs.pick.side === 'tai', cls: 'big tai' });
-    TX.RATIOS.forEach(r => rows[1].push({ txt: r === 100 ? 'ALL-IN' : r + '%', act: 'g:ratio', data: { ratio: r }, on: gs.pick.ratio === r, cls: 'chip', dis: xp < TX.MIN_BET }));
-    return { panel: rows, note: xp < TX.MIN_BET ? 'Bạn có ' + xp + ' XP (< ' + TX.MIN_BET + ') — chế độ luyện tập, không mất/được XP' : 'Cược ' + bet + ' XP (' + gs.pick.ratio + '% của ' + xp + ' XP)' };
+    const gs = gameState;
+    const curSide = gs.pick ? gs.pick.side : 'tai';
+    const curBet = gs.userBet != null ? gs.userBet : 1000;
+    const coins = Data.coins || 0;
+
+    const rows = [[], []];
+    // Hàng 1: 4 Cửa cược chính
+    rows[0].push({ txt: 'XỈU · 4–10', act: 'g:side', data: { side: 'xiu' }, on: curSide === 'xiu', cls: 'big xiu' });
+    rows[0].push({ txt: 'TÀI · 11–17', act: 'g:side', data: { side: 'tai' }, on: curSide === 'tai', cls: 'big tai' });
+    rows[0].push({ txt: 'CHẴN', act: 'g:side', data: { side: 'chan' }, on: curSide === 'chan', cls: 'chip chan' });
+    rows[0].push({ txt: 'LẺ', act: 'g:side', data: { side: 'le' }, on: curSide === 'le', cls: 'chip le' });
+
+    // Hàng 2: Mức cược Xu
+    const chips = [1000, 5000, 10000, 25000, 50000];
+    chips.forEach(c => {
+      rows[1].push({
+        txt: formatCoinsShort(c),
+        act: 'g:setBet',
+        data: { amount: c },
+        on: curBet === c,
+        cls: 'chip coin-chip',
+        dis: coins < c && c > 1000
+      });
+    });
+
+    const sideNames = { tai: 'TÀI (11–17)', xiu: 'XỈU (4–10)', chan: 'CHẴN', le: 'LẺ' };
+    const betNote = curBet > 0
+      ? 'Đang chọn: ' + (sideNames[curSide] || curSide) + ' · Cược: ' + formatCoins(curBet) + ' (Ví: ' + formatCoins(coins) + ')'
+      : 'Tập chơi (0 Xu) · Chọn: ' + (sideNames[curSide] || curSide);
+
+    return { panel: rows, note: betNote };
   },
   myInfo() {
     const gs = gameState;
-    if (gs.over) return gs.win ? '🎉 Thắng! +' + gs.delta + ' XP' : (gs.bao ? 'Bão — thua ' + (-gs.delta) + ' XP' : 'Thua ' + (-gs.delta) + ' XP');
-    return '⭐ XP hiện có: ' + gs.xp0 + (gs.pick.side ? ' · bạn chọn ' + (gs.pick.side === 'tai' ? 'TÀI' : 'XỈU') : '');
+    if (gs.over) {
+      if (gs.bao) return '💥 BÃO! Nhà cái ăn tất ' + (gs.actualBet > 0 ? '(-' + formatCoins(gs.actualBet) + ')' : '');
+      return gs.win ? '🎉 Thắng! +' + formatCoins(Math.abs(gs.deltaCoins)) : 'Thua! -' + formatCoins(Math.abs(gs.deltaCoins));
+    }
+    const sideNames = { tai: 'TÀI', xiu: 'XỈU', chan: 'CHẴN', le: 'LẺ' };
+    return '🪙 Số dư: ' + formatCoins(Data.coins || 0) + ' · Bạn đặt: ' + (sideNames[gs.pick.side] || 'TÀI') + ' (' + formatCoinsShort(gs.userBet || 1000) + ')';
   },
-  actionsView(my) { return gameState.over ? [] : [{ txt: '🎲 LẮC XÚC XẮC', act: 'g:roll', cls: 'primary', dis: !my }]; },
+  actionsView(my) {
+    return gameState.over ? [] : [{ txt: '🎲 LẮC XÚC XẮC', act: 'g:roll', cls: 'primary big-roll-btn', dis: !my }];
+  },
   calculateResult() {
     const gs = gameState;
-    const nets = gs.players.map((p, i) => (i === 0 ? gs.delta : (gs.aiRes[i].win ? gs.aiRes[i].amt : -gs.aiRes[i].amt)));
-    const order = [...gs.players.keys()].sort((a, b) => nets[b] - nets[a] || a - b);
-    const side = i => (i === 0 ? gs.pick.side : gs.ai[i].side) === 'tai' ? 'Tài' : 'Xỉu';
+    const actual = gs.deltaCoins || 0;
+    const outcome = gs.win ? 'win' : 'lose';
+    const sideMap = { tai: 'Tài', xiu: 'Xỉu', chan: 'Chẵn', le: 'Lẻ' };
+
+    const rankings = gs.players.map((p, i) => {
+      if (i === 0) {
+        return {
+          p: 0,
+          label: (sideMap[gs.pick.side] || 'Tài') + ' ' + (actual >= 0 ? '+' : '') + formatCoins(actual)
+        };
+      }
+      const ar = gs.aiRes && gs.aiRes[i];
+      const win = ar && ar.win;
+      const amt = ar ? ar.amt : 1000;
+      return {
+        p: i,
+        label: (sideMap[ar ? ar.side : 'tai'] || '') + ' ' + (win ? '+' : '−') + formatCoins(amt)
+      };
+    });
+
+    // Sắp xếp thứ hạng theo thắng/thua
+    rankings.sort((a, b) => (b.p === 0 && gs.win ? 1 : 0) - (a.p === 0 && gs.win ? 1 : 0));
+
     return {
-      outcome: gs.win ? 'win' : 'lose', casual: true, xpDelta: gs.delta, specials: [],
-      rankings: order.map(p => ({ p, label: side(p) + ' ' + (nets[p] >= 0 ? '+' : '') + nets[p] + (p === 0 ? ' XP' : ' điểm') })),
-      headline: gs.bao ? '🎲 BÃO! Nhà cái ăn tất' : (gs.win ? '🎉 THẮNG +' + gs.delta + ' XP' : null)
+      outcome,
+      casual: false,
+      coinDelta: actual,
+      bet: gs.actualBet || 1000,
+      specials: gs.bao ? ['bao'] : (gs.win ? ['diceWin'] : []),
+      rankings,
+      headline: gs.bao
+        ? '💥 BÃO (' + gs.dice.join('-') + ')! Nhà cái ăn tất'
+        : (gs.win ? '🎉 CHIẾN THẮNG +' + formatCoins(actual) : '😢 THUA TRẬN −' + formatCoins(Math.abs(actual)))
     };
   },
-  detail() { const gs = gameState; return ['Xúc xắc: ' + gs.dice.join(' - ') + ' = ' + gs.sum + (gs.bao ? ' (bão)' : ' → ' + (gs.result === 'tai' ? 'TÀI' : 'XỈU')), 'Bạn chọn ' + (gs.pick.side === 'tai' ? 'Tài' : 'Xỉu') + ' · cược ' + gs.bet + ' XP (' + gs.pick.ratio + '%) · ' + (gs.delta >= 0 ? '+' : '') + gs.delta + ' XP']; }
+  detail() {
+    const gs = gameState;
+    const sideMap = { tai: 'Tài', xiu: 'Xỉu', chan: 'Chẵn', le: 'Lẻ' };
+    return [
+      'Xúc xắc: ' + (gs.dice ? gs.dice.join(' - ') : '? - ? - ?') + ' = ' + gs.sum + (gs.bao ? ' (BÃO)' : ' → ' + (gs.sum >= 11 ? 'TÀI' : 'XỈU') + ' / ' + (gs.sum % 2 === 0 ? 'CHẴN' : 'LẺ')),
+      'Bạn chọn: ' + (sideMap[gs.pick.side] || 'Tài') + ' · Mức cược: ' + formatCoins(gs.actualBet || 1000) + ' · ' + (gs.deltaCoins >= 0 ? '+' : '') + formatCoins(gs.deltaCoins || 0)
+    ];
+  }
 };
 GAME_ENGINES.taiXiu = TX_ENGINE;
 
@@ -5466,38 +5665,187 @@ RENDERERS.rooms = function () { if (!RoomsUI.built) buildRoomsControls(); render
 
 
 
-/* ============================ 10e. TÀI XỈU (giao diện), RANK, KHO VẬT PHẨM ============================ */
-const DIE_PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
-function dieEl(n) {
-  const d = h('div', 'die' + (n ? '' : ' blank') + (n === 1 ? ' one' : '')); const pos = n ? DIE_PIPS[n] : [];
-  for (let i = 0; i < 9; i++) d.appendChild(h('span', 'pip' + (pos.includes(i) ? ' on' : '')));
-  if (!n) d.appendChild(h('b', 'die-q', '?'));
-  d.dataset.n = n || 0; return d;
+/* ============================ 10e. TÀI XỈU (giao diện xúc xắc 3D), RANK, KHO VẬT PHẨM ============================ */
+// Tạo xúc xắc 3D hoàn chỉnh với 6 mặt lập phương đổ bóng chân thực
+function die3DEl(val, idx) {
+  const cube = h('div', 'dice-3d');
+  cube.dataset.value = val || 1;
+  cube.dataset.idx = idx != null ? idx : 0;
+
+  const PIP_MAP = {
+    1: [4],
+    2: [0, 8],
+    3: [0, 4, 8],
+    4: [0, 2, 6, 8],
+    5: [0, 2, 4, 6, 8],
+    6: [0, 2, 3, 5, 6, 8]
+  };
+
+  const faces = ['front', 'back', 'right', 'left', 'top', 'bottom'];
+  // Gán mặt số chuẩn cho xúc xắc (các mặt đối diện cộng lại = 7)
+  const faceValues = [1, 6, 3, 4, 2, 5];
+
+  faces.forEach((sideName, fIndex) => {
+    const fVal = faceValues[fIndex];
+    const faceEl = h('div', 'cube-face ' + sideName + (fVal === 1 ? ' face-one' : ''));
+    const pips = PIP_MAP[fVal] || [];
+    for (let p = 0; p < 9; p++) {
+      const pip = h('span', 'pip' + (pips.includes(p) ? ' on' : ''));
+      faceEl.appendChild(pip);
+    }
+    cube.appendChild(faceEl);
+  });
+
+  return cube;
 }
-/* Bàn Tài Xỉu: 3 xúc xắc có hiệu ứng lắc + dải lịch sử cầu (chỉ để tham khảo) */
+
+// Bàn Tài Xỉu: Bát Đĩa Chuẩn Casino & 3 Xúc Xắc 3D Hoạt Ảnh Mượt Mà Trên Mọi Thiết Bị Mobile/PC
 function renderDiceBox(box, v) {
-  box.classList.add('dice-mode'); box.textContent = '';
-  const gs = gameState, wrap = h('div', 'dice-box'), row = h('div', 'dice-row');
-  const ds = clamp(Math.min(Math.floor(box.clientWidth / 4.4), Math.floor((box.clientHeight - 64) / 1.15)), 34, 66);
-  wrap.style.setProperty('--ds', ds + 'px');
-  const faces = v.dice || [0, 0, 0], dice = faces.map(f => dieEl(f)); dice.forEach(d => row.appendChild(d)); wrap.appendChild(row);
-  const res = h('div', 'dice-result' + (v.result ? ' ' + v.result : ''), v.dice ? (v.bao ? 'BÃO ' + v.sum : (v.result === 'tai' ? 'TÀI ' : 'XỈU ') + v.sum) : '');
+  box.classList.add('dice-mode');
+  box.textContent = '';
+  const gs = gameState;
+
+  const wrap = h('div', 'dice-arena');
+
+  // Đĩa và Bát Tài Xỉu
+  const plate = h('div', 'tx-plate');
+  const felt = h('div', 'tx-plate-felt');
+  plate.appendChild(felt);
+
+  // Khay chứa 3 xúc xắc 3D
+  const diceStage = h('div', 'tx-dice-stage');
+  const faces = v.dice || [1, 2, 3];
+  const diceEls = faces.map((f, i) => die3DEl(f, i));
+  diceEls.forEach(d => diceStage.appendChild(d));
+  felt.appendChild(diceStage);
+
+  // Bát úp (có thể tự mở hoặc người chơi bấm để mở)
+  const bowl = h('div', 'tx-bowl');
+  bowl.innerHTML = '<div class="bowl-knob"></div><div class="bowl-rim"></div><div class="bowl-dragon">🎲</div>';
+  plate.appendChild(bowl);
+
+  wrap.appendChild(plate);
+
+  // Kết quả ván
+  const res = h('div', 'dice-result' + (v.result ? ' ' + v.result : ''));
+  if (v.dice) {
+    if (v.bao) res.textContent = '💥 BÃO ' + v.sum + ' (' + v.dice[0] + '-' + v.dice[1] + '-' + v.dice[2] + ')';
+    else {
+      const tx = v.sum >= 11 ? 'TÀI' : 'XỈU';
+      const cl = v.sum % 2 === 0 ? 'CHẴN' : 'LẺ';
+      res.textContent = tx + ' ' + v.sum + ' · ' + cl + ' (' + v.dice.join('-') + ')';
+    }
+  }
   wrap.appendChild(res);
-  const hist = h('div', 'dice-hist'); hist.title = 'Lịch sử gần đây (tham khảo)';
-  v.hist.forEach(x => hist.appendChild(h('span', 'hd ' + (x.bao ? 'bao' : x.s >= 11 ? 'tai' : 'xiu'), x.bao ? 'B' : x.s >= 11 ? 'T' : 'X'))); wrap.appendChild(hist);
+
+  // Dải soi cầu lịch sử chi tiết
+  const hist = h('div', 'dice-hist');
+  hist.title = 'Lịch sử soi cầu gần đây';
+  (v.hist || []).forEach(x => {
+    const isBao = x.bao;
+    const isTai = x.s >= 11;
+    const tag = h('span', 'hd ' + (isBao ? 'bao' : isTai ? 'tai' : 'xiu'));
+    tag.textContent = isBao ? 'B' : isTai ? 'T' : 'X';
+    tag.title = 'Tổng ' + x.s + (x.dice ? ' (' + x.dice.join('-') + ')' : '');
+    hist.appendChild(tag);
+  });
+  wrap.appendChild(hist);
+
   box.appendChild(wrap);
-  // hiệu ứng lắc: đổi mặt ngẫu nhiên rồi dừng ở kết quả
+
+  // Hoạt ảnh lắc bát và mở xúc xắc
   if (v.dice && !gs.diceDone) {
-    if (!canAnimate()) { gs.diceDone = true; res.classList.add('show'); return; }
+    if (!canAnimate()) {
+      gs.diceDone = true;
+      bowl.classList.add('opened');
+      res.classList.add('show');
+      return;
+    }
     if (UI.diceTimer) return;
-    res.classList.remove('show'); let n = 0; dice.forEach(d => d.classList.add('rolling'));
+
+    res.classList.remove('show');
+    bowl.classList.remove('opened');
+    plate.classList.add('shaking');
+    diceEls.forEach(d => d.classList.add('rolling-3d'));
+
+    let tick = 0;
+    vibrate([40, 30, 60]);
+    SFX.play('cup');
+
     UI.diceTimer = setInterval(() => {
-      n++;
-      dice.forEach((d, i) => { const f = n < 9 ? 1 + rand(6) : faces[i]; const nd = dieEl(f); nd.classList.add('rolling'); d.replaceWith(nd); dice[i] = nd; });
-      if (n % 2 === 0) SFX.play('deal');
-      if (n >= 10) { clearInterval(UI.diceTimer); UI.diceTimer = null; gs.diceDone = true; dice.forEach(d => d.classList.remove('rolling')); res.classList.add('show'); SFX.play(gs.win ? 'eat' : 'card'); }
+      tick++;
+      if (tick % 2 === 0) {
+        SFX.play('dice');
+        vibrate(15);
+      }
+
+      // Xoay ngẫu nhiên xúc xắc trong bát khi đang lắc
+      if (tick < 12) {
+        diceEls.forEach(d => {
+          const rx = rand(4) * 90 + rand(30) - 15;
+          const ry = rand(4) * 90 + rand(30) - 15;
+          const rz = rand(4) * 90;
+          d.style.transform = 'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) rotateZ(' + rz + 'deg)';
+        });
+      }
+
+      // Dừng lắc và định vị mặt số cuối cùng
+      if (tick === 12) {
+        plate.classList.remove('shaking');
+        diceEls.forEach((d, i) => {
+          d.classList.remove('rolling-3d');
+          const targetVal = faces[i];
+          const rotations = {
+            1: { x: 0, y: 0 },
+            6: { x: 180, y: 0 },
+            2: { x: -90, y: 0 },
+            5: { x: 90, y: 0 },
+            3: { x: 0, y: -90 },
+            4: { x: 0, y: 90 }
+          };
+          const rot = rotations[targetVal] || { x: 0, y: 0 };
+          d.style.transform = 'rotateX(' + rot.x + 'deg) rotateY(' + rot.y + 'deg)';
+        });
+      }
+
+      // Mở bát để lộ xúc xắc 3D
+      if (tick === 15) {
+        bowl.classList.add('opened');
+        SFX.play('deal');
+      }
+
+      // Hiện kết quả và âm thanh thắng/thua
+      if (tick >= 18) {
+        clearInterval(UI.diceTimer);
+        UI.diceTimer = null;
+        gs.diceDone = true;
+        res.classList.add('show');
+        if (gs.win) {
+          SFX.play('win');
+          vibrate([60, 40, 60]);
+        } else {
+          SFX.play('lose');
+          vibrate(100);
+        }
+      }
     }, 90);
-  } else if (v.dice) res.classList.add('show');
+  } else if (v.dice) {
+    bowl.classList.add('opened');
+    res.classList.add('show');
+    diceEls.forEach((d, i) => {
+      const targetVal = faces[i];
+      const rotations = {
+        1: { x: 0, y: 0 },
+        6: { x: 180, y: 0 },
+        2: { x: -90, y: 0 },
+        5: { x: 90, y: 0 },
+        3: { x: 0, y: -90 },
+        4: { x: 0, y: 90 }
+      };
+      const rot = rotations[targetVal] || { x: 0, y: 0 };
+      d.style.transform = 'rotateX(' + rot.x + 'deg) rotateY(' + rot.y + 'deg)';
+    });
+  }
 }
 /* Khu điều khiển cược thay cho tay bài (Tài Xỉu) */
 function renderHandPanel(hand, hv) {
@@ -5538,11 +5886,12 @@ function showRankReset(rr) {
   body.appendChild(h('p', 'muted', 'Hạng cao nhất từng đạt vẫn được giữ để mở vật phẩm và khung avatar.'));
   Modal.open({ title: '🔄 Mùa rank mới', body, buttons: [{ text: 'Xem Rank', fn: () => navigateTo('rank') }, { text: 'OK', cls: 'primary' }] });
 }
-function startRankedMatch(gameId) {
+function startRankedMatch(gameId, chosenPlayers) {
   if (!['tienLenMienNam', 'samLoc', 'baCay'].includes(gameId)) {
     showToast('Vui lòng chọn 1 trong 3 game Đấu Rank chính thức', 'warning');
     return;
   }
+  const pCount = clamp(parseInt(chosenPlayers != null ? chosenPlayers : (Data.settings.rankPlayers || 4), 10) || 4, 2, 5);
   const doLaunch = () => {
     const tier = Data.rank.t;
     // Tự động scale độ khó AI theo bậc rank:
@@ -5555,7 +5904,7 @@ function startRankedMatch(gameId) {
     const bet = Math.min(standardBet, Math.max(0, Data.coins || 0));
     Match.start(gameId, {
       ranked: true,
-      players: 4,
+      players: pCount,
       aiLevel: aiLevel,
       bet: bet
     });
@@ -5656,7 +6005,7 @@ RENDERERS.rank = function () {
   secHdr.appendChild(appSvg('swords', 28, 'sec-hdr-svg'));
   const secTxt = h('div', 'sec-hdr-text');
   secTxt.appendChild(h('h3', 'sec-hdr-title', 'CHẾ ĐỘ ĐẤU RANK (3 GAME CHÍNH THỨC)'));
-  secTxt.appendChild(h('p', 'sec-hdr-desc', 'Thi đấu tính sao thăng hạng trực tiếp · Bàn 4 người · AI tự động cân bằng theo bậc rank'));
+  secTxt.appendChild(h('p', 'sec-hdr-desc', 'Thi đấu tính sao thăng hạng trực tiếp · Tự chọn 2, 3, 4, hoặc 5 người chơi · AI tự động cân bằng theo rank'));
   secHdr.appendChild(secTxt);
   arenaSec.appendChild(secHdr);
 
@@ -5684,6 +6033,38 @@ RENDERERS.rank = function () {
     }
   ];
 
+  // Bộ chọn số lượng người chơi Đấu Rank (2, 3, 4, 5 người)
+  let curRankPlayers = clamp(Data.settings.rankPlayers || 4, 2, 5);
+
+  const pSelectBox = h('div', 'rank-players-selector-box');
+  const pSelectLbl = h('div', 'rps-label');
+  pSelectLbl.appendChild(appSvg('users', 18));
+  const pSelectTitle = h('span', '', ' CHỌN SỐ LƯỢNG NGƯỜI CHƠI ĐẤU RANK:');
+  pSelectLbl.appendChild(pSelectTitle);
+  pSelectBox.appendChild(pSelectLbl);
+
+  const pButtonGroup = h('div', 'rps-buttons-group');
+  [2, 3, 4, 5].forEach(num => {
+    const btn = h('button', 'rps-btn' + (num === curRankPlayers ? ' active' : ''), num + ' Người');
+    btn.type = 'button';
+    btn.addEventListener('click', () => {
+      curRankPlayers = num;
+      Data.settings.rankPlayers = num;
+      saveData();
+      SFX.play('click');
+      $('.rps-btn', pButtonGroup).forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      $('.rg-meta-chip.players-count-chip').forEach(chip => {
+        chip.textContent = '';
+        chip.appendChild(appSvg('users', 14));
+        chip.appendChild(document.createTextNode(' ' + num + ' Người chơi'));
+      });
+    });
+    pButtonGroup.appendChild(btn);
+  });
+  pSelectBox.appendChild(pButtonGroup);
+  arenaSec.appendChild(pSelectBox);
+
   const gamesGrid = h('div', 'rank-games-grid');
   RANK_GAMES.forEach(g => {
     const card = h('div', 'rank-game-card game-' + g.id);
@@ -5700,9 +6081,9 @@ RENDERERS.rank = function () {
     cBody.appendChild(h('h4', 'rg-title', g.title));
 
     const metaRow = h('div', 'rg-meta');
-    const pCount = h('span', 'rg-meta-chip');
+    const pCount = h('span', 'rg-meta-chip players-count-chip');
     pCount.appendChild(appSvg('users', 14));
-    pCount.appendChild(document.createTextNode(' 4 Người chơi'));
+    pCount.appendChild(document.createTextNode(' ' + curRankPlayers + ' Người chơi'));
     metaRow.appendChild(pCount);
 
     const rkBadge = h('span', 'rg-meta-chip ranked-chip');
@@ -5719,7 +6100,7 @@ RENDERERS.rank = function () {
     playBtn.appendChild(document.createTextNode(' VÀO BÀN RANK'));
     playBtn.addEventListener('click', () => {
       SFX.play('click');
-      startRankedMatch(g.id);
+      startRankedMatch(g.id, curRankPlayers);
     });
     cBody.appendChild(playBtn);
 
