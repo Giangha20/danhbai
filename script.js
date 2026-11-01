@@ -6647,7 +6647,22 @@ function renderActions() {
   const gs = gameState, eng = Match.engine, bar = $('#action-bar'), myTurn = Match.humanTurn();
   bar.textContent = '';
   const mk = (txt, act, cls, dis) => { const b = h('button', 'btn ' + (cls || ''), txt); b.type = 'button'; b.dataset.action = act; if (dis) b.disabled = true; bar.appendChild(b); return b; };
-  if (gs.over || gs.phase === 'bao') return;
+  if (gs.phase === 'bao') return;
+  if (gs.over) {
+    const playNext = mk('CHƠI TIẾP ▶', 'play-again', 'primary');
+    playNext.onclick = () => {
+      Modal.closeAll();
+      const id = Match.gameId, extra = Match.extra || {};
+      Match.start(id, extra.room ? extra : { players: extra.players, bet: extra.bet, ranked: extra.ranked, aiLevel: extra.aiLevel });
+    };
+    const menuBtn = mk(Match.extra && Match.extra.room ? 'VỀ PHÒNG' : 'VỀ MENU', 'exit-match');
+    menuBtn.onclick = () => {
+      Modal.closeAll();
+      if (Match.extra && Match.extra.room) navigateTo('rooms', { force: true });
+      else navigateTo('home', { force: true });
+    };
+    return;
+  }
   if (eng.actionsView) { eng.actionsView(myTurn).forEach(a => { const b = mk(a.txt, a.act, a.cls, a.dis); if (a.data) Object.keys(a.data).forEach(k => { b.dataset[k] = a.data[k]; }); }); return; }
   if (eng.kind === 'shed') {
     const moves = myTurn ? eng.getValidMoves(0) : [];
@@ -6931,9 +6946,11 @@ const Match = {
     const isTour = this.tour;
     const xp = casual ? 0 : calcXP(res.outcome, Math.round(diff), Data.statistics.streak, specials.filter(s => ['trang', 'baoSamOk', 'chanSam', 'blackjack', 'xibang', 'nguLinh', 'quad'].includes(s)).length);
     const before = Data.level; const add = casual ? ((res.xpDelta || 0) >= 0 ? addXP(res.xpDelta || 0, 1000000) : subXP(-res.xpDelta)) : addXP(xp);
-    let rankInfo = null; // đấu hạng: không áp dụng cho game giải trí
-    if (!casual && gs.players.length >= 2) { try { rankInfo = Rank.apply(res.outcome, diff, Data.statistics.streak); } catch (e) { handleError(e); } }
+    const isRanked = !!(this.extra && this.extra.ranked);
+    let rankInfo = null; // đấu hạng: chỉ áp dụng khi chơi ở chế độ Đấu Rank
+    if (isRanked && !casual && gs.players.length >= 2) { try { rankInfo = Rank.apply(res.outcome, diff, Data.statistics.streak); } catch (e) { handleError(e); } }
     res.rankInfo = rankInfo;
+    res.ranked = isRanked;
     pushHistory({ t: Date.now(), g: this.gameId, o: res.outcome, xp: add.amount, coins: coinDelta, opp: gs.players.slice(1, 4).map(p => p.name), tour: !!isTour, room: !!this.roomCtx, sec: Math.round(seconds), fun: casual });
     if (!casual) Missions.onMatch(this.gameId, res.outcome, { tour: !!isTour, room: !!this.roomCtx, hard: gs.players.slice(1).some(p => p.level === 3) });
     const ach = checkAchievements(specials);
@@ -7022,10 +7039,12 @@ function showResult(res, add, ach, levelBefore, tourNote) {
   }
   body.appendChild(h('div', 'res-xp' + (add.amount < 0 ? ' neg' : ''), (add.amount >= 0 ? '+' : '−') + Math.abs(add.amount) + ' XP' + (res.casual ? ' · Giải trí' : '') + (Data.level > levelBefore ? '  ·  🎉 Lên Level ' + Data.level + '!' : '')));
   if (res.casual) body.appendChild(h('p', 'muted small center', 'Tài Xỉu chỉ để giải trí — không tính đấu hạng.'));
-  if (res.rankInfo) {
+  else if (res.rankInfo) {
     const ri = res.rankInfo, T = RANK_TIERS[Data.rank.t], sg = ri.delta > 0 ? '+' + ri.delta + ' ⭐' : ri.delta < 0 ? ri.delta + ' ⭐' : '±0 ⭐';
     const prog = T.divs ? Data.rank.s + '/' + T.need + ' sao' : '★ ' + Data.rank.s;
     body.appendChild(h('div', 'res-rank' + (ri.promoted ? ' up' : ri.demoted ? ' down' : ''), '🏅 Đấu hạng: ' + sg + ' · ' + (ri.promoted ? '🎉 THĂNG HẠNG ' + ri.fromLabel + ' → ' + ri.label : ri.demoted ? '📉 Rớt hạng ' + ri.fromLabel + ' → ' + ri.label : ri.label + ' (' + prog + ')')));
+  } else if (!tourNote) {
+    body.appendChild(h('p', 'muted small center', '⚔️ Chế độ đấu thường — không cộng/trừ sao Rank.'));
   }
   ach.forEach(a => body.appendChild(h('div', 'res-ach', '🏅 Thành tích mới: ' + a.name)));
   if (ach.length) setTimeout(() => SFX.play('achievement'), 400);
@@ -7034,7 +7053,7 @@ function showResult(res, add, ach, levelBefore, tourNote) {
     { text: 'TIẾP TỤC GIẢI', cls: 'primary', fn: () => navigateTo('tournament', { force: true }) },
     { text: 'XEM CHI TIẾT', keep: true, fn: () => showDetail() }
   ] : [
-    { text: 'CHƠI LẠI', cls: 'primary', fn: () => Match.start(id, extra.room ? extra : { players: extra.players, bet: extra.bet, ranked: extra.ranked, aiLevel: extra.aiLevel }) },
+    { text: 'CHƠI TIẾP ▶', cls: 'primary', fn: () => Match.start(id, extra.room ? extra : { players: extra.players, bet: extra.bet, ranked: extra.ranked, aiLevel: extra.aiLevel }) },
     extra.room ? { text: 'VỀ PHÒNG', fn: () => navigateTo('rooms', { force: true }) } : { text: 'VỀ MENU', fn: () => { navigateTo('home', { force: true }); } },
     { text: 'XEM CHI TIẾT', keep: true, fn: () => showDetail() }
   ];
